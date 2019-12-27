@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+
+@mixin fontStyle{
+  font-family: 'Roboto', sans-serif;
+  line-height: 22px;
+  letter-spacing: 1px;
+}
+
+h1{
+  font-size: 40px;
+  margin: 15px 0;
+  line-height: 40px;
+}
+
+h2{
+  margin: 10px 0;
+}
+
+.main{
+  width: 100%;
+  height: 400px;
+  background: #fdfdfd;
+  display: flex;
+  align-items: stretch;
+  @include fontStyle;
+  &.layout-v{
+    flex-direction: row;
+    .left-col{
+      width: 30%;
+      background: #ffca28;
+      ul{
+        list-style: none;
+        padding: 10px;
+        margin: 0;
+        li{
+          a{
+            font-size: 18px;
+            text-decoration: none;
+            &:hover{
+              font-weight: 600;
+            }
+            &:visited{
+              color: #000;
+            }
+          }
+        }
+      }
+    }
+    .right-col{
+      width: 70%;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      .tora-content{
+        flex-grow: 5;
+        padding: 10px 10px 10px 20px;
+      }
+      .footer{
+        flex-grow: 2;
+        padding: 10px;
+      }
+    }
+  }
+  &.layout-h{
+    flex-direction: column;
+    .top-row{
+      width: 100%;
+      background: #ffca28;
+      ul{
+        display: flex;
+        flex-direction: row;
+        padding: 0;
+        li{
+          list-style: none;
+          padding: 0 20px;
+        }
+      }
+    }
+    .bottom-row{
+      width: 100%;
+      .footer{
+        padding: 10px;
+        min-height: 50px;
+        background: #ffca28;
+      }
+    }
+  }
+  &.layout-m{
+    flex-direction: column;
+    .top-row{
+      width: 100%;
+      min-height: 300px;
+      .footer{
+        padding: 10px;
+        min-height: 50px;
+        background: #ffca28;
+      }
+    }
+    .bottom-row{
+      width: 100%;
+      background: #ffca28;
+      ul{
+        display: flex;
+        flex-direction: row;
+        padding: 0;
+        justify-content: center;
+        li{
+          list-style: none;
+          padding: 0 20px;
+        }
+      }
+    }
+  }
+  .nav-container{
+    li{
+      &>div{
+        display: flex;
+      }
+
+    }
+    .icon-wrapper{
+      display: flex;
+      justify-content: center;
+      width: 20px;
+      margin-right: 5px;
+      i{
+        margin-top: 3px;
+      }
+    }
+  }
+}
+
+
+.home-container{
+  span{
+    font-size: 18px;
+    font-weight: 600;
+  }
+  input{
+    display: block;
+    width: 300px;
+    margin: 10px 0;
+  }
+}

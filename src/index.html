@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="https://kit.fontawesome.com/a5f881d256.js" crossorigin="anonymous"></script>
+    <title><%= htmlWebpackPlugin.options.title %></title>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+  <script type="text/javascript">
+
+
+      const route = [
+        {
+          "home":{
+            icon: "fa-home",
+            data:{date: '17th December 2019'}
+          }
+        },
+        {
+          "about":{
+            icon: "fa-question"
+          }
+        },
+        {
+          "contact":{
+            icon: "fa-pencil-alt"
+          }
+        },
+        {
+          "profile":{
+            icon: "fa-pencil-alt",
+            nonRoute: true,
+            subRoute:[
+              'Ross',
+              {
+                "Aaron":{
+                  subRoute:[
+                    "item1",
+                    {
+                      'aaron-2':{
+                        subRoute:[
+                          'aaron-sub-2'
+                        ]
+                      }
+                    },
+                    "item3"
+                  ]
+                }
+              },
+              'John',
+              {
+                'Jake':{
+                  subRoute:[
+                    "item1",
+                    {
+                      'item2':{
+                        subRoute:[
+                          'sub-item-2'
+                        ]
+                      }
+                    },
+                    "item3"
+                  ]
+                },
+              }
+            ]
+          }
+        }
+      ]
+
+
+      const app = new _.Blade({
+        target: ".view-content",
+        router: route
+      });
+
+      app.render({
+        onAppInit:() => {
+          console.log('=== 1 ===');
+          app.pushState({
+            'appName': 'ToraCMS',
+            'appType': 'Content Management System'
+          });
+        },
+        onRouteInit: () => {
+          console.log('=== 2 ===');
+        },
+        afterAppInit: () => {
+          console.log('=== 3 ===');
+
+        },
+        onAppUpdate: () => {
+          console.log('=== 4 ===');
+        },
+        onRouteChange: () => {
+          console.log('=== 5 ===');
+          app.get('route');
+        }
+      });
+
+  </script>
+</html>

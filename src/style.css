@@ -1,0 +1,154 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
+h1 {
+  font-size: 40px;
+  margin: 15px 0;
+  line-height: 40px;
+}
+
+h2 {
+  margin: 10px 0;
+}
+
+.main {
+  width: 100%;
+  height: 400px;
+  background: #fdfdfd;
+  display: flex;
+  align-items: stretch;
+  font-family: 'Roboto', sans-serif;
+  line-height: 22px;
+  letter-spacing: 1px;
+}
+
+.main.layout-v {
+  flex-direction: row;
+}
+
+.main.layout-v .left-col {
+  width: 30%;
+  background: #ffca28;
+}
+
+.main.layout-v .left-col ul {
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+}
+
+.main.layout-v .left-col ul li a {
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.main.layout-v .left-col ul li a:hover {
+  font-weight: 600;
+}
+
+.main.layout-v .left-col ul li a:visited {
+  color: #000;
+}
+
+.main.layout-v .right-col {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.main.layout-v .right-col .tora-content {
+  flex-grow: 5;
+  padding: 10px 10px 10px 20px;
+}
+
+.main.layout-v .right-col .footer {
+  flex-grow: 2;
+  padding: 10px;
+}
+
+.main.layout-h {
+  flex-direction: column;
+}
+
+.main.layout-h .top-row {
+  width: 100%;
+  background: #ffca28;
+}
+
+.main.layout-h .top-row ul {
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+}
+
+.main.layout-h .top-row ul li {
+  list-style: none;
+  padding: 0 20px;
+}
+
+.main.layout-h .bottom-row {
+  width: 100%;
+}
+
+.main.layout-h .bottom-row .footer {
+  padding: 10px;
+  min-height: 50px;
+  background: #ffca28;
+}
+
+.main.layout-m {
+  flex-direction: column;
+}
+
+.main.layout-m .top-row {
+  width: 100%;
+  min-height: 300px;
+}
+
+.main.layout-m .top-row .footer {
+  padding: 10px;
+  min-height: 50px;
+  background: #ffca28;
+}
+
+.main.layout-m .bottom-row {
+  width: 100%;
+  background: #ffca28;
+}
+
+.main.layout-m .bottom-row ul {
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  justify-content: center;
+}
+
+.main.layout-m .bottom-row ul li {
+  list-style: none;
+  padding: 0 20px;
+}
+
+.main .nav-container li > div {
+  display: flex;
+}
+
+.main .nav-container .icon-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 20px;
+  margin-right: 5px;
+}
+
+.main .nav-container .icon-wrapper i {
+  margin-top: 3px;
+}
+
+.home-container span {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.home-container input {
+  display: block;
+  width: 300px;
+  margin: 10px 0;
+}

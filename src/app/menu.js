@@ -10,6 +10,34 @@ export default class Menu{
     this.onRouteChange = onRouteChange;
   }
 
+
+  setRouteProps(subRoute, thisObj, thisRoute){
+
+    this.onRouteChange();
+
+    var template, data, route;
+
+    console.log()
+
+    if(Object.entries(window.blade.props.template).length === 0){
+      template = subRoute[thisRoute].template || null;
+      window.blade.props.template = template || null;
+    }else{
+      template = window.blade.props.template;
+    }
+
+    if(typeof(thisObj) === 'object'){
+      route = Object.keys(thisObj)[0];
+      data = thisObj[Object.keys(thisObj)[0]].data || window.blade.props.data;
+    }else{
+      route = thisRoute;
+      data = {} || window.blade.props.data;
+    }
+
+    return {template, data, route}
+
+  }
+
   addLinksSubRoute(targetRoute, subRoute){
 
     for(let i=0;i<subRoute.length;i++){
@@ -23,34 +51,47 @@ export default class Menu{
 
           thisLink.addEventListener('click', (e) => {
 
+            window.blade.props = {};
+            window.blade.props.data = {};
+            window.blade.props.template = {};
+
             var thisRoute2 = typeof(subRoute[i]) === 'string' ? subRoute[i].toLowerCase() : Object.keys(subRoute[i])[0];
             var thisLink2 = document.querySelector(`[data-blade-route='${targetRoute.toLowerCase()}-${thisRoute2.toLowerCase()}']`);
             var thisLinkHref2 = thisLink2.getAttribute('href')
 
-            console.log(thisRoute2);
-            console.log(thisLink2);
-            console.log(thisLinkHref2);
+            var template;
+
+            // if(!window.blade.temp.template){
+            //   template = subRoute[i][thisRoute2].template || null;
+            //   window.blade.temp.template = template || null;
+            // }else{
+            //   template = window.blade.temp.template;
+            // }
+
+
+            window.blade.temp.subRoute = subRoute[i][thisRoute2].subRoute || null;
 
             var thisObj = subRoute[i];
-            if(typeof(thisObj) === 'object'){
 
-              route = Object.keys(thisObj)[0];
-              data = thisObj[Object.keys(thisObj)[0]].data || {};
-            }else{
-              route = thisRoute2;
-              data = {};
-            }
+            // if(typeof(thisObj) === 'object'){
+            //   route = Object.keys(thisObj)[0];
+            //   data = thisObj[Object.keys(thisObj)[0]].data || {};
+            // }else{
+            //   route = thisRoute2;
+            //   data = {};
+            // }
 
             e.preventDefault();
-            // let page = `/${route}`;
+
             history.pushState({}, '', thisLinkHref2);
-            selector = route.toLowerCase();
+            // selector = route.toLowerCase();
 
             const renderPage = async() => {
-              var res = await getPage(thisLinkHref2, this.pageRoot);
+              var props = await this.setRouteProps(subRoute[i], thisObj, thisRoute2);
+              window.blade.temp.template = props.template || null;
+              var res = await getPage(thisLinkHref2, this.pageRoot, props.template);
               let content = await res.text();
-              await this.onRouteChange();
-              await setPage(content, this.viewTarget, data);
+              await setPage(content, this.viewTarget, props.data);
             }
 
             renderPage();
@@ -73,10 +114,7 @@ export default class Menu{
             }
 
           }
-
-
-    }
-
+        }
   }
 
   addLinks(){
@@ -90,13 +128,31 @@ export default class Menu{
 
           thisLink.addEventListener('click', (e) => {
 
+            window.blade.props = {};
+            window.blade.props.data = {};
+            window.blade.props.template = {};
+
+            window.blade.temp.parentRoute = null;
+
+            var thisRoute2 = Object.keys(this.routes[i])[0];
+
+            var template;
+
+            // if(!window.blade.props.template){
+            //   template = this.routes[i][thisRoute2].template || null;
+            // }else{
+            //   template = window.blade.props.template;
+            // }
+
+            window.blade.temp.subRoute = this.routes[i][thisRoute2].subRoute || null;
             var thisObj = this.routes[i];
+
             if(typeof(thisObj) === 'object'){
               route = Object.keys(thisObj)[0];
-              data = thisObj[Object.keys(thisObj)[0]].data || {};
+              // data = thisObj[Object.keys(thisObj)[0]].data || {};
             }else{
               route = thisRoute;
-              data = {};
+              // data = {};
             }
 
             e.preventDefault();
@@ -105,10 +161,13 @@ export default class Menu{
             selector = page.substr(1, page.length).toLowerCase();
 
             const renderPage = async() => {
-              var res = await getPage(`/${route}`, this.pageRoot);
+              var props = await this.setRouteProps(this.routes[i], thisObj, thisRoute2);
+              console.log(props);
+              window.blade.temp.template = props.template || null;
+              var res = await getPage(`/${route}`, this.pageRoot, props.template);
+              console.log(res);
               let content = await res.text();
-              await this.onRouteChange();
-              await setPage(content, this.viewTarget, data);
+              await setPage(content, this.viewTarget, props.data);
             }
 
             renderPage();
@@ -124,7 +183,6 @@ export default class Menu{
           }else{
             // subRoute = route.subRoute;
           }
-          console.log(subRoute);
           this.addLinksSubRoute(`${Object.keys(this.routes[i])[0]}`, subRoute);
         }
       }
@@ -139,7 +197,7 @@ export default class Menu{
     var subRoutes = routes.map(route => {
       var page, icon, thisRoute = Object.keys(route)[0];
 
-      var subRoutes_x = '';
+      var subRoutes_child = '';
 
       if(typeof(route) === 'object'){
         page = thisRoute;
@@ -156,7 +214,7 @@ export default class Menu{
           }else{
             // subRoute = route.subRoute;
           }
-          subRoutes_x = this.renderSubRoutes(`${baseRoot}/${page.toLowerCase()}`, subRoute);
+          subRoutes_child = this.renderSubRoutes(`${baseRoot}/${page.toLowerCase()}`, subRoute);
         }
       }
 
@@ -165,12 +223,13 @@ export default class Menu{
       var bladeRoute = `${baseRoot}-${page.toLowerCase()}`
 
       return `
-      <li>
-        <div>
-          <a class="nav-link" data-blade-route="${bladeRoute.replace(/\//g,'-')}" href="/${baseRoot}/${page.toLowerCase()}">${page}</a>
-        </div>
-        ${subRoutes_x !== undefined ? subRoutes_x : ''}
-      </li>`
+        <li class="menu-item ${subRoutes !== undefined ? 'has-submenu' : ''}">
+          <div>
+            <a class="nav-link" data-blade-route="${bladeRoute.replace(/\//g,'-')}" href="/${baseRoot}/${page.toLowerCase()}">${page}</a>
+            ${subRoutes_child ? `<i class="fas fa-angle-right"></i>` : ''}
+            ${subRoutes_child !== undefined ? subRoutes_child : ''}
+          </div>
+        </li>`
 
     }).toString().replace(/,/g, '');
 
@@ -207,12 +266,13 @@ export default class Menu{
       }
 
       return `
-        <li>
+        <li class="menu-item ${subRoutes !== undefined ? 'has-submenu' : ''}">
           <div>
             <div class="icon-wrapper"><i class="fas ${icon}"></i></div>
             <a class="nav-link" data-blade-route="${page.replace(' ', '').toLowerCase()}" href="/${page.replace(' ', '').toLowerCase()}">${routeName}</a>
+            ${subRoutes ? `<i class="fas fa-angle-right"></i>` : ''}
+            ${subRoutes !== undefined ? subRoutes : ''}
           </div>
-          ${subRoutes !== undefined ? subRoutes : ''}
         </li>
       `;
     })
@@ -224,6 +284,13 @@ export default class Menu{
     `;
 
     document.querySelector('.nav').innerHTML = content.replace(/,/g,'');
+
+    const openMenus = document.querySelectorAll('.menu-open');
+
+    for(let menu of openMenus){
+      menu.parentNode.nextElementSibling.style.display = 'none';
+    }
+
 
     this.addLinks();
 

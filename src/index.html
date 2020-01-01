@@ -3,13 +3,14 @@
   <head>
     <meta charset="UTF-8">
     <script src="https://kit.fontawesome.com/a5f881d256.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
     <title><%= htmlWebpackPlugin.options.title %></title>
   </head>
   <body>
     <div id="root"></div>
   </body>
-  <script type="text/javascript">
 
+  <script type="text/javascript">
 
       const route = [
         {
@@ -33,43 +34,83 @@
             icon: "fa-pencil-alt",
             nonRoute: true,
             subRoute:[
-              'Ross',
               {
-                "Aaron":{
+                "ross":{
+                  template: "layout-2"
+                }
+              },
+              {
+                "aaron":{
+                  template: "layout-1",
+                  data: {
+                    name: "Aaron",
+                    description: "I am the developer behind bladeJS",
+                    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec finibus sagittis posuere."
+                  },
                   subRoute:[
-                    "item1",
                     {
-                      'aaron-2':{
+                      "item1":{
+                        template: "layout-1"
+                      }
+                    },
+                    {
+                      'aaron2':{
+                        template: "layout-1",
                         subRoute:[
-                          'aaron-sub-2'
+                          {
+                            "aaronsub2":{
+                              template: "layout-1"
+                            }
+                          }
                         ]
                       }
                     },
-                    "item3"
+                    {
+                      "item3":{
+                        template: "layout-1"
+                      }
+                    }
                   ]
                 }
               },
-              'John',
               {
-                'Jake':{
+                'john':{
+                  template: "layout-1"
+                }
+              },
+              {
+                'jake':{
+                  template: "layout-1",
                   subRoute:[
-                    "item1",
+                    {
+                      "item1":{
+                        template: "layout-1"
+                      }
+                    },
                     {
                       'item2':{
+                        template: "layout-1",
                         subRoute:[
-                          'sub-item-2'
+                          {
+                            'subitem2':{
+                              template: "layout-1"
+                            }
+                          }
                         ]
                       }
                     },
-                    "item3"
+                    {
+                      "item3":{
+                        template: 'layout-1'
+                      }
+                    }
                   ]
-                },
+                }
               }
             ]
           }
         }
       ]
-
 
       const app = new _.Blade({
         target: ".view-content",
@@ -79,7 +120,7 @@
       app.render({
         onAppInit:() => {
           console.log('=== 1 ===');
-          app.pushState({
+          app.state('push', {
             'appName': 'ToraCMS',
             'appType': 'Content Management System'
           });
@@ -96,7 +137,25 @@
         },
         onRouteChange: () => {
           console.log('=== 5 ===');
-          app.get('route');
+
+          console.log(app.get('template'));
+
+          const route = app.get('route');
+
+          if(route === '/profile/aaron/item3'){
+            app.set('template', 'layout-2');
+            app.set('data', {
+              name: "Jane",
+              description: "I love Cats",
+              text: "Donec finibus sagittis posuere. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            })
+          }
+
+          console.log(app.get('template'));
+
+          // console.log(app.get('subRoute'));
+          // console.log(app.get('parentRoute'));
+          // console.log(app.get('fullRoute'))
         }
       });
 

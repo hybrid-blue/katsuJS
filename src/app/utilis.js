@@ -1,20 +1,28 @@
-const fetchPage = async(route, root) =>{
-  console.log('................')
-  console.log(root)
-  console.log(route)
-  console.log('................')
-  const res = await fetch(`http://localhost:8080/${root}${route}.html`);
+const fetchPage = async(route, root, template) =>{
+  var res;
+
+  if(!template){
+    res = await fetch(`http://localhost:8080/${root}/${route}.html`);
+  }else{
+    res = await fetch(`http://localhost:8080/template/${template}.html`);
+  }
+
   const string = await res;
   return string;
 }
 
 
 export const setPage = (content, target, data) => {
-  document.querySelector(target).innerHTML = content;
 
+  document.querySelector(target).innerHTML = content;
   const scripts = document.querySelectorAll('script');
 
-  window.blade.props = data;
+  if(Object.entries(data).length === 0){
+    window.blade.props.data = null;
+  }else{
+    window.blade.props.data = data;
+  }
+
 
   let pageScript = [...scripts].map((script) => {
     if(script.dataset.script){
@@ -33,7 +41,7 @@ export const setPage = (content, target, data) => {
 
 }
 
-export const getPage = async(defaultRoute, pageRoot) => {
-  var res = await fetchPage(defaultRoute, pageRoot);
+export const getPage = async(defaultRoute, pageRoot, template) => {
+  var res = await fetchPage(defaultRoute, pageRoot, template);
   return res;
 }

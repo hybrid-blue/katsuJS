@@ -4,9 +4,9 @@ import App from './app/';
 import Router from './router';
 import { template } from './layout';
 import Menu from './app/menu';
-import Store from './app/store';
+import Api from './app/api';
 
-export class Blade extends Store{
+export class Blade extends Api{
   constructor(settings){
     super();
     console.log(settings)
@@ -20,43 +20,18 @@ export class Blade extends Store{
   render(hook){
     const {onAppInit, afterAppInit, onRouteInit, onAppUpdate, onRouteChange} = hook;
     window.blade = {};
-    this.initState(onAppUpdate);
+    window.blade.temp = {};
+    this.initApi(onAppUpdate);
 
     onAppInit();
 
     const menu = new Menu(this.routes, this.pageRoot, this.target, onRouteChange);
-    const router = new Router(this.pageRoot, this.target, this.defaultRoute, this.routes);
+    const router = new Router(this.pageRoot, this.target, this.defaultRoute, this.routes, onRouteChange);
     document.getElementById('root').innerHTML = template[this.layout];
+    menu.render();
     router.defaultRoute(afterAppInit, onRouteInit);
     router.handleBrowserNavigation(this.pages, onRouteChange);
-    menu.render();
 
   }
-
-  get(val){
-    const selector = {
-      route: () => {
-        console.log('Get Route')
-      }
-    }
-
-    return selector[val];
-  }
-
-  // beforePageLoad(callback){
-  //   callback();
-  // }
-  //
-  // onPageLoad(callback){
-  //   callback();
-  // }
-  //
-  // afterPageLoad(callback){
-  //   callback();
-  // }
-  //
-  // onPageUpdate(callback){
-  //   callback();
-  // }
 
 }

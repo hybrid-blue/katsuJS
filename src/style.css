@@ -25,14 +25,19 @@ h2 {
 }
 
 .main.layout-v .left-col {
-  width: 30%;
   background: #ffca28;
 }
 
 .main.layout-v .left-col ul {
+  position: relative;
+  width: 150px;
   list-style: none;
   padding: 10px;
   margin: 0;
+}
+
+.main.layout-v .left-col ul li {
+  padding: 2px 10px;
 }
 
 .main.layout-v .left-col ul li a {
@@ -46,6 +51,27 @@ h2 {
 
 .main.layout-v .left-col ul li a:visited {
   color: #000;
+}
+
+.main.layout-v .left-col ul ul {
+  display: none;
+  position: absolute;
+  left: 150px;
+  padding: 0 10px;
+  margin-bottom: 10px;
+  background: #ffca28;
+}
+
+.main.layout-v .left-col ul ul li {
+  padding: 2px 10px;
+}
+
+.main.layout-v .left-col ul ul li:first-child {
+  padding: 0 10px 2px 10px;
+}
+
+.main.layout-v .left-col ul ul li:last-child {
+  padding: 2px 10px 0 10px;
 }
 
 .main.layout-v .right-col {
@@ -131,6 +157,13 @@ h2 {
   display: flex;
 }
 
+.main .nav-container li > div > i {
+  margin-left: 10px;
+  margin-top: 3px;
+  width: 15px;
+  display: block;
+}
+
 .main .nav-container .icon-wrapper {
   display: flex;
   justify-content: center;
@@ -140,6 +173,10 @@ h2 {
 
 .main .nav-container .icon-wrapper i {
   margin-top: 3px;
+}
+
+.main .has-submenu:hover > div > ul {
+  display: block;
 }
 
 .home-container span {

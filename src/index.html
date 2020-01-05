@@ -118,6 +118,16 @@
       });
 
       app.render({
+
+        // In the App
+        // app.status(init, () => { })
+        // app.status(update, () => { })
+        // app.status(after, () => { })
+
+        // In the route
+        // app.route(init, () => { });
+        // app.route(after, () => { });
+
         onAppInit:() => {
           console.log('=== 1 ===');
           app.state('push', {

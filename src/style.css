@@ -189,3 +189,10 @@ h2 {
   width: 300px;
   margin: 10px 0;
 }
+
+.square {
+  height: 100px;
+  width: 100px;
+  background: red;
+  margin: 10px;
+}

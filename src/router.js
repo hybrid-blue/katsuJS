@@ -2,7 +2,7 @@ import { setPage, getPage } from './app/utilis';
 
 export default class Router{
 
-  constructor(pageRoot, viewTarget, defaultPage = "", routes, onRouteChange){
+  constructor(pageRoot, viewTarget, defaultPage = "", routes, onRouteChange, template = "", templateUrl = ""){
     this.pageRoot = pageRoot;
     this.viewTarget = viewTarget;
     this.defaultPage = defaultPage;
@@ -15,32 +15,39 @@ export default class Router{
 
 
   findRoute(selector, thisLevelRoutes, level = 0){
+
+    console.log(thisLevelRoutes)
+
     var template;
     const routes = selector.split('/');
     for(let thisRoute of thisLevelRoutes){
 
         let route = routes[level];
+        console.log(Object.keys(thisRoute))
+        console.log(Object.values(thisRoute))
+        // if(thisRoute[route]){
+        //   if(thisLevelRoutes.length > 0){
+            // level++
+            // this.findRoute(selector, thisRoute[route].subRoute, level);
+          // }else{
+            console.log(thisRoute)
+            console.log(window.blade.view[Object.values(thisRoute)[0]].template)
 
-        if(thisRoute[route]){
-
-          if(thisRoute[route].subRoute && level < routes.length - 1){
-            level++
-            this.findRoute(selector, thisRoute[route].subRoute, level);
-          }else{
-
-
-            if(thisRoute[route].template && !window.blade.temp.template){
-              template = thisRoute[route].template
-              this.selectedRoute = template;
-            }else{
-              this.selectedRoute = window.blade.temp.template;
+            if(window.blade.view[Object.values(thisRoute)[0]].template){
+              this.selectedRoute = {
+                template: window.blade.view[Object.values(thisRoute)[0]].template || '',
+                templateUrl: window.blade.view[Object.values(thisRoute)[0]].templateUrl || '',
+                style: window.blade.view[Object.values(thisRoute)[0]].style || '',
+                styleUrl: window.blade.view[Object.values(thisRoute)[0]].styleUrl || '',
+                props: window.blade.view[Object.values(thisRoute)[0]].props || '',
+                controller: window.blade.view[Object.values(thisRoute)[0]].controller || ''
             }
 
             this.selectedRouteObj = thisRoute[route];
             this.obj = thisRoute;
 
             break;
-          }
+          // }
         }
 
     }
@@ -52,29 +59,29 @@ export default class Router{
   }
 
 
-  setRouteProps(route, thisObj, thisRoute){
-
-    this.onRouteChange();
-
-    var template, data;
-
-    if(Object.entries(window.blade.props.template).length === 0){
-      template = this.selectedRouteObj.template || null;
-      window.blade.props.template = template || null;
-    }else{
-      template = window.blade.props.template;
-    }
-
-    if(typeof(thisObj) === 'object'){
-      route = Object.keys(route)[0];
-      data = this.selectedRouteObj.data || window.blade.props.data;
-    }else{
-      route = thisRoute;
-      data = {} || window.blade.props.data;
-    }
-    return {template, data, route}
-
-  }
+  // setRouteProps(route, thisObj, thisRoute){
+  //
+  //   // this.onRouteChange();
+  //
+  //   var template, data;
+  //
+  //   if(Object.entries(window.blade.props.template).length === 0){
+  //     template = this.selectedRouteObj.template || null;
+  //     window.blade.props.template = template || null;
+  //   }else{
+  //     template = window.blade.props.template;
+  //   }
+  //
+  //   if(typeof(thisObj) === 'object'){
+  //     route = Object.keys(route)[0];
+  //     data = this.selectedRouteObj.data || window.blade.props.data;
+  //   }else{
+  //     route = thisRoute;
+  //     data = {} || window.blade.props.data;
+  //   }
+  //   return {template, data, route}
+  //
+  // }
 
 
 
@@ -82,35 +89,35 @@ export default class Router{
 
     this.renderLoading();
 
-    var thisLink = document.querySelector(`[data-blade-route='${selector.replace(/\//g,'-', '-')}']`);
+    // var thisLink = document.querySelector(`[data-blade-route='${selector.replace(/\//g,'-', '-')}']`);
     var type = this.findRoute(selector, this.routes);
 
-    var thisLinkHref = thisLink.getAttribute('href');
+    // var thisLinkHref = thisLink.getAttribute('href');
     var template = this.selectedRoute || null;
-    var data = this.selectedRouteObj.data || {};
+    // var data = this.selectedRouteObj.data || {};
 
     const render = async(template) => {
-      var props = await this.setRouteProps(this.obj, this.obj, selector);
-      window.blade.temp.template = props.template || null;
+      // var props = await this.setRouteProps(this.obj, this.obj, selector);
+      // window.blade.temp.template = props.template || null;
 
-      var res = await getPage(`/${selector}`, this.pageRoot, template);
-      const statusCode = await res.status;
-      if(statusCode === 404){
-        let content = '<h1>404</h1><h2>Page was not found</h2>'
-        await setPage(content, this.viewTarget, props.data);
-        await afterAppInit()
-      }else{
-        let content = await res.text();
-        await setPage(content, this.viewTarget, props.data);
-        await afterAppInit()
-      }
+      var res = await getPage(`/${selector}`, this.pageRoot, this.selectedRoute.templateUrl);
+      // const statusCode = await res.status;
+      // if(statusCode === 404){
+      //   let content = '<h1>404</h1><h2>Page was not found</h2>'
+      //   await setPage(content, this.viewTarget, this.selectedRoute);
+        // await afterAppInit()
+      // }else{
+        // let content = await res.text();
+        await setPage(this.viewTarget, this.selectedRoute);
+        // await afterAppInit()
+      // }
     }
 
     render(template);
   }
 
   defaultRoute(afterAppInit, onRouteInit){
-    onRouteInit();
+    // onRouteInit();
 
     var selector;
     if(window.location.pathname === '/'){

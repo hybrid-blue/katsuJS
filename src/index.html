@@ -18,10 +18,26 @@
       <div class="wrapper">
         <h1>{{title}}</h1>
         <h2>{{subtitle}}</h2>
-        <input type="input" />
+        <input type="input" data-blade-bind="subtitle" />
         <ul class="fruits-list" data-blade-for="fruit in fruits">
-          <li>{{fruit}}</li>
+          <li>
+            <div>
+              <span>{{msg}}: </span><span>{{fruit.name}} - {{fruit.desc}} - {{fruit.color}} - {{fruit.test.thing}}</span>
+            </div>
+          </li>
         </ul>
+        <label>Element A</label>
+        <input type="checkbox" data-blade-bind="typeA" checked="true"/>
+        <label>Element B</label>
+        <input type="checkbox" data-blade-bind="typeB" />
+        <h3 data-blade-if="typeA">This is Element A</h3>
+        <h3 data-blade-if="typeB">This is Element B</h3>
+        <div class="click-area" data-blade-click="changeColor('Hello World')">{{color}}</div>
+
+        <div data-blade-switch="age">
+          <div data-blade-case="25">My Age is 25!</div>
+        </div>
+
       </div>
 
     `);
@@ -29,22 +45,38 @@
     app.data({
       title: 'Type Something!',
       subtitle: 'BladeJS support reactive templating!',
+      msg: 'This is a...',
+      typeA: true,
+      typeB: false,
+      color: 'red',
+      age: 25,
       fruits:[
-        'Apples',
-        'Oranges',
-        'Bannanas',
-        'Melons',
-        'Strawberries'
+        {name: 'Apples', desc: 'It`s green and crunchy'},
+        {name: 'Oranges', desc: 'It`s round and orange'},
+        {name: 'Bannanas', desc: 'It`s long and yellow', test:{thing: 'KNACK II BABY!!'}},
+        {name: 'Melons', desc: 'It`s Hard and round', color: 'Green and Black'},
+        {name: 'Strawberries', desc: 'It`s red and sweet'},
+        {name: 'Grapes', desc: 'Juicey', test:{thing: 'Mah Boi!'}}
       ]
     })
 
-    app.controller(({$data}) => {
-      const input = document.querySelector('input');
+    app.controller(({$data, $event}) => {
+      $event.on('changeColor', function(e){
 
-      input.addEventListener('keyup', (e) => {
-        $data({title: e.target.value})
+        console.log(e)
+
+        let randColor = [
+          'red',
+          'blue',
+          'green',
+          'purple',
+          'aquablue',
+          'yellow',
+          'orange',
+        ]
+        let num = Math.floor(Math.random() * Math.floor(7));
+        $data({color: randColor[num]})
       })
-
     })
 
     app.render("#root");

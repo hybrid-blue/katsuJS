@@ -18,8 +18,12 @@ export class Blade extends Api{
     window.blade.view = {};
     window.blade.route = [];
     window.blade.data = {};
-
+    window.blade.elements = {};
+    window.blade.events = {};
+    window.blade.module = viewName
     window.blade.view[this.viewName] = {};
+
+    window.blade.nodes = {};
 
   }
 
@@ -57,18 +61,10 @@ export class Blade extends Api{
     let domparser = new DOMParser();
     const root = document.querySelector('#root').innerHTML
     var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
-    const app = new Dom();
+    const app = new Dom(this.viewName);
     const htmlContent = app.virtualDom(window.blade.view[this.viewName].template);
     window.blade.view[this.viewName].vDomNew = htmlContent;
     const targetElm = document.querySelector('#root');
-
-    // console.log('=================')
-    // console.log(targetElm)
-    // console.log(window.blade.view[this.viewName].vDomNew[0])
-    // console.log(window.blade.view[this.viewName].vDomPure[0])
-    // console.log(window.blade.data)
-    // console.log('=================')
-
     app.updateDom(targetElm, window.blade.view[this.viewName].vDomNew[0], window.blade.view[this.viewName].vDomPure[0]);
 
     // var controller = window.blade.view[this.viewName].controller
@@ -80,13 +76,21 @@ export class Blade extends Api{
 
   }
 
+  event(name, func){
+    window.blade.events[name] = func;
+  }
+
   render(target){
 
+    const $event = {
+      on: (name, func) => this.event(name, func)
+    }
     const $data = data => this.updateData(data);
 
     var template = window.blade.view[this.viewName].template;
-    const app = new Dom();
+    const app = new Dom(this.viewName);
     const htmlContent = app.virtualDom(template);
+
     window.blade.view[this.viewName].vDomPure = htmlContent;
 
     let domparser = new DOMParser();
@@ -97,7 +101,8 @@ export class Blade extends Api{
     window.blade.view[this.viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
 
     const parms = {
-      $data: $data
+      $data: $data,
+      $event: $event
     }
 
     var controller = window.blade.view[this.viewName].controller

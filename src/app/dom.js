@@ -1,8 +1,9 @@
 import Compiler from './compiler';
 
 export default class Dom extends Compiler{
-  constructor(){
+  constructor(viewName){
     super()
+    this.viewName = viewName;
     this.dom = document.querySelector('#root');
     this.vDom = []
   }
@@ -15,14 +16,138 @@ export default class Dom extends Compiler{
 
       return Array.prototype.map.call(thisnode.childNodes, (node => {
 
-        console.log(node.textContent)
 
-        var map, thisNode = node.textContent.trim()
+        // let nextNode = node.nextSibling;
+        if(node.attributes){
+          // let nextNode = node.nextSibling;
+          let selector = node.getAttribute(`data-blade-if`);
+
+
+          if(selector){
+
+            var thisElm = window.blade.elements['id1'];
+            let iou = document.createComment('element-hidden');
+
+            if(typeof window.blade.data[selector] === 'boolean'){
+              if(!eval(window.blade.data[selector])){
+                window.blade.elements['hidden'] = {elm: node, state: false};
+                node = iou;
+              }else{
+                window.blade.elements['hidden'] = {elm: node, state: true};
+                console.log(thisnode)
+                node = window.blade.elements['hidden'].elm;
+              }
+            }else{
+              console.log(typeof selector)
+              var exp = (typeof selector === 'string' ? window.blade.data[selector] : selector);
+              if(!eval(exp)){
+                window.blade.elements['hidden'] = {elm: node, state: false};
+                node = iou;
+              }else{
+                window.blade.elements['hidden'] = {elm: node, state: true};
+                node = window.blade.elements['hidden'].elm;
+              }
+            }
+            console.log('-------------');
+            console.log(node);
+            console.log('-------------');
+          }
+        }
+
+
+        if(node.attributes){
+          [...node.attributes].forEach((attr) => {
+            switch(attr.name){
+              case 'data-blade-for':
+                this.directiveFor(attr.value, node)
+              break;
+
+              case 'data-blade-switch':
+                this.directiveSwitch(attr.value, node)
+              break;
+
+              case 'data-blade-case':
+                this.directiveCase(attr.value, node)
+              break;
+
+              case 'data-blade-click':
+                setTimeout(() => {
+                  let target = document.querySelector(`[data-blade-click="${attr.value}"]`);
+
+                  if(!target.getAttribute('data-blade-listening')){
+                    target.setAttribute('data-blade-listening', 'true');
+                    target.addEventListener('click', (e) => {
+
+                      let regex = /(?<=\()(.*?)(?=\s*\))/g;
+                      let arg = attr.value.match(regex)
+
+                      let func = window.blade.events[attr.value.split('(')[0]];
+
+                      func(...arg);
+                    })
+                  }
+
+                },10)
+
+              break;
+              case 'data-blade-bind':
+
+                setTimeout(() => {
+                  let target = document.querySelector(`[data-blade-bind="${attr.value}"]`);
+
+                  if(!target.getAttribute('data-blade-listening')){
+                    target.setAttribute('data-blade-listening', 'true');
+
+                    var eventType;
+
+                    if(target.getAttribute('type') === 'input'){
+                      eventType = 'keydown';
+                    }else if(target.getAttribute('type') === 'checkbox'){
+                      eventType = 'click';
+                    }
+
+                    target.addEventListener(eventType, (e) => {
+
+                      setTimeout(() => {
+                        var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
+                        let data = {};
+                        data[attr.value] = eventValue;
+                        let view = window.blade.module
+                        window.blade.data = Object.assign({}, window.blade.data, data);
+                        let domparser = new DOMParser();
+                        const root = document.querySelector('#root').innerHTML
+                        var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
+
+                        const htmlContent = this.virtualDom(window.blade.view[view].template);
+
+                        window.blade.view[view].vDomNew = htmlContent;
+                        const targetElm = document.querySelector('#root');
+
+                        // this.updateDom(targetElm, window.blade.view[view].vDomNew[0], window.blade.view[view].vDomPure[0]);
+                        this.updateDom(targetElm, window.blade.view[view].vDomNew[0], window.blade.view[view].vDomPure[0]);
+
+                        window.blade.view[view].vDomPure = window.blade.view[view].vDomNew
+
+
+                      }, 10)
+
+                    })
+
+                  }
+
+                }, 10);
+
+              break;
+            }
+          });
+        }
+
+        var map, thisNode = node.textContent.trim(), emptyArray = [];
+
         var map = {
-          type: node.nodeType === 3 ? 'text' : (node.nodeType === 1 ? node.tagName.toLowerCase() : null),
-          // content: node.childNodes && node.childNodes.length > 0 ? null : node.textContent,
-          content: node.childNodes && node.childNodes.length > 0 ? null : (/{{(.*?)}}/.test(node.textContent) ? this.expressions(node.textContent) : node.textContent),
-          attr: node.attributes && this.buildAttributes(node.attributes),
+          type: node.nodeType === 3 ? 'text' : (node.nodeType === 1 ? node.tagName.toLowerCase() : (node.nodeType === 8 ? 'comment' : null)),
+          content: node.childNodes && node.childNodes.length > 0 ? null : (/{{(.*?)}}/g.test(node.textContent) ? this.expressions(node.textContent) : node.textContent),
+          attr: node.attributes ? this.buildAttributes(node.attributes) : (node.nodeType === 8 ? emptyArray : null),
           node: node,
           children: buildNodes(node)
         }
@@ -95,7 +220,9 @@ export default class Dom extends Compiler{
     if(node){
       if(node.type === 'text'){
         return document.createTextNode(node.content);
-      }
+      }else if (node.type === 'comment') {
+  			return document.createComment(node.content);
+  		}
     }else{
       return document.createTextNode('');
     }
@@ -131,10 +258,12 @@ export default class Dom extends Compiler{
       root.replaceChild(this.createElm(newNode), root.childNodes[index]);
 
     }else if(newNode){
-
-      if(typeof root.childNodes[index].attributes !== 'undefined'){
-        if(newNode.attr.length > 0){
-          this.updateAttrs(root.childNodes[index], newNode.attr, oldNode.attr);
+      // console.log(root.childNodes[index])
+      if(root.childNodes[index] !== undefined){
+        if(typeof root.childNodes[index].attributes !== 'undefined'){
+          if(newNode.attr.length > 0){
+            this.updateAttrs(root.childNodes[index], newNode.attr, oldNode.attr);
+          }
         }
       }
 

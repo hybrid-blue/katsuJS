@@ -1,0 +1,16 @@
+<script>
+  const app = new Blade({
+    target: ".view-content",
+    router: route
+  })
+
+  app.route('/', () => {
+    template: '<h1>Hello World</h1>',
+    style: 'h1{color: red}',
+    data: {variable: 'testing'},
+    controller: ({variable}) => {
+      console.log(variable)
+    }
+  })
+
+</script>

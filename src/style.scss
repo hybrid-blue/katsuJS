@@ -175,3 +175,47 @@ h2{
     margin: 10px 0;
   }
 }
+
+.square{
+  height: 100px;
+  width: 100px;
+  background: red;
+  margin: 10px;
+}
+
+.click-area{
+  height: 100px;
+  width: 100px;
+  border: 1px solid #222;
+}
+
+.bg{
+  &-red{
+    background: red;
+  }
+  &-blue{
+    background: blue;
+  }
+  &-green{
+    background: green;
+  }
+  &-purple{
+    background: purple;
+  }
+  &-aqua{
+    background: aqua;
+  }
+  &-yellow{
+    background: yellow;
+  }
+  &-orange{
+    background: orange;
+  }
+}
+
+.component-wrapper{
+  display: inline-block;
+  margin: 20px 0;
+  padding: 5px;
+  border: 2px solid #222;
+}

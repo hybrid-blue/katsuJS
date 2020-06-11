@@ -12,162 +12,87 @@
 
   <script type="text/javascript">
 
-      const route = [
-        {
-          "home":{
-            icon: "fa-home",
-            data:{date: '17th December 2019'}
-          }
-        },
-        {
-          "about":{
-            icon: "fa-question"
-          }
-        },
-        {
-          "contact":{
-            icon: "fa-pencil-alt"
-          }
-        },
-        {
-          "profile":{
-            icon: "fa-pencil-alt",
-            nonRoute: true,
-            subRoute:[
-              {
-                "ross":{
-                  template: "layout-2"
-                }
-              },
-              {
-                "aaron":{
-                  template: "layout-1",
-                  data: {
-                    name: "Aaron",
-                    description: "I am the developer behind bladeJS",
-                    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec finibus sagittis posuere."
-                  },
-                  subRoute:[
-                    {
-                      "item1":{
-                        template: "layout-1"
-                      }
-                    },
-                    {
-                      'aaron2':{
-                        template: "layout-1",
-                        subRoute:[
-                          {
-                            "aaronsub2":{
-                              template: "layout-1"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "item3":{
-                        template: "layout-1"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                'john':{
-                  template: "layout-1"
-                }
-              },
-              {
-                'jake':{
-                  template: "layout-1",
-                  subRoute:[
-                    {
-                      "item1":{
-                        template: "layout-1"
-                      }
-                    },
-                    {
-                      'item2':{
-                        template: "layout-1",
-                        subRoute:[
-                          {
-                            'subitem2':{
-                              template: "layout-1"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "item3":{
-                        template: 'layout-1'
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
+    const app = new _.Blade();
+
+    const comp = new app.module('text-block');
+    const test = new app.module("home", ['text-block']);
+
+    comp.view(`
+      <div class="component-wrapper">
+        <input type="input" data-blade-bind="testmsg" />
+        <div>{{testmsg}}</div>
+      </div>
+    `);
+    comp.data({testmsg: '...Now with text!'})
+    comp.renderComponent()
+
+    test.view(`
+      <div class="wrapper">
+        <h1>{{title}}</h1>
+        <h2>{{subtitle}}</h2>
+        <input type="input" data-blade-bind="subtitle" />
+        <ul class="fruits-list" data-blade-for="fruit in fruits">
+          <li>
+            <div>
+              <span>{{msg}}: </span><span>{{fruit.name}} - {{fruit.desc}} - {{fruit.color}} - {{fruit.test.thing}}</span>
+            </div>
+          </li>
+        </ul>
+        <label>Element A</label>
+        <input type="checkbox" data-blade-bind="typeA" checked="true"/>
+        <label>Element B</label>
+        <input type="checkbox" data-blade-bind="typeB" />
+        <h3 data-blade-if="typeA">This is Element A</h3>
+        <h3 data-blade-if="typeB">This is Element B</h3>
+        <div class="click-area bg-{{color}}" data-blade-click="changeColor('value1', title)"></div>
+        <hr />
+        <input type="input" data-blade-bind="candy" />
+        <div data-blade-switch="candy">
+          <div data-blade-case="chocolate">You have typed 'Chocolate'</div>
+          <div data-blade-case="carmel">You have typed 'Caramel'</div>
+          <div data-blade-case="toffee">You have typed 'Toffee'</div>
+          <div data-blade-default="true">This is the default case</div>
+        </div>
+        <text-block />
+      </div>
+    `);
+
+    test.data({
+      title: 'Type Something!',
+      subtitle: 'BladeJS support reactive templating!',
+      msg: 'This is a...',
+      typeA: true,
+      typeB: false,
+      color: 'red',
+      candy: '',
+      fruits:[
+        {name: 'Apples', desc: 'It`s green and crunchy'},
+        {name: 'Oranges', desc: 'It`s round and orange'},
+        {name: 'Bannanas', desc: 'It`s long and yellow', test:{thing: 'KNACK II BABY!!'}},
+        {name: 'Melons', desc: 'It`s Hard and round', color: 'Green and Black'},
+        {name: 'Strawberries', desc: 'It`s red and sweet'},
+        {name: 'Grapes', desc: 'Juicey', test:{thing: 'Mah Boi!'}}
       ]
+    })
 
-      const app = new _.Blade({
-        target: ".view-content",
-        router: route
-      });
+    test.controller(({$data, $event}) => {
+      $event.on('changeColor', function(e){
+          let randColor = [
+            'red',
+            'blue',
+            'green',
+            'purple',
+            'aqua',
+            'yellow',
+            'orange',
+          ]
+          let num = Math.floor(Math.random() * Math.floor(7));
+          $data({color: randColor[num]})
+      })
+    })
 
-      app.render({
+    test.render('#root')
 
-        // In the App
-        // app.status(init, () => { })
-        // app.status(update, () => { })
-        // app.status(after, () => { })
-
-        // In the route
-        // app.route(init, () => { });
-        // app.route(after, () => { });
-
-        onAppInit:() => {
-          console.log('=== 1 ===');
-          app.state('push', {
-            'appName': 'ToraCMS',
-            'appType': 'Content Management System'
-          });
-        },
-        onRouteInit: () => {
-          console.log('=== 2 ===');
-        },
-        afterAppInit: () => {
-          console.log('=== 3 ===');
-
-        },
-        onAppUpdate: () => {
-          console.log('=== 4 ===');
-        },
-        onRouteChange: () => {
-          console.log('=== 5 ===');
-
-          console.log(app.get('template'));
-
-          const route = app.get('route');
-
-          if(route === '/profile/aaron/item3'){
-            app.set('template', 'layout-2');
-            app.set('data', {
-              name: "Jane",
-              description: "I love Cats",
-              text: "Donec finibus sagittis posuere. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-            })
-          }
-
-          console.log(app.get('template'));
-
-          // console.log(app.get('subRoute'));
-          // console.log(app.get('parentRoute'));
-          // console.log(app.get('fullRoute'))
-        }
-      });
 
   </script>
 </html>

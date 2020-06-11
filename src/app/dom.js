@@ -9,7 +9,6 @@ export default class Dom extends Compiler{
   }
 
   buildDom(dom){
-    console.log('### Updated ###')
     let domparser = new DOMParser();
     var htmlobject = domparser.parseFromString(dom, 'text/html').querySelector('body');
     var switchCase = false;
@@ -165,6 +164,9 @@ export default class Dom extends Compiler{
                 }, 10);
 
               break;
+              case 'data-bind-class':
+                console.log(attr)
+              break;
             }
           });
         }
@@ -198,7 +200,6 @@ export default class Dom extends Compiler{
   };
 
   virtualDom(dom){
-    console.log(dom)
     let builtDom = this.buildDom(dom);
     return builtDom;
   }
@@ -214,7 +215,6 @@ export default class Dom extends Compiler{
 
       if(expressions){
         for(let i=0;i<expressions.length;i++){
-          console.log(window.blade.view[this.viewName].data[expressions[i]])
           value = attr.value.replace(`{{${expressions[i]}}}`, window.blade.view[this.viewName].data[expressions[i]]);
         }
       }else{

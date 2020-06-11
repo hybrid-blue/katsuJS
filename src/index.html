@@ -13,18 +13,7 @@
   <script type="text/javascript">
 
     const app = new _.Blade();
-
-    const comp = new app.module('text-block');
-    const test = new app.module("home", ['text-block']);
-
-    comp.view(`
-      <div class="component-wrapper">
-        <input type="input" data-blade-bind="testmsg" />
-        <div>{{testmsg}}</div>
-      </div>
-    `);
-    comp.data({testmsg: '...Now with text!'})
-    comp.renderComponent()
+    const test = new app.module("home");
 
     test.view(`
       <div class="wrapper">
@@ -44,7 +33,7 @@
         <input type="checkbox" data-blade-bind="typeB" />
         <h3 data-blade-if="typeA">This is Element A</h3>
         <h3 data-blade-if="typeB">This is Element B</h3>
-        <div class="click-area bg-{{color}}" data-blade-click="changeColor('value1', title)"></div>
+        <div class="click-area" data-blade-class="color" data-blade-click="changeColor('value1', title)"></div>
         <hr />
         <input type="input" data-blade-bind="candy" />
         <div data-blade-switch="candy">
@@ -53,7 +42,6 @@
           <div data-blade-case="toffee">You have typed 'Toffee'</div>
           <div data-blade-default="true">This is the default case</div>
         </div>
-        <text-block />
       </div>
     `);
 

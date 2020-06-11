@@ -10,15 +10,12 @@ export class Blade{
   constructor(viewName){
 
     this.module = class{
-      constructor(viewName, childComponents){
+      constructor(viewName){
         this.viewName = viewName;
         window.blade.module = viewName;
         window.blade.view[this.viewName] = {};
         this.targetElement;
-        this.childComponents = childComponents;
       }
-
-
 
       view(template){
           window.blade.view[this.viewName].template = template;
@@ -33,24 +30,11 @@ export class Blade{
       }
 
       updateData(data, target){
-        // window.blade.view[this.viewName].data = Object.assign({}, window.blade.view[this.viewName].data, data);
-        // let domparser = new DOMParser();
-        // const root = document.querySelector(this.targetElement).innerHTML
-        // var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
-        // const app = new Dom(this.viewName);
-        // const htmlContent = app.virtualDom(window.blade.view[this.viewName].template);
-        // window.blade.view[this.viewName].vDomNew = htmlContent;
-        // const targetElm = document.querySelector(this.targetElement);
-        // app.updateDom(targetElm, window.blade.view[this.viewName].vDomNew[0], window.blade.view[this.viewName].vDomPure[0]);
-
         window.blade.view[target].data = Object.assign({}, window.blade.view[target].data, data);
         let domparser = new DOMParser();
         const root = document.querySelector(this.targetElement).innerHTML
         var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
         const app = new Dom(target);
-        // console.log('---------------')
-        // console.log(window.blade.view[target].template)
-        // console.log('---------------')
         const htmlContent = app.virtualDom(window.blade.view[target].template);
         window.blade.view[target].vDomNew = htmlContent;
         const targetElm = document.querySelector(this.targetElement);
@@ -97,71 +81,56 @@ export class Blade{
         window.dispatchEvent(event)
         window.removeEventListener('executeScript', extScript);
 
-        // Render Child Components
-
-        // console.log(window.blade.component);
-        // console.log(this.childComponents)
-
-        if(this.childComponents.length > 0){
-          Object.keys(window.blade.component).forEach((component) => {
-            // if(!window.blade.component[component].rendered){
-              // window.blade.component[component].rendered = true;
-              this.renderChildComponent(component);
-            // }
-
-          })
-        }
-
       }
 
-      renderChildComponent(componentName){
-        const $event = {
-
-          on: (name, func) => this.event(name, func)
-        }
-        const $data = data => this.updateData(data, componentName);
-
-        var template = window.blade.component[componentName].template;
-        console.log('==== 1 ====')
-        console.log(template);
-
-        const app = new Dom(componentName);
-        const htmlContent = app.virtualDom(template);
-
-        window.blade.component[componentName].vDomPure = htmlContent;
-
-        let domparser = new DOMParser();
-        var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
-
-        const targetElm = document.querySelector(componentName);
-
-        app.updateDom(targetElm, htmlContent[0]);
-        window.blade.component[componentName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
-
-        const parms = {
-          $data: $data,
-          $event: $event
-        }
-
-        var controller = window.blade.component[componentName].controller;
-        if(controller){
-          let extScript = () => {eval(controller(parms))}
-          let event = new Event('executeScript');
-          window.addEventListener('executeScript', extScript)
-          window.dispatchEvent(event)
-          window.removeEventListener('executeScript', extScript);
-        }
-
-      }
-
-      renderComponent(){
-        window.blade.component[this.viewName] = {
-          template: window.blade.view[this.viewName].template,
-          data: window.blade.view[this.viewName].data,
-          controller: window.blade.view[this.viewName].controller,
-          // rendered: false
-        };
-      }
+      // renderChildComponent(componentName){
+      //   const $event = {
+      //
+      //     on: (name, func) => this.event(name, func)
+      //   }
+      //   const $data = data => this.updateData(data, componentName);
+      //
+      //   var template = window.blade.component[componentName].template;
+      //   console.log('==== 1 ====')
+      //   console.log(template);
+      //
+      //   const app = new Dom(componentName);
+      //   const htmlContent = app.virtualDom(template);
+      //
+      //   window.blade.component[componentName].vDomPure = htmlContent;
+      //
+      //   let domparser = new DOMParser();
+      //   var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
+      //
+      //   const targetElm = document.querySelector(componentName);
+      //
+      //   app.updateDom(targetElm, htmlContent[0]);
+      //   window.blade.component[componentName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
+      //
+      //   const parms = {
+      //     $data: $data,
+      //     $event: $event
+      //   }
+      //
+      //   var controller = window.blade.component[componentName].controller;
+      //   if(controller){
+      //     let extScript = () => {eval(controller(parms))}
+      //     let event = new Event('executeScript');
+      //     window.addEventListener('executeScript', extScript)
+      //     window.dispatchEvent(event)
+      //     window.removeEventListener('executeScript', extScript);
+      //   }
+      //
+      // }
+      //
+      // renderComponent(){
+      //   window.blade.component[this.viewName] = {
+      //     template: window.blade.view[this.viewName].template,
+      //     data: window.blade.view[this.viewName].data,
+      //     controller: window.blade.view[this.viewName].controller,
+      //     // rendered: false
+      //   };
+      // }
 
     }
 

@@ -16,22 +16,17 @@ export default class Router{
 
   findRoute(selector, thisLevelRoutes, level = 0){
 
-    console.log(thisLevelRoutes)
-
     var template;
     const routes = selector.split('/');
     for(let thisRoute of thisLevelRoutes){
 
         let route = routes[level];
-        console.log(Object.keys(thisRoute))
-        console.log(Object.values(thisRoute))
+
         // if(thisRoute[route]){
         //   if(thisLevelRoutes.length > 0){
             // level++
             // this.findRoute(selector, thisRoute[route].subRoute, level);
           // }else{
-            console.log(thisRoute)
-            console.log(window.blade.view[Object.values(thisRoute)[0]].template)
 
             if(window.blade.view[Object.values(thisRoute)[0]].template){
               this.selectedRoute = {
@@ -149,7 +144,6 @@ export default class Router{
 
   handleBrowserNavigation(routes, onRouteChange){
     window.addEventListener('popstate', (event) => {
-      console.log('Pressed Navigation');
       window.blade.props = {};
       window.blade.temp = {};
       this.selectedRoute = null;

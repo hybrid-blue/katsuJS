@@ -12,9 +12,21 @@
 
   <script type="text/javascript">
 
-    var app = new _.Blade("home");
+    const app = new _.Blade();
 
-    app.view(`
+    const comp = new app.module('text-block');
+    const test = new app.module("home", ['text-block']);
+
+    comp.view(`
+      <div class="component-wrapper">
+        <input type="input" data-blade-bind="testmsg" />
+        <div>{{testmsg}}</div>
+      </div>
+    `);
+    comp.data({testmsg: '...Now with text!'})
+    comp.renderComponent()
+
+    test.view(`
       <div class="wrapper">
         <h1>{{title}}</h1>
         <h2>{{subtitle}}</h2>
@@ -32,24 +44,27 @@
         <input type="checkbox" data-blade-bind="typeB" />
         <h3 data-blade-if="typeA">This is Element A</h3>
         <h3 data-blade-if="typeB">This is Element B</h3>
-        <div class="click-area" data-blade-click="changeColor('Hello World')">{{color}}</div>
-
-        <div data-blade-switch="age">
-          <div data-blade-case="25">My Age is 25!</div>
+        <div class="click-area bg-{{color}}" data-blade-click="changeColor('value1', title)"></div>
+        <hr />
+        <input type="input" data-blade-bind="candy" />
+        <div data-blade-switch="candy">
+          <div data-blade-case="chocolate">You have typed 'Chocolate'</div>
+          <div data-blade-case="carmel">You have typed 'Caramel'</div>
+          <div data-blade-case="toffee">You have typed 'Toffee'</div>
+          <div data-blade-default="true">This is the default case</div>
         </div>
-
+        <text-block />
       </div>
-
     `);
 
-    app.data({
+    test.data({
       title: 'Type Something!',
       subtitle: 'BladeJS support reactive templating!',
       msg: 'This is a...',
       typeA: true,
       typeB: false,
       color: 'red',
-      age: 25,
+      candy: '',
       fruits:[
         {name: 'Apples', desc: 'It`s green and crunchy'},
         {name: 'Oranges', desc: 'It`s round and orange'},
@@ -60,26 +75,24 @@
       ]
     })
 
-    app.controller(({$data, $event}) => {
+    test.controller(({$data, $event}) => {
       $event.on('changeColor', function(e){
-
-        console.log(e)
-
-        let randColor = [
-          'red',
-          'blue',
-          'green',
-          'purple',
-          'aquablue',
-          'yellow',
-          'orange',
-        ]
-        let num = Math.floor(Math.random() * Math.floor(7));
-        $data({color: randColor[num]})
+          let randColor = [
+            'red',
+            'blue',
+            'green',
+            'purple',
+            'aqua',
+            'yellow',
+            'orange',
+          ]
+          let num = Math.floor(Math.random() * Math.floor(7));
+          $data({color: randColor[num]})
       })
     })
 
-    app.render("#root");
+    test.render('#root')
+
 
   </script>
 </html>

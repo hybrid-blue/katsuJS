@@ -1,18 +1,171 @@
 import './style.css';
 
 import App from './app/';
-import Router from './router';
-import { template } from './layout';
-import Menu from './app/menu';
 import Api from './app/api';
 import Dom from './app/dom';
 
-export class Blade extends Api{
+// import Module from './app/module';
+
+export class Blade{
   constructor(viewName){
-    super();
 
-    this.viewName = viewName;
+    this.module = class{
+      constructor(viewName, childComponents){
+        this.viewName = viewName;
+        window.blade.module = viewName;
+        window.blade.view[this.viewName] = {};
+        this.targetElement;
+        this.childComponents = childComponents;
+      }
 
+
+
+      view(template){
+          window.blade.view[this.viewName].template = template;
+      }
+
+      data(state){
+        window.blade.view[this.viewName].data = state;
+      }
+
+      controller(func){
+        window.blade.view[this.viewName].controller = func;
+      }
+
+      updateData(data, target){
+        // window.blade.view[this.viewName].data = Object.assign({}, window.blade.view[this.viewName].data, data);
+        // let domparser = new DOMParser();
+        // const root = document.querySelector(this.targetElement).innerHTML
+        // var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
+        // const app = new Dom(this.viewName);
+        // const htmlContent = app.virtualDom(window.blade.view[this.viewName].template);
+        // window.blade.view[this.viewName].vDomNew = htmlContent;
+        // const targetElm = document.querySelector(this.targetElement);
+        // app.updateDom(targetElm, window.blade.view[this.viewName].vDomNew[0], window.blade.view[this.viewName].vDomPure[0]);
+
+        window.blade.view[target].data = Object.assign({}, window.blade.view[target].data, data);
+        let domparser = new DOMParser();
+        const root = document.querySelector(this.targetElement).innerHTML
+        var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
+        const app = new Dom(target);
+        // console.log('---------------')
+        // console.log(window.blade.view[target].template)
+        // console.log('---------------')
+        const htmlContent = app.virtualDom(window.blade.view[target].template);
+        window.blade.view[target].vDomNew = htmlContent;
+        const targetElm = document.querySelector(this.targetElement);
+        app.updateDom(targetElm, window.blade.view[target].vDomNew[0], window.blade.view[target].vDomPure[0]);
+
+      }
+
+      event(name, func){
+        window.blade.events[name] = func;
+      }
+
+      render(target){
+
+        this.targetElement = target;
+
+        const $event = {
+          on: (name, func) => this.event(name, func)
+        }
+        const $data = data => this.updateData(data, this.viewName);
+
+        var template = window.blade.view[this.viewName].template;
+        const app = new Dom(this.viewName);
+        const htmlContent = app.virtualDom(template);
+
+        window.blade.view[this.viewName].vDomPure = htmlContent;
+
+        let domparser = new DOMParser();
+        var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
+
+        const targetElm = document.querySelector(target);
+
+        app.updateDom(targetElm, htmlContent[0]);
+        window.blade.view[this.viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
+
+        const parms = {
+          $data: $data,
+          $event: $event
+        }
+
+        var controller = window.blade.view[this.viewName].controller
+        let extScript = () => {eval(controller(parms))}
+        let event = new Event('executeScript');
+        window.addEventListener('executeScript', extScript)
+        window.dispatchEvent(event)
+        window.removeEventListener('executeScript', extScript);
+
+        // Render Child Components
+
+        // console.log(window.blade.component);
+        // console.log(this.childComponents)
+
+        if(this.childComponents.length > 0){
+          Object.keys(window.blade.component).forEach((component) => {
+            // if(!window.blade.component[component].rendered){
+              // window.blade.component[component].rendered = true;
+              this.renderChildComponent(component);
+            // }
+
+          })
+        }
+
+      }
+
+      renderChildComponent(componentName){
+        const $event = {
+
+          on: (name, func) => this.event(name, func)
+        }
+        const $data = data => this.updateData(data, componentName);
+
+        var template = window.blade.component[componentName].template;
+        console.log('==== 1 ====')
+        console.log(template);
+
+        const app = new Dom(componentName);
+        const htmlContent = app.virtualDom(template);
+
+        window.blade.component[componentName].vDomPure = htmlContent;
+
+        let domparser = new DOMParser();
+        var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
+
+        const targetElm = document.querySelector(componentName);
+
+        app.updateDom(targetElm, htmlContent[0]);
+        window.blade.component[componentName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
+
+        const parms = {
+          $data: $data,
+          $event: $event
+        }
+
+        var controller = window.blade.component[componentName].controller;
+        if(controller){
+          let extScript = () => {eval(controller(parms))}
+          let event = new Event('executeScript');
+          window.addEventListener('executeScript', extScript)
+          window.dispatchEvent(event)
+          window.removeEventListener('executeScript', extScript);
+        }
+
+      }
+
+      renderComponent(){
+        window.blade.component[this.viewName] = {
+          template: window.blade.view[this.viewName].template,
+          data: window.blade.view[this.viewName].data,
+          controller: window.blade.view[this.viewName].controller,
+          // rendered: false
+        };
+      }
+
+    }
+
+    // this.viewName = viewName;
     window.blade = {};
     window.blade.temp = {};
     window.blade.view = {};
@@ -20,146 +173,18 @@ export class Blade extends Api{
     window.blade.data = {};
     window.blade.elements = {};
     window.blade.events = {};
-    window.blade.module = viewName
-    window.blade.view[this.viewName] = {};
-
+    window.blade.module = {};
+    window.blade.switch;
     window.blade.nodes = {};
+    window.blade.controller = {};
+    window.blade.component = {};
+    // window.blade.module = viewName
+    // window.blade.view[window.blade.module] = {};
 
   }
 
-  view(template){
-
-      // const dependencies = arr;
-      // const obj = dependencies.pop();
-      // const {template, templateUrl, style, styleUrl, props, controller} = obj;
-
-      window.blade.view[this.viewName].template = template;
-
-      // window.blade.view[name] = {
-      //   template: template,
-      //   templateUrl: templateUrl,
-      //   style: style,
-      //   styleUrl: styleUrl,
-      //   props: props,
-      //   controller: controller
-      // }
-
-      // this.initApi(onAppUpdate);
-  }
-
-  data(state){
-    window.blade.data = state;
-  }
-
-  controller(func){
-    window.blade.view[this.viewName].controller = func;
-  }
-
-  updateData(data){
-    window.blade.data = Object.assign({}, window.blade.data, data);
-
-    let domparser = new DOMParser();
-    const root = document.querySelector('#root').innerHTML
-    var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
-    const app = new Dom(this.viewName);
-    const htmlContent = app.virtualDom(window.blade.view[this.viewName].template);
-    window.blade.view[this.viewName].vDomNew = htmlContent;
-    const targetElm = document.querySelector('#root');
-    app.updateDom(targetElm, window.blade.view[this.viewName].vDomNew[0], window.blade.view[this.viewName].vDomPure[0]);
-
-    // var controller = window.blade.view[this.viewName].controller
-    // let extScript = () => {eval(controller(parms))}
-    // let event = new Event('executeScript');
-    // window.addEventListener('executeScript', extScript)
-    // window.dispatchEvent(event)
-    // window.removeEventListener('executeScript', extScript);
+  service(){
 
   }
-
-  event(name, func){
-    window.blade.events[name] = func;
-  }
-
-  render(target){
-
-    const $event = {
-      on: (name, func) => this.event(name, func)
-    }
-    const $data = data => this.updateData(data);
-
-    var template = window.blade.view[this.viewName].template;
-    const app = new Dom(this.viewName);
-    const htmlContent = app.virtualDom(template);
-
-    window.blade.view[this.viewName].vDomPure = htmlContent;
-
-    let domparser = new DOMParser();
-    var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
-    const targetElm = document.querySelector(target);
-
-    app.updateDom(targetElm, htmlContent[0]);
-    window.blade.view[this.viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
-
-    const parms = {
-      $data: $data,
-      $event: $event
-    }
-
-    var controller = window.blade.view[this.viewName].controller
-    let extScript = () => {eval(controller(parms))}
-    let event = new Event('executeScript');
-    window.addEventListener('executeScript', extScript)
-    window.dispatchEvent(event)
-    window.removeEventListener('executeScript', extScript);
-
-    // const expresion = new Compiler();
-    // const compiled = expresion.compile(htmlContent)
-
-    // document.getElementById('root').innerHTML = template;
-
-    // const router = new Router(this.pageRoot, this.target, this.defaultRoute, window.blade.route);
-    // router.defaultRoute(this.afterAppInit, this.onRouteInit);
-    // router.defaultRoute();
-    // router.handleBrowserNavigation(this.pages, this.onRouteChange);
-    // router.handleBrowserNavigation(this.pages);
-
-  }
-
-
-
-  route(route, view){
-//           "aaron":{
-//             template: "layout-1",
-//             data: {
-//               name: "Aaron",
-//               description: "I am the developer behind bladeJS",
-//               text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec finibus sagittis posuere."
-//             },
-
-    var obj = {
-      [route]: view,
-    }
-
-    window.blade.route.push(obj)
-
-  }
-
-
-  // render(hook){
-  //   const {onAppInit, afterAppInit, onRouteInit, onAppUpdate, onRouteChange} = hook;
-  //   window.blade = {};
-  //   window.blade.temp = {};
-  //   this.initApi(onAppUpdate);
-  //
-  //   onAppInit();
-  //
-  //   const menu = new Menu(this.routes, this.pageRoot, this.target, onRouteChange);
-  //   const router = new Router(this.pageRoot, this.target, this.defaultRoute, this.routes, onRouteChange);
-  //   document.getElementById('root').innerHTML = template[this.layout];
-  //   menu.render();
-  //   router.defaultRoute(afterAppInit, onRouteInit);
-  //   router.handleBrowserNavigation(this.pages, onRouteChange);
-  //
-  // }
 
 }

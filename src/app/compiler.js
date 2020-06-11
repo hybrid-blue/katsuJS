@@ -5,10 +5,22 @@ export default class Compiler{
 
   }
 
-  expressions(content){
+  expressions(content, target){
+    // console.log(content)
     var regex = /(?<={{)(.*?)(?=\s*}})/g;
     let val = regex.exec(content)[0]
-    return window.blade.data[val];
+
+    var data;
+    // console.log(window.blade.view[target].data[val])
+    if(window.blade.view[target].data[val]){
+      // data = window.blade.data[val];
+      data = window.blade.view[target].data[val]
+    }else{
+      // console.log(window.blade.component[target])
+      data = window.blade.component[target].data[val];
+    }
+
+    return data;
   }
 
   generateExp(obj, key){
@@ -25,7 +37,7 @@ export default class Compiler{
 
   }
 
-  directiveFor(value, node){
+  directiveFor(value, node, target){
 
 
     let selector = value.split(' ').pop();
@@ -99,7 +111,8 @@ export default class Compiler{
             return newHtml;
           }
 
-          const expArray = html.match(/{{fruit(.*?)}}/g);
+          const regex = new RegExp(`{{${expression}(.*?)}}`, "g");
+          const expArray = html.match(regex);
           newHtml = removeExp(html, item, expArray);
           // console.log(selector);
           // console.log(html)
@@ -114,9 +127,15 @@ export default class Compiler{
     }
 
     const htmlContent = node.innerHTML
-    let items = window.blade.data[selector];
+    // let items = window.blade.data[selector];
+
+
+    let items = window.blade.view[target].data[selector]
 
     const func = (html, items, exp) => {
+      console.log(target);
+      console.log(selector);
+      console.log(items)
       return items.map((item, i) => {
         let htmlContent = cleanExp(html, item, exp)
         return replaceExp(htmlContent, item, exp);
@@ -132,11 +151,16 @@ export default class Compiler{
   }
 
   directiveSwitch(value, node){
-
+    // window.blade.switch = value;
   }
 
   directiveCase(value, node){
-
+    // let switchVal = window.blade.switch;
+    // let comment = document.createComment('case-element')
+    // if(value !== window.blade.data[switchVal]){
+    //   console.log(node.parentNode)
+    //   node.parentNode.replaceChild(comment, node);
+    // }
   }
 
   directiveBind(value){

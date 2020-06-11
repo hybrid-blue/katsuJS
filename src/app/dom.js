@@ -9,8 +9,10 @@ export default class Dom extends Compiler{
   }
 
   buildDom(dom){
+    console.log('### Updated ###')
     let domparser = new DOMParser();
     var htmlobject = domparser.parseFromString(dom, 'text/html').querySelector('body');
+    var switchCase = false;
 
     const buildNodes = (thisnode) => {
 
@@ -28,18 +30,16 @@ export default class Dom extends Compiler{
             var thisElm = window.blade.elements['id1'];
             let iou = document.createComment('element-hidden');
 
-            if(typeof window.blade.data[selector] === 'boolean'){
-              if(!eval(window.blade.data[selector])){
+            if(typeof window.blade.view[this.viewName].data[selector] === 'boolean'){
+              if(!eval(window.blade.view[this.viewName].data[selector])){
                 window.blade.elements['hidden'] = {elm: node, state: false};
                 node = iou;
               }else{
                 window.blade.elements['hidden'] = {elm: node, state: true};
-                console.log(thisnode)
                 node = window.blade.elements['hidden'].elm;
               }
             }else{
-              console.log(typeof selector)
-              var exp = (typeof selector === 'string' ? window.blade.data[selector] : selector);
+              var exp = (typeof selector === 'string' ? window.blade.view[this.viewName].data[selector] : selector);
               if(!eval(exp)){
                 window.blade.elements['hidden'] = {elm: node, state: false};
                 node = iou;
@@ -48,9 +48,6 @@ export default class Dom extends Compiler{
                 node = window.blade.elements['hidden'].elm;
               }
             }
-            console.log('-------------');
-            console.log(node);
-            console.log('-------------');
           }
         }
 
@@ -59,15 +56,29 @@ export default class Dom extends Compiler{
           [...node.attributes].forEach((attr) => {
             switch(attr.name){
               case 'data-blade-for':
-                this.directiveFor(attr.value, node)
+                this.directiveFor(attr.value, node, this.viewName)
               break;
 
               case 'data-blade-switch':
-                this.directiveSwitch(attr.value, node)
+                window.blade.switch = attr.value;
               break;
 
               case 'data-blade-case':
-                this.directiveCase(attr.value, node)
+                this.directiveCase(attr.value, node);
+                let switchVal = window.blade.switch;
+                let comment = document.createComment('case-element');
+                if(attr.value !== window.blade.view[this.viewName].data[switchVal]){
+                  node = comment;
+                }else{
+                  switchCase = true;
+                };
+              break;
+
+              case 'data-blade-default':
+                if(switchCase){
+                  let comment = document.createComment('case-element');
+                  node = comment;
+                }
               break;
 
               case 'data-blade-click':
@@ -83,7 +94,23 @@ export default class Dom extends Compiler{
 
                       let func = window.blade.events[attr.value.split('(')[0]];
 
-                      func(...arg);
+                      var newArgs = [];
+
+                      let args = arg[0].split(',')
+
+                      for(let i = 0;i<args.length;i++){
+                        if(/\'(.*?)\'/g.test(args[i])){
+                          let val = args[i].trim();
+                          let trimed = val.substr(1, val.length-2);
+                          newArgs.push(trimed)
+                        }else{
+                          newArgs.push(window.blade.view[this.viewName].data[args[i].trim()])
+                        }
+                      }
+
+                      var obj = {this: e.target, args: newArgs}
+
+                      func(newArgs);
                     })
                   }
 
@@ -113,7 +140,7 @@ export default class Dom extends Compiler{
                         let data = {};
                         data[attr.value] = eventValue;
                         let view = window.blade.module
-                        window.blade.data = Object.assign({}, window.blade.data, data);
+                        window.blade.view[this.viewName].data = Object.assign({}, window.blade.view[this.viewName].data, data);
                         let domparser = new DOMParser();
                         const root = document.querySelector('#root').innerHTML
                         var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
@@ -142,11 +169,19 @@ export default class Dom extends Compiler{
           });
         }
 
+
+        if(node.nodeType === 1){
+          // console.log(window.blade.component)
+        }
+
         var map, thisNode = node.textContent.trim(), emptyArray = [];
+
+        // console.log(node)
+        // console.log(node.nodeType)
 
         var map = {
           type: node.nodeType === 3 ? 'text' : (node.nodeType === 1 ? node.tagName.toLowerCase() : (node.nodeType === 8 ? 'comment' : null)),
-          content: node.childNodes && node.childNodes.length > 0 ? null : (/{{(.*?)}}/g.test(node.textContent) ? this.expressions(node.textContent) : node.textContent),
+          content: node.childNodes && node.childNodes.length > 0 ? null : (/{{(.*?)}}/g.test(node.textContent) ? this.expressions(node.textContent, this.viewName) : node.textContent),
           attr: node.attributes ? this.buildAttributes(node.attributes) : (node.nodeType === 8 ? emptyArray : null),
           node: node,
           children: buildNodes(node)
@@ -163,6 +198,7 @@ export default class Dom extends Compiler{
   };
 
   virtualDom(dom){
+    console.log(dom)
     let builtDom = this.buildDom(dom);
     return builtDom;
   }
@@ -171,8 +207,22 @@ export default class Dom extends Compiler{
   buildAttributes(attributes){
     var attrArray = [];
     Object.values(attributes).map((attr) => {
+
+      var value;
+      var regex = /(?<={{)(.*?)(?=\s*}})/g;
+      let expressions = attr.value.match(regex);
+
+      if(expressions){
+        for(let i=0;i<expressions.length;i++){
+          console.log(window.blade.view[this.viewName].data[expressions[i]])
+          value = attr.value.replace(`{{${expressions[i]}}}`, window.blade.view[this.viewName].data[expressions[i]]);
+        }
+      }else{
+        value = attr.value;
+      }
+
       var attrObj = {};
-      attrObj[attr.name] = attr.value;
+      attrObj[attr.name] = value;
       attrArray.push(attrObj);
     })
     return attrArray;
@@ -183,6 +233,15 @@ export default class Dom extends Compiler{
   }
 
   setAttr($target, name, value){
+    var regex = /(?<={{)(.*?)(?=\s*}})/g;
+    let expressions = value.match(regex);
+
+    if(expressions){
+      for(let i=0;i<expressions.length;i++){
+        value = value.replace(`{{${expressions[i]}}}`, window.blade.view[this.viewName].data[expressions[i]]);
+      }
+    }
+
     $target.setAttribute(name, value)
   }
 

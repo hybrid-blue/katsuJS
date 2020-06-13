@@ -6,18 +6,16 @@ export default class Compiler{
   }
 
   expressions(content, target){
-    // console.log(content)
-    var regex = /(?<={{)(.*?)(?=\s*}})/g;
-    let val = regex.exec(content)[0]
 
-    var data;
-    // console.log(window.blade.view[target].data[val])
-    if(window.blade.view[target].data[val]){
-      // data = window.blade.data[val];
-      data = window.blade.view[target].data[val]
-    }else{
-      // console.log(window.blade.component[target])
-      data = window.blade.component[target].data[val];
+    var regex = /(?<={{)(.*?)(?=\s*}})/g;
+    let expressions = content.match(regex);
+
+    var data = content;
+
+    for(let exp of expressions){
+      if(window.blade.view[target].data[exp] !== null){
+        data = data.replace(`{{${exp}}}`, window.blade.view[target].data[exp]);
+      }
     }
 
     return data;
@@ -133,9 +131,6 @@ export default class Compiler{
     let items = window.blade.view[target].data[selector]
 
     const func = (html, items, exp) => {
-      console.log(target);
-      console.log(selector);
-      console.log(items)
       return items.map((item, i) => {
         let htmlContent = cleanExp(html, item, exp)
         return replaceExp(htmlContent, item, exp);

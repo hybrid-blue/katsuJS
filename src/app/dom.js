@@ -49,6 +49,7 @@ export default class Dom extends Compiler{
           }
         }
 
+        this.directives(node, this.viewName, this.virtualDom)
 
         if(node.nodeType === 1){
           // console.log(window.blade.component)

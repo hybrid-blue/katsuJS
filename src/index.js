@@ -55,12 +55,45 @@ export class Blade{
 
       render(target){
 
-        this.targetElement = target;
+        window.blade.view[this.viewName].root = target;
 
         const $event = {
           on: (name, func) => this.event(name, func)
         }
-        const $data = data => this.updateData(data, this.viewName);
+
+        //Overhaul with setter and getter
+
+        const updateData = this.updateData
+
+        window.blade.view[this.viewName].targetData = {}
+
+        // const $test = new Proxy(window.blade.view[this.viewName].targetData, {
+        //
+        //   get: function(target, prop, receiver){
+        //     return window.blade.view[window.blade.module].data[prop];
+        //   },
+        //
+        //   set: function(target, prop, value){
+        //     window.blade.view[window.blade.module].data[prop] = value;
+        //     console.log(value)
+        //     console.log(window.blade.module)
+        //     updateData(value, window.blade.module);
+        //   }
+        // })
+
+        const $data = new Proxy(window.blade.view[this.viewName].targetData, {
+
+          get: function(target, prop, receiver){
+            return window.blade.view[window.blade.module].data[prop];
+          },
+
+          set: function(target, prop, value){
+            window.blade.view[window.blade.module].data[prop] = value;
+            console.log(value)
+            console.log(window.blade.module)
+            updateData(value, window.blade.module);
+          }
+        })
 
         var template = window.blade.view[this.viewName].template;
         const app = new Dom(this.viewName);

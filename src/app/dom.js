@@ -57,11 +57,6 @@ export default class Dom extends Compiler{
 
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 
-        // console.log(node)
-        // console.log(node.nodeType)
-
-        // console.log('###############')
-        // console.log(node.textContent)
         var map = {
           type: node.nodeType === 3 ? 'text' : (node.nodeType === 1 ? node.tagName.toLowerCase() : (node.nodeType === 8 ? 'comment' : null)),
           content: node.childNodes && node.childNodes.length > 0 ? null : (/{{(.*?)}}/g.test(node.textContent) ? this.expressions(node.textContent, this.viewName) : node.textContent),

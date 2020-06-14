@@ -30,15 +30,22 @@ export class Blade{
       }
 
       updateData(data, target){
+
         window.blade.view[target].data = Object.assign({}, window.blade.view[target].data, data);
+
         let domparser = new DOMParser();
-        const root = document.querySelector(this.targetElement).innerHTML
+        const root = document.querySelector(window.blade.view[target].root).innerHTML;
         var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
         const app = new Dom(target);
+
         const htmlContent = app.virtualDom(window.blade.view[target].template);
+
         window.blade.view[target].vDomNew = htmlContent;
-        const targetElm = document.querySelector(this.targetElement);
+        const targetElm = document.querySelector(window.blade.view[target].root);
+
         app.updateDom(targetElm, window.blade.view[target].vDomNew[0], window.blade.view[target].vDomPure[0]);
+
+        window.blade.view[target].vDomPure = window.blade.view[target].vDomNew
 
       }
 

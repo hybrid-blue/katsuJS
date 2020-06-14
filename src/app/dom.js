@@ -321,6 +321,11 @@ export default class Dom extends Compiler{
 
                 }, 10)
               break;
+              case 'data-blade-src':
+                setTimeout(() => {
+                  document.querySelector(`[data-blade-src="${attr.value}"]`).src = window.blade.view[this.viewName].data[attr.value]
+                }, 10)
+              break;
             }
           });
         }

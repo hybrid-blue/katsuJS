@@ -145,34 +145,10 @@ export default class Compiler{
     node.appendChild(document.createRange().createContextualFragment(newHTML))
   }
 
-  directiveSwitch(value, node){
-    // window.blade.switch = value;
-  }
-
-  directiveCase(value, node){
-    // let switchVal = window.blade.switch;
-    // let comment = document.createComment('case-element')
-    // if(value !== window.blade.data[switchVal]){
-    //   console.log(node.parentNode)
-    //   node.parentNode.replaceChild(comment, node);
-    // }
-  }
-
-  directiveBind(value){
-    // setTimeout(() => {
-    //   let target = document.querySelector(`[data-blade-bind="${value}"]`);
-    //   target.addEventListener('keydown', (e) => {
-    //     setTimeout(() => {
-    //       let data = {};
-    //       data[value] = e.target.value;
-    //       return data[value];
-    //     }, 10)
-    //   })
-    // }, 10);
-  }
 
 
-  compile(htmlContent){
+
+
 
   }
 

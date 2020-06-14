@@ -17,7 +17,6 @@ export default class Dom extends Compiler{
 
       return Array.prototype.map.call(thisnode.childNodes, (node => {
 
-
         // let nextNode = node.nextSibling;
         if(node.attributes){
           // let nextNode = node.nextSibling;
@@ -164,8 +163,163 @@ export default class Dom extends Compiler{
                 }, 10);
 
               break;
-              case 'data-bind-class':
-                console.log(attr)
+              case 'data-blade-class':
+                setTimeout(() => {
+
+                  const target = document.querySelector(`[data-blade-class="${attr.value}"]`);
+
+                  if(attr.value.indexOf('{') > -1){
+                    var stringObj = attr.value;
+                    stringObj = stringObj.substr(1, attr.value.length);
+                    stringObj = stringObj.substr(0, attr.value.length - 2);
+                    var classNameArray = [];
+                    var newClassNameArray = [];
+                    let objArray = stringObj.split(',');
+                    var bladeClasses = [];
+
+                    for(let items of objArray){
+                      let array = items.split(':')
+
+                      classNameArray.push(array);
+                    }
+
+                    for(let item of classNameArray){
+                      let a, b;
+                      for(let i=0;i<item.length;i++){
+                        if(i === 0){
+                          a = item[i].trim()
+                        }else{
+                          b = item[i].trim()
+                        }
+                      }
+
+
+                      bladeClasses.push(a)
+                      newClassNameArray.push(JSON.parse(`{"${a}": "${b}"}`));
+                    }
+
+
+                    target.classList.add(node.classList.value);
+
+                    var nameArray = [];
+
+                    for(let className of newClassNameArray){
+                      let key = Object.keys(className);
+                      let value = Object.values(className);
+
+
+                      let data = window.blade.view[this.viewName].data[value]
+
+                      let nodeClass = node.classList.value.split(' ');
+                      let targetClass = target.classList.value.split(' ');
+
+                      if(window.blade.view[this.viewName].data[value]){
+                        nameArray.push(key[0])
+                      }
+
+
+                    }
+
+                    let nodeClass = node.classList.value.split(' ');
+                    let targetClass = target.classList.value.split(' ');
+
+                    console.log(bladeClasses)
+                    console.log(nameArray)
+
+
+                    let newClasses = nameArray.filter(item => {
+                      console.log(item)
+                      var classArray = [];
+                      for(let thisClass of bladeClasses){
+                        console.log(thisClass)
+                        classArray.push(item !== thisClass);
+                      }
+                      return classArray;
+                    })
+
+                    let currentClasses = targetClass.filter(item => {
+                      for(let thisClass of nodeClass){
+                        return item !== thisClass;
+                      }
+                    })
+
+                    // console.log('~~~~~~~~~~~~')
+                    // console.log(targetClass)
+                    // console.log(JSON.stringify(newClasses));
+                    // console.log(JSON.stringify(currentClasses))
+                    // console.log('~~~~~~~~~~~~')
+
+                    if(JSON.stringify(newClasses) !== JSON.stringify(currentClasses)){
+
+                      var removedClasses;
+
+                      if(newClasses.length > 0){
+                        removedClasses = currentClasses.filter(item => {
+                          for(let thisClass of newClasses){
+                            return item !== thisClass;
+                          }
+                        })
+                      }else{
+                        removedClasses = currentClasses
+                      }
+
+                      for(let item of removedClasses){
+                        target.classList.remove(item);
+                      }
+
+                      let targetClassArr = node.classList.value.split(', ');
+                      let classArray = targetClassArr.concat(newClasses);
+                      for(let className of classArray){
+                        target.classList.add(className);
+                      }
+
+                    }
+
+                    // for(let thisclass of newClasses){
+                    //   target.classList.add(thisclass);
+                    // }
+
+
+
+                  }else{
+
+                    // console.log('============');
+                    // console.log(data);
+                    // console.log(node.classList.value.split(' '));
+                    // console.log(target.classList.value.split(' '));
+                    // console.log('============');
+
+
+                    let nodeClass = node.classList.value.split(' ');
+                    let targetClass = target.classList.value.split(' ');
+
+                    let newClasses = targetClass.filter(item => {
+                      for(let thisClass of nodeClass){
+                        return item !== thisClass;
+                      }
+                    })
+
+                    let data = window.blade.view[this.viewName].data[attr.value];
+
+                    console.log(JSON.stringify(newClasses));
+                    console.log(JSON.stringify([data]));
+
+                    if(JSON.stringify(newClasses) !== JSON.stringify([data])){
+                      // Remove Blade Classes
+                      for(let item of newClasses){
+                        target.classList.remove(item);
+                      }
+
+                      let classArray = [node.classList.value, data];
+
+                      for(let className of classArray){
+                        target.classList.add(className);
+                      }
+                    }
+
+                  }
+
+                }, 10)
               break;
             }
           });
@@ -181,6 +335,9 @@ export default class Dom extends Compiler{
         // console.log(node)
         // console.log(node.nodeType)
 
+        // console.log('###############')
+        // console.log(node.textContent)
+
         var map = {
           type: node.nodeType === 3 ? 'text' : (node.nodeType === 1 ? node.tagName.toLowerCase() : (node.nodeType === 8 ? 'comment' : null)),
           content: node.childNodes && node.childNodes.length > 0 ? null : (/{{(.*?)}}/g.test(node.textContent) ? this.expressions(node.textContent, this.viewName) : node.textContent),
@@ -188,6 +345,10 @@ export default class Dom extends Compiler{
           node: node,
           children: buildNodes(node)
         }
+
+        // console.log('++++++++++++++++++++++')
+        // console.log(map)
+        // console.log('++++++++++++++++++++++')
 
         return map
 
@@ -302,6 +463,10 @@ export default class Dom extends Compiler{
   }
 
   changed(node1, node2){
+    // console.log('========= Changed Nodes ===========')
+
+    // if(node1) console.log(node1.content);
+    // if(node2) console.log(node2.content);
     return typeof node1 !== typeof node2 ||
          typeof node1 === 'string' && node1 !== node2 ||
          node1.type !== node2.type || node1.content !== node2.content
@@ -309,11 +474,26 @@ export default class Dom extends Compiler{
 
   updateDom(root, newNode, oldNode, index = 0){
 
+    // console.log('========= Nodes ===========')
+    // console.log(root.childNodes[index])
+    // console.log(this.createElm(newNode))
+    // console.log(this.changed(newNode, oldNode))
+    // console.log('===========================')
     if(!oldNode){
+      // console.log('========= Created Elm ===========')
+      // console.log(this.createElm(newNode))
+      // console.log('=================================')
       root.appendChild(this.createElm(newNode));
     }else if (!newNode && root.childNodes[index]){
+      // console.log('========= Remove Elm ===========')
+      // console.log(root.childNodes[index])
+      // console.log('=================================')
       root.removeChild(root.childNodes[index]);
     }else if (this.changed(newNode, oldNode) && root.childNodes[index]) {
+      // console.log('========= Replace Elm ===========')
+      // console.log(root.childNodes[index])
+      // console.log(this.createElm(newNode))
+      // console.log('=================================')
       root.replaceChild(this.createElm(newNode), root.childNodes[index]);
 
     }else if(newNode){

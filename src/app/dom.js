@@ -96,7 +96,34 @@ export default class Dom extends Compiler{
       }
     })
   }
+    const getData = (data) => {
+      var dataPath;
+
+      let dataArray = data.split('.')
+
+      const findRoot = () =>{
+
+      }
+
+      if(data.indexOf('.') > -1){
+        for(let i = 0;i<dataArray.length;i++){
+          if(i === 0){
+            if(window.blade.view[viewName].data[topObj]){
+              dataPath = window.blade.view[viewName].data[topObj][index];
+            }else{
+
+            }
+          }else{
+            dataPath = dataPath[dataArray[i]];
+          }
+
         }
+      }else{
+        dataPath = window.blade.view[viewName].data[data];
+      }
+
+      return dataPath;
+    }
           case 'data-blade-class':
 
             var temp, selectorAttr, tempVal;

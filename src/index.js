@@ -5,6 +5,7 @@ import Api from './app/api';
 import Dom from './app/dom';
 
 // import Module from './app/module';
+// Replace SetTimeout with requestAnimationFrame
 
 export class Blade{
   constructor(viewName){
@@ -30,8 +31,10 @@ export class Blade{
       }
 
       updateData(data, target){
-
+        console.log('======= updateData ======')
+        // window.blade.view[target].data = Object.assign({}, window.blade.view[target].data, data, obj);
         window.blade.view[target].data = Object.assign({}, window.blade.view[target].data, data);
+        // console.log(window.blade.view[target].data)
 
         let domparser = new DOMParser();
         const root = document.querySelector(window.blade.view[target].root).innerHTML;
@@ -40,12 +43,15 @@ export class Blade{
 
         const htmlContent = app.virtualDom(window.blade.view[target].template);
 
+
         window.blade.view[target].vDomNew = htmlContent;
         const targetElm = document.querySelector(window.blade.view[target].root);
 
         app.updateDom(targetElm, window.blade.view[target].vDomNew[0], window.blade.view[target].vDomPure[0]);
 
-        window.blade.view[target].vDomPure = window.blade.view[target].vDomNew
+        window.blade.view[target].vDomPure = window.blade.view[target].vDomNew;
+
+        // console.log(window.blade.view[target].vDomPure)
 
       }
 
@@ -64,6 +70,7 @@ export class Blade{
         //Overhaul with setter and getter
 
         const updateData = this.updateData
+        const viewName = this.viewName
 
         window.blade.view[this.viewName].targetData = {}
 
@@ -81,19 +88,107 @@ export class Blade{
         //   }
         // })
 
-        const $data = new Proxy(window.blade.view[this.viewName].targetData, {
+        var dataPathStr = '';
+        var dataPathArray = [];
 
-          get: function(target, prop, receiver){
-            return window.blade.view[window.blade.module].data[prop];
-          },
 
-          set: function(target, prop, value){
-            window.blade.view[window.blade.module].data[prop] = value;
-            console.log(value)
-            console.log(window.blade.module)
-            updateData(value, window.blade.module);
+        var trueTypeOf = function (obj) {
+        	return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
+        };
+
+
+        function wrap(o, fn, scope = []){
+          const handler = {
+            get(target, prop, receiver) {
+              // fn('get value in scope: ', scope.concat(prop))
+
+              if (['object', 'array'].indexOf(trueTypeOf(target[prop])) > -1) {
+                return new Proxy(target[prop], handler);
+              }
+
+              return target[prop]
+            },
+            set(target, prop, value, receiver) {
+              // fn('set value in scope: ', scope.concat(prop))
+              target[prop] = value
+              // console.log(value)
+
+              var obj = {};
+              let pathArray = scope.concat(prop);
+
+              if(pathArray.length > 1){
+                for(let i=0;i<pathArray.length;i++){
+                  if(i === (pathArray.length - 1)){
+                    let thisObj = {}
+                    thisObj[pathArray[(i)]] = value;
+                    obj[pathArray[(i - 1)]] = thisObj;
+                  }else if(i === 0){
+                    obj[pathArray[i]] = {}
+                  }else{
+                    obj[pathArray[(i - 1)]] = {}
+                  }
+                }
+              }else{
+                obj[pathArray[0]] = value
+              }
+
+              // console.log('+++++++++')
+              // console.log(obj)
+              // console.log('+++++++++')
+
+              updateData(obj, window.blade.module);
+
+              return true
+            },
+            // ownKeys() {
+            //   fn('keys in scope: ', scope)
+            //   return Reflect.ownKeys(o)
+            // }
           }
-        })
+
+          return new Proxy(
+            Object.keys(o).reduce((result, key) => {
+              if (isObject(o[key])) {
+                result[key] = wrap(o[key], fn, scope.concat(key))
+              } else {
+                result[key] = o[key]
+              }
+              return result
+            }, {}),
+            handler
+          )
+
+
+        }
+
+
+        function isObject(obj) {
+          return typeof obj === 'object' && !Array.isArray(obj)
+        }
+
+
+        const $data = wrap(window.blade.view[this.viewName].data, console.log)
+
+        // const handler = {
+        //   get: function(target, key, scope = []){
+        //     if(typeof target[key] === 'object' && target[key] !== null){
+        //       return new Proxy(target[key], handler)
+        //     }else{
+        //       return target[key];
+        //     }
+        //   },
+        //
+        //   set: function(target, key, value){
+        //     return true;
+        //     // updateData(window.blade.view[this.viewName].data, window.blade.module);
+        //   }
+        // }
+
+
+
+
+        // const $data = new Proxy(window.blade.view[this.viewName].data, handler)
+
 
         var template = window.blade.view[this.viewName].template;
         const app = new Dom(this.viewName);
@@ -107,6 +202,7 @@ export class Blade{
         const targetElm = document.querySelector(target);
 
         app.updateDom(targetElm, htmlContent[0]);
+
         window.blade.view[this.viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
 
         const parms = {
@@ -117,6 +213,7 @@ export class Blade{
         var controller = window.blade.view[this.viewName].controller
         let extScript = () => {eval(controller(parms))}
         let event = new Event('executeScript');
+
         window.addEventListener('executeScript', extScript)
         window.dispatchEvent(event)
         window.removeEventListener('executeScript', extScript);
@@ -187,6 +284,7 @@ export class Blade{
     window.blade.nodes = {};
     window.blade.controller = {};
     window.blade.component = {};
+    window.blade.hiddenElements = [];
     // window.blade.module = viewName
     // window.blade.view[window.blade.module] = {};
 

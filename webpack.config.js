@@ -5,7 +5,7 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       hash: true,
-      title: 'A Single Page Application',
+      title: 'A BladeJS App',
       template: './src/index.html',
       filename: './index.html'
     })

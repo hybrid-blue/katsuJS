@@ -201,6 +201,39 @@ export default class Dom extends Compiler{
 
       return dataPath;
     }
+          case 'data-blade-switch':
+
+            window.blade.switch = attr.value;
+
+            const hasCaseAttribute = (attrs, data) => {
+              for(let nodeAttr of attrs){
+
+                console.log(attr.name)
+                if(nodeAttr.name === 'data-blade-case' && nodeAttr.value !== data){
+                  return true;
+                }
+              }
+              return false;
+            }
+
+            const setCaseDirective = (node) => {
+              let data = getData(window.blade.switch)
+              let elms = node.childNodes;
+              for(let i=0;i<elms.length;i++){
+                if(elms[i].nodeType === 1){
+                  if(hasCaseAttribute(elms[i].attributes, data)){
+                    let iou = document.createComment('element-removed');
+                    node.childNodes[i].replaceWith(iou)
+                  }else{
+                    this.switchCase = true;
+                  };
+                }
+              }
+            }
+
+            setCaseDirective(node)
+
+          break;
           case 'data-blade-class':
 
             var temp, selectorAttr, tempVal;

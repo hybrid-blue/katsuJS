@@ -96,6 +96,9 @@ export default class Dom extends Compiler{
       }
     })
   }
+    const virtualDom = this.virtualDom.bind(this);
+    const updateDom = this.updateDom.bind(this);
+
     const getData = (data) => {
       var dataPath;
 

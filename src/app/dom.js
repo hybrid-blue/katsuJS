@@ -53,6 +53,49 @@ export default class Dom extends Compiler{
 
         if(node.nodeType === 1){
           // console.log(window.blade.component)
+  poller(elm, index = null){
+    return new Promise((resolve, reject) => {
+      var i = 0;
+
+      var selector = index ? 'document.querySelectorAll('+elm+')'+'['+index+']' : 'document.querySelectorAll('+elm+')'
+
+        var pollerElm = setInterval(() => {
+          if(selector || i === 1000){
+            stopPoller()
+            resolve(true);
+          }else{
+            i++;
+          }
+        },1);
+
+
+      function stopPoller() {
+        clearInterval(pollerElm);
+      }
+    })
+  }
+
+  pollerCase(elm){
+    return new Promise((resolve, reject) => {
+      var i = 0;
+
+      var selector = 'elm.querySelectorAll("div")'
+
+        var pollerElm = setInterval(() => {
+          if(selector || i === 1000){
+            stopPoller()
+            resolve(elm);
+          }else{
+            i++;
+          }
+        },1);
+
+
+      function stopPoller() {
+        clearInterval(pollerElm);
+      }
+    })
+  }
         }
           case 'data-blade-class':
 

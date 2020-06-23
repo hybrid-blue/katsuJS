@@ -233,6 +233,136 @@ export default class Dom extends Compiler{
 
             setCaseDirective(node)
 
+          case 'data-blade-bind':
+
+          var temp, selectorAttr, tempVal;
+
+            // if(attr.value.indexOf('.') > -1){
+            //   temp = window.blade.view[viewName].data['temp'];
+            //   selectorAttr = Object.keys(temp)[0];
+            // }else{
+            //   selectorAttr = attr.value
+            // }
+
+            function setBindEvent(target, type){
+
+              // setTimeout(() => {
+
+                console.log(target)
+                console.log(type)
+                if(!target.getAttribute('data-blade-listening')){
+                  target.setAttribute('data-blade-listening', 'true');
+
+                  var eventType;
+
+                  if(target.getAttribute('type') === 'text'){
+                    eventType = 'keydown';
+                  }else if(target.getAttribute('type') === 'checkbox'){
+                    eventType = 'click';
+                  }else{
+                    eventType = 'keydown';
+                  }
+
+                  // console.log(target)
+                  // console.log(eventType)
+
+                  target.addEventListener(eventType, function(e){
+
+                      // console.log(e)
+                      setTimeout(() => {
+
+                        var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
+                        let view = window.blade.module
+                        let data = {};
+                        if(type !== 'for'){
+
+                          data[attr.value] = eventValue;
+                          window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, data);
+
+                        }else{
+
+                          var dataArray = attr.value.split('.');
+                          var targetParent;
+                          var bladeData = window.blade.view[viewName].data
+                          var bladeDataPath;
+                          var obj;
+
+                          function getParent(elm){
+                            if(elm.parentNode.getAttribute('data-blade-for')){
+                              targetParent = elm.parentNode
+                            }else{
+                              getParent(elm.parentNode)
+                            }
+                          }
+
+                          for(let i=0;i<dataArray.length;i++){
+                            if(i === 0){
+                              getParent(target);
+                              var baseProp = targetParent.getAttribute('data-blade-for').split(' ').pop();
+                              obj = bladeData[baseProp];
+                            }else{
+                              obj[index][dataArray[i]] = eventValue;
+                            }
+                          }
+
+                          data[attr.value] = eventValue;
+                          window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, obj);
+
+                        }
+
+
+                        let domparser = new DOMParser();
+                        const root = document.querySelector('#root').innerHTML
+                        var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
+                        const htmlContent = virtualDom(window.blade.view[view].template);
+
+                        window.blade.view[view].vDomNew = htmlContent;
+                        const targetElm = document.querySelector('#root');
+                        updateDom(targetElm, window.blade.view[view].vDomNew[0], window.blade.view[view].vDomPure[0]);
+
+                        window.blade.view[view].vDomPure = window.blade.view[view].vDomNew
+
+                        console.log(window.blade.view[view].vDomPure)
+
+                      },1)
+
+                    })
+
+                }
+
+              // },10)
+              // let target = document.querySelector(`[data-blade-bind="${attr.value}"]`);
+
+
+            }
+
+
+
+
+
+
+            if(node.getAttribute("data-blade-bind") === attr.value){
+
+              this.poller(`[data-blade-bind="${attr.value}"]`).then(res => {
+
+                var elms;
+                if(type === 'for'){
+                  elms = document.querySelectorAll(`[data-blade-bind="${attr.value}"]`)[index];
+                  setBindEvent(elms, type)
+                }else{
+                  elms = document.querySelectorAll(`[data-blade-bind="${attr.value}"]`);
+                  for(let elm of elms){
+                    setBindEvent(elm, type)
+                  }
+                }
+
+            });
+
+
+          }
+
+
+
           break;
           case 'data-blade-class':
 

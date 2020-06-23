@@ -233,6 +233,117 @@ export default class Dom extends Compiler{
 
             setCaseDirective(node)
 
+          case 'data-blade-click':
+
+          var temp, selectorAttr, tempVal;
+
+            if(attr.value.indexOf('.') > -1){
+              temp = window.blade.view[viewName].data['temp'];
+              selectorAttr = Object.keys(temp)[0];
+
+            }else{
+              selectorAttr = attr.value
+            }
+
+            setTimeout(() => {
+              // let target = document.querySelector(`[data-blade-click="${attr.value}"]`);
+
+              const setClickEvent = (target) => {
+
+
+
+                if(!target.getAttribute('data-blade-listening')){
+                  target.setAttribute('data-blade-listening', 'true');
+                  target.addEventListener('click', (e) => {
+
+                    let regex = /(?<=\()(.*?)(?=\s*\))/g;
+                    let arg = attr.value.match(regex);
+
+                    let func = window.blade.events[attr.value.split('(')[0]];
+
+                    var newArgs = {};
+
+                    let args = arg[0].split(',')
+
+                    for(let i = 0;i<args.length;i++){
+
+                      if(/\'(.*?)\'/g.test(args[i])){
+
+                        let val = args[i].trim();
+                        let trimed = val.substr(1, val.length-2);
+
+                        newArgs['args'] = trimed;
+
+
+                      }else{
+                        if(args[i].trim() === 'index'){
+
+                          var foundIndex;
+
+                          const findIndex = (parentNode, childNode) => {
+                            // let elmTag = childNode.tagName;
+                            let nodes = parentNode.children;
+                            for(let i=0;i<nodes.length;i++){
+                              if(nodes[i].isEqualNode(childNode)){
+                                return i;
+                              }
+                            }
+                          }
+
+                          const findParent = (elm) => {
+
+                            var parentNode, childNode;
+
+                            if(elm.parentNode.getAttribute('data-blade-for')){
+                              parentNode = elm.parentNode;
+                              childNode = elm;
+                              foundIndex = findIndex(parentNode, childNode);
+                              newArgs['index'] = foundIndex;
+                            }else{
+                              findParent(elm.parentNode);
+                            }
+
+                          }
+
+                          findParent(target);
+
+                        }else{
+                          newArgs['data'] = window.blade.view[viewName].data[args[i].trim()];
+                        }
+
+                      }
+                    }
+
+                    func(newArgs);
+
+                  })
+                }
+
+              }
+
+
+
+
+              if(node.getAttribute("data-blade-click") === attr.value){
+                var elms;
+
+                // console.log(type)
+
+                // let data = type === 'for' ? Object.values(temp)[0] : window.blade.view[viewName].data[attr.value];
+                if(type === 'for'){
+                  elms = document.querySelectorAll(`[data-blade-click="${attr.value}"]`)[index];
+                  setClickEvent(elms)
+                }else{
+                  elms = document.querySelectorAll(`[data-blade-click="${attr.value}"]`);
+                  for(let elm of elms){
+                    setClickEvent(elm)
+                  }
+                }
+              }
+
+            },1)
+
+          break;
           case 'data-blade-bind':
 
           var temp, selectorAttr, tempVal;

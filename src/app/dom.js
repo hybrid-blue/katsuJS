@@ -54,6 +54,361 @@ export default class Dom extends Compiler{
         if(node.nodeType === 1){
           // console.log(window.blade.component)
         }
+          case 'data-blade-class':
+
+            var temp, selectorAttr, tempVal;
+
+            setTimeout(() => {
+
+                const classBuilder = (target, data, type = 'default', index = null) => {
+
+                  if(attr.value.indexOf('{') > -1){
+
+                    var stringObj = attr.value;
+                    stringObj = stringObj.substr(1, attr.value.length);
+                    stringObj = stringObj.substr(0, attr.value.length - 2);
+                    var classNameArray = [];
+                    var newClassNameArray = [];
+                    var bladeClasses = [];
+                    let objArray = stringObj.split(',');
+
+
+                    for(let items of objArray){
+                      let array = items.split(':')
+
+                      classNameArray.push(array);
+                    }
+
+                    for(let item of classNameArray){
+                      let a, b;
+                      for(let i=0;i<item.length;i++){
+                        if(i === 0){
+                          a = item[i].trim()
+                        }else{
+                          b = item[i].trim()
+                        }
+                      }
+
+                      bladeClasses.push(a)
+                      newClassNameArray.push(JSON.parse(`{"${a}": "${b}"}`));
+                    }
+
+
+                    target.classList.add(node.classList.value);
+
+                    var nameArray = [];
+
+                    for(let className of newClassNameArray){
+                      let key = Object.keys(className);
+                      let value = Object.values(className);
+
+                      // console.log(value)
+                      // let data = type === 'for' ? window.blade.view[viewName].data['temp'] : window.blade.view[viewName].data[value]
+                      // console.log(data);
+
+                      let nodeClass = node.classList.value.split(' ');
+                      let targetClass = target.classList.value.split(' ');
+
+                      if(window.blade.view[viewName].data[value]){
+                        nameArray.push(key[0])
+                      }
+
+
+                    }
+
+                    let nodeClass = node.classList.value.split(' ');
+                    let targetClass = target.classList.value.split(' ');
+
+                    let newClasses = nameArray.filter(item => {
+                      // console.log(item)
+                      var classArray = [];
+                      for(let thisClass of bladeClasses){
+                        // console.log(thisClass)
+                        classArray.push(item !== thisClass);
+                      }
+                      return classArray;
+                    })
+
+                    let currentClasses = targetClass.filter(item => {
+                      for(let thisClass of nodeClass){
+                        return item !== thisClass;
+                      }
+                    })
+
+                    if(JSON.stringify(newClasses) !== JSON.stringify(currentClasses)){
+
+                      var removedClasses;
+
+                      if(newClasses.length > 0){
+                        removedClasses = currentClasses.filter(item => {
+                          for(let thisClass of newClasses){
+                            return item !== thisClass;
+                          }
+                        })
+                      }else{
+                        removedClasses = currentClasses
+                      }
+
+                      for(let item of removedClasses){
+                        target.classList.remove(item);
+                      }
+
+                      let targetClassArr = node.classList.value.split(', ');
+                      let classArray = targetClassArr.concat(newClasses);
+                      for(let className of classArray){
+                        // console.log('~~~~~ Class 1 ~~~~~')
+                        target.classList.add(className);
+                      }
+
+                    }
+
+                  }else{
+
+                    let nodeClass = node.classList.value.split(' ');
+                    let targetClass = target.classList.value.split(' ');
+
+                    let newClasses = targetClass.filter(item => {
+                      for(let thisClass of nodeClass){
+                        return item !== thisClass;
+                      }
+                    })
+
+                    // let data = type === 'for' ? window.blade.view[viewName].data['temp'] : window.blade.view[viewName].data[attr.value];
+                    // console.log(data)
+
+
+                    if(type === 'boolean'){
+
+                      for(let item of newClasses){
+                        target.classList.remove(item);
+                      }
+
+                      var stringObj = JSON.stringify(data);
+
+                      // console.log(stringObj)
+
+                      stringObj = stringObj.substr(1, stringObj.length);
+                      stringObj = stringObj.substr(0, stringObj.length - 1);
+                      var classNameArray = [];
+                      var newClassNameArray = [];
+                      let objArray = stringObj.split(',');
+                      var bladeClasses = [];
+
+                      for(let items of objArray){
+                        let array = items.split(':')
+
+                        classNameArray.push(array);
+                      }
+
+                      for(let item of classNameArray){
+                        let a, b;
+                        for(let i=0;i<item.length;i++){
+                          if(i === 0){
+                            a = item[i].trim()
+                          }else{
+                            b = item[i].trim()
+                          }
+                        }
+
+                        // console.log(a);
+                        // console.log(b)
+
+                        bladeClasses.push(a)
+                        newClassNameArray.push(JSON.parse(`{${a}: ${b}}`));
+
+                        // console.log(bladeClasses);
+                        // console.log(newClassNameArray)
+                      }
+
+                      target.classList.add(node.classList.value);
+
+                      var nameArray = [];
+
+                      for(let className of newClassNameArray){
+
+                        let key = Object.keys(className);
+                        let value = Object.values(className);
+
+                        // console.log(value)
+                        // let data = type === 'for' ? window.blade.view[viewName].data['temp'] : window.blade.view[viewName].data[value]
+                        // console.log(data);
+
+                        // let nodeClass = node.classList.value.split(' ');
+                        // let targetClass = target.classList.value.split(' ');
+                        //
+                        // console.log(nodeClass);
+                        // console.log(targetClass);
+
+                        // if(window.blade.view[viewName].data[key]){
+                        //   nameArray.push(key[0])
+                        // }
+
+                        if(value[0]) nameArray.push(key[0])
+
+                      }
+
+                      let nodeClass = node.classList.value.split(' ');
+                      let targetClass = target.classList.value.split(' ');
+
+                      if(nameArray.length > 0){
+                        nameArray.forEach(item => {
+                          target.classList.add(item);
+                        })
+                      }
+
+
+                      // console.log('====== 2 ======')
+
+                      // let currentClasses = targetClass.filter(item => {
+                      //   for(let thisClass of nodeClass){
+                      //     return item !== thisClass;
+                      //   }
+                      // })
+                      //
+                      // console.log(currentClasses)
+
+                      // console.log('====== 3 ======')
+
+                      // if(JSON.stringify(newClasses) !== JSON.stringify(currentClasses)){
+
+                        // console.log('====== 4 ======')
+
+                        // var removedClasses;
+                        //
+                        // if(newClasses.length > 0){
+                        //   removedClasses = currentClasses.filter(item => {
+                        //     for(let thisClass of newClasses){
+                        //       return item !== thisClass;
+                        //     }
+                        //   })
+                        // }else{
+                        //   removedClasses = currentClasses
+                        // }
+                        //
+                        // for(let item of removedClasses){
+                        //   target.classList.remove(item);
+                        // }
+                        //
+                        // let targetClassArr = node.classList.value.split(', ');
+                        // let classArray = targetClassArr.concat(newClasses);
+                        // for(let className of classArray){
+                        //   target.classList.add(className);
+                        // }
+
+                      // }
+
+
+
+
+
+
+
+                    }else if(JSON.stringify(newClasses) !== JSON.stringify([data])){
+
+
+
+                      for(let item of newClasses){
+                        target.classList.remove(item);
+                      }
+
+                      let classArray = [node.classList.value, data];
+
+                      for(let className of classArray){
+                        // console.log('~~~~~ Class 2 ~~~~~')
+                        // console.log(className)
+                        target.classList.add(className);
+                      }
+                    }
+
+                  }
+
+                }
+
+                // console.log('==== data-blade-class SUCCESS ====');
+                // console.log(window.blade.view[viewName].data['temp'])
+                // console.log(node.getAttribute("data-blade-class"))
+                // console.log(selectorAttr)
+                // const target = document.querySelector(`[data-blade-class="${attr.value}"]`);
+
+                // console.log('[======================]')
+                // console.log(node.getAttribute("data-blade-class"));
+                // console.log(selectorAttr)
+                // console.log('[======================]')
+
+                if(node.getAttribute("data-blade-class") === attr.value){
+
+                  var elms, data;
+
+                  // if(attr.value.indexOf('{') > -1){
+                    data  = attr.value;
+                  // }
+
+                  if(type === 'for'){
+                    elms = document.querySelectorAll(`[data-blade-class="${attr.value}"]`)[index];
+
+                    let classSelector = data.split('.').pop();
+                    var bladeDataClass = data;
+
+                    // find value
+                    var bladeData = window.blade.view[viewName].data;
+                    var dataArray = data.split('.')
+                    var path;
+                    var targetParent;
+
+                    function getParent(elm){
+
+                      if(elm.parentNode.getAttribute('data-blade-for')){
+                        targetParent = elm.parentNode
+                      }else{
+                        getParent(elm.parentNode)
+                      }
+
+                    }
+
+                    var bladeDataClass;
+
+                    for(let i=0;i<dataArray.length;i++){
+                      if(i === 0){
+                        getParent(elms);
+                        var baseProp = targetParent.getAttribute('data-blade-for').split(' ').pop();
+                        let targetObj = bladeData[baseProp];
+                        bladeDataClass = targetObj[index];
+                      }else{
+                        bladeDataClass = bladeDataClass[dataArray[i]]
+                      }
+                    }
+
+                    if(typeof bladeDataClass === 'boolean'){
+                      let thisSelector = attr.value.split('.').pop();
+                      let obj = {};
+                      obj[thisSelector] = bladeDataClass;
+                      classBuilder(elms, obj, 'boolean', index);
+                    }else{
+                      for(let elm of elms){
+                        if(!elm.classList.contains(data) && data) classBuilder(elm, data);
+                      }
+                    }
+
+                  }else{
+                    elms = document.querySelectorAll(`[data-blade-class="${attr.value}"]`);
+                    for(let elm of elms){
+                      let obj = {};
+                      let data = getData(attr.value)
+                      obj[attr.value] = data;
+
+                      classBuilder(elm, data);
+                    }
+                  }
+                }
+
+
+            }, 1)
+
+
+
+
+
+          break;
 
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 

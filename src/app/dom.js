@@ -16,38 +16,112 @@ export default class Dom extends Compiler{
     const buildNodes = (thisnode) => {
 
       return Array.prototype.map.call(thisnode.childNodes, (node => {
+  directiveFor(value, node, target){
 
-        // let nextNode = node.nextSibling;
-        if(node.attributes){
-          // let nextNode = node.nextSibling;
-          let selector = node.getAttribute(`data-blade-if`);
+    let selector = value.split(' ').pop();
+    let exp = value.split(' ')[0];
 
+    var topSelector = selector;
 
-          if(selector){
+    const replaceExp = (html, item, expression, index) => {
+      var values = expression;
+      var dataObj = []
 
-            var thisElm = window.blade.elements['id1'];
-            let iou = document.createComment('element-hidden');
+      if(typeof item === 'object'){
 
-            if(typeof window.blade.view[this.viewName].data[selector] === 'boolean'){
-              if(!eval(window.blade.view[this.viewName].data[selector])){
-                window.blade.elements['hidden'] = {elm: node, state: false};
-                node = iou;
+        let expKeys = Object.keys(item);
+        let expVals = Object.values(item);
+
+        for(let key of expKeys){
+
+          this.expressStr = '';
+          var childObject = this.generateExp(item, key);
+          var selector = `${expression}.${childObject}`;
+          var itemValue;
+
+          // console.log(childObject)
+
+          if(/[\.]/g.test(childObject)){
+            let paths = childObject.split('.');
+            function getValue(paths, item, i = 0){
+              if(typeof Object.values(item[paths[i]])[0] === 'string'){
+                return Object.values(item[paths[i]])[0];
               }else{
-                window.blade.elements['hidden'] = {elm: node, state: true};
-                node = window.blade.elements['hidden'].elm;
-              }
-            }else{
-              var exp = (typeof selector === 'string' ? window.blade.view[this.viewName].data[selector] : selector);
-              if(!eval(exp)){
-                window.blade.elements['hidden'] = {elm: node, state: false};
-                node = iou;
-              }else{
-                window.blade.elements['hidden'] = {elm: node, state: true};
-                node = window.blade.elements['hidden'].elm;
+                i++
+                getValue(paths, item[paths[i]], i)
               }
             }
+            itemValue = getValue(paths, item)
+          }else{
+            itemValue = item[key]
           }
+
+
+            html = html.replace(`{{${selector}}}`, `{{${key}}}`);
+            html = html.replace(`{{${key}}}`, itemValue);
+
+          // if(){
+
+            let obj = {};
+            obj[selector] = itemValue;
+
+            window.blade.view[target].data['temp'] = obj
+
+            // console.log(html)
+
+            // this.buildDom(html, 'body', 'for', index, topSelector);
+
+          // }
         }
+      }else{
+        html.replace(`{{${expression}}}`, item)
+      }
+
+
+      html = `<!-- ${topSelector}[${index}] -->` + html + `<!-- END -->`
+
+      return html;
+
+    }
+
+    const cleanExp = (html, item, expression) => {
+      var values = expression;
+      var newHtml;
+
+      if(typeof item === 'object'){
+
+        let expKeys = Object.keys(item);
+        let expVals = Object.values(item);
+
+        for(let key of expKeys){
+
+          function removeExp(html, dataArray, expArray, i){
+            var newHtml = html;
+            for(let exp of expArray){
+              var isMissing = true;
+              for(let data of Object.keys(dataArray)){
+                if(exp.indexOf(data) > -1) isMissing = false;
+              }
+              if(isMissing){
+                newHtml = newHtml.replace(exp, '');
+              }else{
+                newHtml = newHtml;
+              }
+            }
+
+            return newHtml;
+          }
+
+          const regex = new RegExp(`{{${expression}(.*?)}}`, "g");
+          const expArray = html.match(regex);
+          newHtml = removeExp(html, item, expArray);
+        }
+      }else{
+        // newHtml = html.replace(`{{${expression}}}`, item)
+      }
+
+      return newHtml
+    }
 
         this.directives(node, this.viewName, this.virtualDom)
 

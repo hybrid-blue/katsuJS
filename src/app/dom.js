@@ -1,21 +1,77 @@
-import Compiler from './compiler';
+// import Compiler from './compiler';
 
-export default class Dom extends Compiler{
+// export default class Dom extends Compiler{
+
+export default class Dom{
   constructor(viewName){
-    super()
+    // super()
     this.viewName = viewName;
     this.dom = document.querySelector('#root');
     this.vDom = []
+    this.expressStr = '';
+    this.currentIndex = null;
+    this.currentIteration;
+    this.switchCase = null
   }
 
-  buildDom(dom){
-    let domparser = new DOMParser();
-    var htmlobject = domparser.parseFromString(dom, 'text/html').querySelector('body');
-    var switchCase = false;
+  // Expressions
 
-    const buildNodes = (thisnode) => {
+  expressions(content, target){
 
-      return Array.prototype.map.call(thisnode.childNodes, (node => {
+    // console.log(content);
+    // console.log(target);
+
+    var regex = /(?<={{)(.*?)(?=\s*}})/g;
+    let expressions = content.match(regex);
+
+    // console.log(expressions)
+
+
+
+
+
+    var data = content;
+
+
+      for(let exp of expressions){
+
+        if(exp.indexOf('.') > -1){
+
+          let expArray = exp.split('.');
+
+          var currentData = window.blade.view[target].data;
+
+          for(let i=0;i<expArray.length;i++){
+
+            if(i === (expArray.length - 1)){
+              return data.replace(`{{${exp}}}`, currentData[expArray[i]]);
+            }else{
+              currentData = currentData[expArray[i]];
+            }
+          }
+        }else{
+          if(window.blade.view[target].data[exp] !== null){
+            return data.replace(`{{${exp}}}`, window.blade.view[target].data[exp]);
+          }
+        }
+
+      }
+  }
+
+  generateExp(obj, key){
+    if(typeof obj[key] === 'object'){
+      this.expressStr += `${key}.`;
+      this.generateExp(obj[key], Object.keys(obj[key])[0]);
+    }else{
+      this.expressStr += key;
+    }
+    return this.expressStr;
+  }
+
+  directiveIf(dom, node){
+
+  }
+
   directiveFor(value, node, target){
 
     let selector = value.split(' ').pop();
@@ -123,10 +179,44 @@ export default class Dom extends Compiler{
       return newHtml
     }
 
-        this.directives(node, this.viewName, this.virtualDom)
+    const htmlContent = node.innerHTML
+    // let items = window.blade.data[selector];
 
-        if(node.nodeType === 1){
-          // console.log(window.blade.component)
+
+    let items = window.blade.view[target].data[selector]
+
+    const func = (html, items, exp) => {
+
+      // console.log('~~~~~~~~~~~~~~~~~');
+      // console.log(html);
+      // console.log(items);
+      // console.log(exp);
+      // console.log('~~~~~~~~~~~~~~~~~');
+
+      return items.map((item, i) => {
+
+        // console.log('~~~~~~~~~~~~~~~~~');
+        // console.log(item);
+        // console.log(i);
+        // console.log('~~~~~~~~~~~~~~~~~');
+        // console.log(i)
+
+        let htmlContent = cleanExp(html, item, exp)
+        return replaceExp(htmlContent, item, exp, i);
+      }).join('');
+    }
+
+    let oldChildNode = document.createRange().createContextualFragment(node.innerHTML)
+    // If statment
+    // var newHTML = ifFunc(htmlContent, items, exp)
+    // For statment
+    var newHTML =  func(htmlContent, items, exp);
+    node.innerHTML = '';
+    node.appendChild(document.createRange().createContextualFragment(newHTML));
+
+
+  }
+
   poller(elm, index = null){
     return new Promise((resolve, reject) => {
       var i = 0;
@@ -170,6 +260,15 @@ export default class Dom extends Compiler{
       }
     })
   }
+
+
+  directives(node, viewName, type = 'default', index = null, topObj = null){
+
+    // console.log('[@@@@@@@@@@@@@@@@@@@@@]');
+    // console.log(index);
+    // console.log(type);
+    // console.log('[@@@@@@@@@@@@@@@@@@@@@]');
+
     const virtualDom = this.virtualDom.bind(this);
     const updateDom = this.updateDom.bind(this);
 
@@ -201,6 +300,17 @@ export default class Dom extends Compiler{
 
       return dataPath;
     }
+
+    if(node.attributes){
+
+      [...node.attributes].forEach((attr) => {
+
+        switch(attr.name){
+
+          case 'data-blade-for':
+            this.directiveFor(attr.value, node, viewName);
+          break;
+
           case 'data-blade-switch':
 
             window.blade.switch = attr.value;
@@ -232,6 +342,39 @@ export default class Dom extends Compiler{
             }
 
             setCaseDirective(node)
+
+          break;
+
+          // case 'data-blade-default':
+          //
+          //   const setCaseDefaultDirective = (elm) => {
+          //     if(this.switchCase){
+          //       // console.log('=== Set default for removal ===')
+          //       elm.setAttribute('data-blade-remove', true);
+          //     }
+          //   }
+          //
+          //   this.poller(`[data-blade-default="${attr.value}"]`).then(res => {
+          //     if(node.getAttribute("data-blade-default") === attr.value){
+          //       var elm;
+          //       if(type === 'for'){
+          //         // elms = document.querySelectorAll(`[data-blade-default="${attr.value}"]`)[index];
+          //         elm = node.parentNode.querySelector(`[data-blade-default="${attr.value}"]`);
+          //         // for(let elm of elms){
+          //         //   setCaseDefaultDirective(elm)
+          //         // }
+          //         setCaseDefaultDirective(elm)
+          //       }else{
+          //         elm = node.parentNode.querySelector(`[data-blade-default="${attr.value}"]`);
+          //         // for(let elm of elms){
+          //         //   setCaseDefaultDirective(elm)
+          //         // }
+          //         setCaseDefaultDirective(elm)
+          //       }
+          //     }
+          //   })
+          //
+          // break;
 
           case 'data-blade-click':
 
@@ -871,6 +1014,297 @@ export default class Dom extends Compiler{
 
           break;
 
+
+          case 'data-blade-if':
+
+            // var temp, selectorAttr, tempVal;
+            //
+            //   const setIfDirective = function(elm){
+            //
+            //     var forSelector;
+            //     var dataStr = null;
+            //
+            //     if(type === 'for'){
+            //
+            //         var dataStr = {};
+            //         var dataObj = {};
+            //         let selectorArray = attr.value.split('.');
+            //
+            //         forSelector = selectorArray.join('.');
+            //
+            //         var bladeData = window.blade.view[viewName].data
+            //
+            //         var forSelectorArray = forSelector.split('.')
+            //
+            //         for(let i=0;i<forSelectorArray.length;i++){
+            //           if(i === 0){
+            //             var baseProp = forSelectorArray[0];
+            //             dataStr = bladeData[topObj][index]
+            //             dataObj = dataStr
+            //           }else{
+            //             let prop = forSelectorArray[i]
+            //             dataStr = dataStr[prop]
+            //
+            //           }
+            //         }
+            //
+            //         if(typeof dataStr === 'boolean'){
+            //           if(!dataStr){
+            //             elm.setAttribute('data-blade-remove', true);
+            //           }
+            //         }
+            //
+            //     }else{
+            //
+            //       if(typeof window.blade.view[viewName].data[attr.value] === 'boolean'){
+            //         if(!window.blade.view[viewName].data[attr.value]){
+            //           elm.setAttribute('data-blade-remove', true);
+            //         }
+            //       }
+            //
+            //     }
+            //
+            //   }
+            //
+            //
+            //   this.poller(`[data-blade-if="${attr.value}"]`).then(res => {
+            //
+            //     if(node.getAttribute("data-blade-if") === attr.value){
+            //
+            //       var elms;
+            //
+            //       let data = getData(attr.value)
+            //
+            //       if(type === 'for'){
+            //
+            //         elms = document.querySelectorAll(`[data-blade-if="${attr.value}"]`)[index];
+            //
+            //         if(elms) setIfDirective(elms)
+            //
+            //       }else{
+            //         elms = document.querySelectorAll(`[data-blade-if="${attr.value}"]`);
+            //         for(let elm of elms){
+            //           if(elm) setIfDirective(elm)
+            //         }
+            //
+            //       }
+            //
+            //     }
+            //
+            //   })
+            //
+            //
+            //
+            //
+            //
+
+
+
+
+            // window.addEventListener('DOMContentLoaded', (event) => {
+            //     console.log('DOM fully loaded and parsed');
+            // });
+
+
+              window.blade.if = attr.value;
+
+              const hasIfAttribute = (attrs, data) => {
+
+                for(let nodeAttr of attrs){
+
+                  if(nodeAttr.name === 'data-blade-if' && !data){
+
+                    // console.log('+++++++++++++++++++++++++++')
+                    // console.log(attr.name)
+                    // console.log(data)
+                    // console.log(nodeAttr)
+                    // console.log('+++++++++++++++++++++++++++')
+
+                    return true;
+                  }
+                }
+                return false;
+              }
+
+              const setIfDirective = (node) => {
+                console.log('==== set If Directive ====')
+                let data = getData(window.blade.if)
+                console.log(data)
+                let parentElm = node.parentNode;
+                let elms = parentElm.childNodes;
+                for(let i=0;i<elms.length;i++){
+                  if(elms[i].nodeType === 1){
+                    if(hasIfAttribute(elms[i].attributes, data)){
+                      let iou = document.createComment('element-hidden');
+                      console.log('==== Element Hidden ====')
+                      node.parentNode.childNodes[i].replaceWith(iou)
+                    }else{
+                      this.switchCase = true;
+                    };
+                  }
+                }
+              }
+
+              setIfDirective(node)
+
+              // console.log(node)
+
+
+          break;
+        }
+
+      });
+      // window.blade.view[viewName].data.temp = null;
+    }
+
+  }
+
+
+/////////////////////////////////////////////
+
+
+
+// DOM Building
+
+  buildDom(dom, root = "body", type = "default", index = null, topObj = null){
+
+    let domparser = new DOMParser();
+    var htmlobject = index !== null ? domparser.parseFromString(dom, 'text/html').querySelectorAll(root)[0] : domparser.parseFromString(dom, 'text/html').querySelector(root);
+
+
+    // console.log(htmlobject)
+
+
+    const buildNodes = (thisnode) => {
+
+      // console.log(thisnode.childNodes)
+
+
+
+      return Array.prototype.map.call(thisnode.childNodes, (node => {
+
+
+        // if(node.attributes){
+        //
+        //
+        //     let selector = node.getAttribute(`data-blade-if`);
+        //
+        //     if(selector){
+        //
+        //         var thisElm = window.blade.elements['id1'];
+        //         let iou = document.createComment('element-removed');
+        //         var forSelector;
+        //         var dataStr = null;
+        //
+        //         if(type === 'for'){
+        //           var dataStr = {};
+        //           var dataObj = {};
+        //           let selectorArray = selector.split('.');
+        //
+        //           selectorArray.splice(0, 1, `${topObj}`);
+        //
+        //           forSelector = selectorArray.join('.');
+        //
+        //           var bladeData = window.blade.view[this.viewName].data
+        //
+        //           var forSelectorArray = forSelector.split('.')
+        //
+        //           for(let i=0;i<forSelectorArray.length;i++){
+        //             if(i === 0){
+        //               var baseProp = forSelectorArray[0];
+        //               dataStr = bladeData[baseProp][index]
+        //               dataObj = dataStr
+        //             }else{
+        //               let prop = forSelectorArray[i]
+        //               dataStr = dataStr[prop]
+        //
+        //             }
+        //           }
+        //
+        //           if(typeof dataStr === 'boolean'){
+        //             console.log(node)
+        //             if(!dataStr){
+        //               node = iou;
+        //             }
+        //           }
+        //
+        //         }else{
+        //
+        //           // console.log('############')
+        //           // console.log(selector)
+        //           // console.log(node)
+        //           // console.log(dataStr)
+        //           // console.log(index)
+        //           // console.log(topObj)
+        //           // console.log('############')
+        //
+        //
+        //           if(typeof window.blade.view[this.viewName].data[selector] === 'boolean'){
+        //
+        //             if(!window.blade.view[this.viewName].data[selector]){
+        //
+        //               node = iou;
+        //             }
+        //           }
+        //
+        //         }
+        //
+        //       }
+        //
+        //
+        // }
+
+        // this.directives(node, this.viewName, this.virtualDom, type, index)
+
+        // const getParent = (elm) => {
+        //
+        // }
+
+
+        // if(node.attributes){
+        //
+        //   const checkchildfor = (elm) => {
+        //     console.log(elm)
+        //     if(elm.getElementsByTagName('body')){
+        //       return false;
+        //     }
+        //     if(elm.parentNode.hasAttribute('data-blade-for')){
+        //       console.log(node)
+        //       return true
+        //     }else{
+        //       checkchildfor(elm.parentNode)
+        //     }
+        //
+        //   }
+        //
+        //   checkchildfor(node)
+        //
+        // }
+
+        if(node.nodeName === '#comment'){
+          // console.log('#################')
+          // console.log(node.textContent)
+          // console.log('#################')
+          if(node.textContent.trim().indexOf('[') > -1){
+            // console.log('++++ Comment ++++')
+            index = parseInt(node.textContent.slice((node.textContent.indexOf('[') + 1), node.textContent.indexOf(']')));
+            type = 'for'
+            this.currentIteration = node.textContent.split('[')[0].trim();
+          }else{
+            type = null
+          }
+
+        }
+
+        // console.log('============================')
+        // console.log(node);
+        // console.log(this.viewName);
+        // console.log(type);
+        // console.log(index);
+        // console.log('============================')
+
+        this.directives(node, this.viewName, type, index, this.currentIteration)
+
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 
         var map = {
@@ -880,10 +1314,6 @@ export default class Dom extends Compiler{
           node: node,
           children: buildNodes(node)
         }
-
-        // console.log('++++++++++++++++++++++')
-        // console.log(map)
-        // console.log('++++++++++++++++++++++')
 
         return map
 
@@ -896,8 +1326,24 @@ export default class Dom extends Compiler{
   };
 
   virtualDom(dom){
+
     let builtDom = this.buildDom(dom);
+
+    // setTimeout(() => {
+    //   console.log('[@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]')
+    //   console.log(document.querySelectorAll('[data-blade-remove="true"]'))
+    //   if(document.querySelectorAll('[data-blade-remove="true"]').length > 0){
+    //     let removedElms = document.querySelectorAll('[data-blade-remove="true"]')
+    //     let iou = document.createComment('element-removed');
+    //     for(let elm of removedElms){
+    //       elm.replaceWith(iou)
+    //     }
+    //   }
+    //   console.log('[@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]')
+    // },1000)
+
     return builtDom;
+
   }
 
 

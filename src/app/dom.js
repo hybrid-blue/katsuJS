@@ -589,6 +589,46 @@ export default class Dom extends Compiler{
 
 
           break;
+          case 'data-blade-src':
+
+            var temp, selectorAttr, tempVal;
+
+            // if(window.blade.view[viewName].data['temp'] !== null){
+            // if(attr.value.indexOf('.') > -1){
+            //   temp = window.blade.view[viewName].data['temp'];
+            //   selectorAttr = Object.keys(temp)[0];
+            // }else{
+            //   selectorAttr = attr.value
+            // }
+
+            // setTimeout(() => {
+
+            this.poller(`[data-blade-src="${attr.value}"]`).then(res => {
+              if(node.getAttribute("data-blade-src") === attr.value){
+                var elms;
+                // let data = type === 'for' ? Object.values(temp)[0] : window.blade.view[viewName].data[attr.value];
+
+                let data = getData(attr.value)
+
+                if(type === 'for'){
+                  elms = document.querySelectorAll(`[data-blade-src="${attr.value}"]`)[index];
+                  if(!elms.src) elms.setAttribute('src', data);
+                }else{
+                  elms = document.querySelectorAll(`[data-blade-src="${attr.value}"]`);
+                  for(let elm of elms){
+                    if(!elm.src) elm.setAttribute('src', data);
+                  }
+                }
+              }
+            })
+
+
+
+            // }, 1)
+
+
+
+          break;
 
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 

@@ -791,12 +791,19 @@ export default class Dom extends Compiler{
       root.replaceChild(this.createElm(newNode), root.childNodes[index]);
 
     }else if(newNode){
-      // console.log(root.childNodes[index])
-      if(root.childNodes[index] !== undefined){
+      // Add root !== undefined handle new comments
+      if(root !== undefined && root.childNodes[index] !== undefined){
         if(typeof root.childNodes[index].attributes !== 'undefined'){
-          if(newNode.attr.length > 0){
-            this.updateAttrs(root.childNodes[index], newNode.attr, oldNode.attr);
+          // prevent if node has no new attr
+
+          if(newNode.attr !== null){
+
+            if(newNode.attr.length > 0){
+              this.updateAttrs(root.childNodes[index], newNode.attr, oldNode.attr);
+            }
+
           }
+
         }
       }
 

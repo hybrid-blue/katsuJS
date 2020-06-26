@@ -18,9 +18,7 @@ const app = new Blade();
 class greetingMod{
   view(){
     return `
-      <div>
-        <h1>{{message}}</h1>
-      </div>
+      <h1>{{message}}</h1>
     `
   }
   data(){

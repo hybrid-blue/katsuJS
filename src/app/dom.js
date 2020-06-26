@@ -73,7 +73,7 @@ export default class Dom{
   }
 
   directiveFor(value, node, target){
-    
+
     let selector = value.split(' ').pop();
     let exp = value.split(' ')[0];
 
@@ -176,6 +176,7 @@ export default class Dom{
     let items = window.blade.view[target].data[selector]
 
     const func = (html, items, exp) => {
+
       return items.map((item, i) => {
         let htmlContent = cleanExp(html, item, exp)
         return replaceExp(htmlContent, item, exp, i);
@@ -186,6 +187,8 @@ export default class Dom{
     var newHTML =  func(htmlContent, items, exp);
 
     node.parentNode.replaceChild(document.createRange().createContextualFragment(newHTML), node);
+
+    return items.length;
 
   }
 
@@ -1242,25 +1245,22 @@ export default class Dom{
 
         // Prepare For elments
 
-        // console.log('[======================================]')
-        node.childNodes.forEach((item, i) => {
-          // console.log(`[----- ${i} -----]`)
-          if(node.childNodes[i].attributes){
-            if(node.childNodes[i].getAttribute('data-blade-for')){
-              if(!window.blade.forLoop.includes(node.childNodes[i].getAttribute('data-blade-for'))){
-                // console.log(node.childNodes[i])
-                this.directiveFor(node.childNodes[i].getAttribute('data-blade-for'), node.childNodes[i], this.viewName);
-                // console.log(node)
-                // console.log(node.childNodes[i + 1])
-                window.blade.forLoop.push(node.childNodes[i + 1].getAttribute('data-blade-for'))
-
+        if(node.children){
+          let childNodes = node.children;
+          let childCount = childNodes.length;
+          for(let i = 0;i<childCount;i++){
+            if(childNodes[i].attributes){
+              if(childNodes[i].getAttribute('data-blade-for')){
+                if(!window.blade.forLoop.includes(childNodes[i].getAttribute('data-blade-for'))){
+                  var elmCount = this.directiveFor(childNodes[i].getAttribute('data-blade-for'), childNodes[i], this.viewName);
+                  window.blade.forLoop.push(childNodes[i].getAttribute('data-blade-for'))
+                  childCount = childCount + (elmCount - 1)
+                }
               }
             }
           }
-        })
-        // console.log('[======================================]')
+        }
 
-        /////////////////////
 
         if(node.nodeName === '#comment'){
           // console.log('#################')
@@ -1277,8 +1277,12 @@ export default class Dom{
 
         }
 
-
-
+        // console.log('######################');
+        // console.log(index);
+        // console.log(type);
+        // console.log(this.currentIteration)
+        // console.log(node);
+        // console.log('######################');
 
         if(node.attributes){
 

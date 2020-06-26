@@ -1,10 +1,13 @@
 # bladeJS
 
-A front-end framework for building Single Page Applications.
+A reactive, directive-based library for creating User Interfaces.
 
-This framework comes with a built-in router, scalable state management and template handling, so all you need to worry about is providing the content. Let BladeJS handle the heavy work!
+BladeJS is the go-to solution for creating fully functional UI components in short-time, by using an minimal coding and vast array of built-in directives.
 
-This Framework is still under a lot of work and is not in a fully workable state.
+Rather than competing to be the smallest UI library, BladeJs focuses on offering the best tools to create awesome User Interfaces!
+
+
+This library is currently in Beta/Development stage and may contain error that are currently being address
 
 
 

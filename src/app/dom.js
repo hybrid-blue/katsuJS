@@ -73,7 +73,7 @@ export default class Dom{
   }
 
   directiveFor(value, node, target){
-
+    
     let selector = value.split(' ').pop();
     let exp = value.split(' ')[0];
 
@@ -95,8 +95,6 @@ export default class Dom{
           var selector = `${expression}.${childObject}`;
           var itemValue;
 
-          // console.log(childObject)
-
           if(/[\.]/g.test(childObject)){
             let paths = childObject.split('.');
             function getValue(paths, item, i = 0){
@@ -116,18 +114,11 @@ export default class Dom{
             html = html.replace(`{{${selector}}}`, `{{${key}}}`);
             html = html.replace(`{{${key}}}`, itemValue);
 
-          // if(){
-
             let obj = {};
             obj[selector] = itemValue;
 
             window.blade.view[target].data['temp'] = obj
 
-            // console.log(html)
-
-            // this.buildDom(html, 'body', 'for', index, topSelector);
-
-          // }
         }
       }else{
         html.replace(`{{${expression}}}`, item)
@@ -151,7 +142,8 @@ export default class Dom{
 
         for(let key of expKeys){
 
-          function removeExp(html, dataArray, expArray, i){
+          function removeExp(html, dataArray, expArray){
+
             var newHtml = html;
             for(let exp of expArray){
               var isMissing = true;
@@ -179,41 +171,21 @@ export default class Dom{
       return newHtml
     }
 
-    const htmlContent = node.innerHTML
-    // let items = window.blade.data[selector];
-
+    const htmlContent = node.outerHTML;
 
     let items = window.blade.view[target].data[selector]
 
     const func = (html, items, exp) => {
-
-      // console.log('~~~~~~~~~~~~~~~~~');
-      // console.log(html);
-      // console.log(items);
-      // console.log(exp);
-      // console.log('~~~~~~~~~~~~~~~~~');
-
       return items.map((item, i) => {
-
-        // console.log('~~~~~~~~~~~~~~~~~');
-        // console.log(item);
-        // console.log(i);
-        // console.log('~~~~~~~~~~~~~~~~~');
-        // console.log(i)
-
         let htmlContent = cleanExp(html, item, exp)
         return replaceExp(htmlContent, item, exp, i);
       }).join('');
     }
 
     let oldChildNode = document.createRange().createContextualFragment(node.innerHTML)
-    // If statment
-    // var newHTML = ifFunc(htmlContent, items, exp)
-    // For statment
     var newHTML =  func(htmlContent, items, exp);
-    node.innerHTML = '';
-    node.appendChild(document.createRange().createContextualFragment(newHTML));
 
+    node.parentNode.replaceChild(document.createRange().createContextualFragment(newHTML), node);
 
   }
 

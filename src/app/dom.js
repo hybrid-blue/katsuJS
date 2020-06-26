@@ -1068,44 +1068,48 @@ export default class Dom{
 
 
 
-              window.blade.if = attr.value;
-
-              const hasIfAttribute = (attrs, data) => {
-
-                for(let nodeAttr of attrs){
-
-                  if(nodeAttr.name === 'data-blade-if' && !data){
 
 
-                    return true;
-                  }
-                }
-                return false;
-              }
+              //
+              // window.blade.if = attr.value;
+              //
+              // const hasIfAttribute = (attrs, data) => {
+              //   for(let nodeAttr of attrs){
+              //     if(nodeAttr.name === 'data-blade-if' && !data){
+              //       return true;
+              //     }
+              //   }
+              //   return false;
+              // }
+              //
+              // var hide;
+              //
+              // // const setIfDirective = (node) => {
+              //   console.log('==== set If Directive ====')
+              //   let data = getData(window.blade.if)
+              //
+              //
+              //   let elms = node.parentNode.childNodes;
+              //   for(let i=0;i<elms.length;i++){
+              //     if(elms[i].nodeType === 1){
+              //       if(hasIfAttribute(elms[i].attributes, data)){
+              //         let iou = document.createComment('element-hidden');
+              //         console.log('==== Element Hidden ====')
+              //         console.log(node.parentNode.childNodes[i])
+              //         // node.parentNode.childNodes[i].replaceWith(iou);
+              //         node.parentNode.childNodes[i].replaceWith(iou);
+              //       }else{
+              //         this.switchCase = true;
+              //       };
+              //     };
+              //   };
+              // // };
 
-              const setIfDirective = (node) => {
-                console.log('==== set If Directive ====')
-                let data = getData(window.blade.if)
-                console.log(data)
-                let parentElm = node.parentNode;
-                let elms = parentElm.childNodes;
-                for(let i=0;i<elms.length;i++){
-                  if(elms[i].nodeType === 1){
-                    if(hasIfAttribute(elms[i].attributes, data)){
-                      let iou = document.createComment('element-hidden');
-                      console.log('==== Element Hidden ====')
-                      node.parentNode.childNodes[i].replaceWith(iou)
-                    }else{
-                      this.switchCase = true;
-                    };
-                  }
-                }
-              }
 
-              setIfDirective(node)
+              // setIfDirective(node)
+
 
               // console.log(node)
-
 
           break;
         }
@@ -1238,6 +1242,29 @@ export default class Dom{
         //
         // }
 
+
+        // Prepare For elments
+
+        // console.log('[======================================]')
+        node.childNodes.forEach((item, i) => {
+          // console.log(`[----- ${i} -----]`)
+          if(node.childNodes[i].attributes){
+            if(node.childNodes[i].getAttribute('data-blade-for')){
+              if(!window.blade.forLoop.includes(node.childNodes[i].getAttribute('data-blade-for'))){
+                // console.log(node.childNodes[i])
+                this.directiveFor(node.childNodes[i].getAttribute('data-blade-for'), node.childNodes[i], this.viewName);
+                // console.log(node)
+                // console.log(node.childNodes[i + 1])
+                window.blade.forLoop.push(node.childNodes[i + 1].getAttribute('data-blade-for'))
+
+              }
+            }
+          }
+        })
+        // console.log('[======================================]')
+
+        /////////////////////
+
         if(node.nodeName === '#comment'){
           // console.log('#################')
           // console.log(node.textContent)
@@ -1253,10 +1280,85 @@ export default class Dom{
 
         }
 
-        // console.log('============================')
-        // console.log('============================')
+
+
+
+        if(node.attributes){
+
+          let selector = node.getAttribute(`data-blade-if`);
+
+            if(selector){
+
+
+              const getData = (data) => {
+                var dataPath;
+
+                let dataArray = data.split('.')
+
+                const findRoot = () =>{
+
+                }
+
+                if(data.indexOf('.') > -1){
+                  for(let i = 0;i<dataArray.length;i++){
+                    if(i === 0){
+                      if(window.blade.view[this.viewName].data[this.currentIteration]){
+                        dataPath = window.blade.view[this.viewName].data[this.currentIteration][index];
+                      }else{
+
+                      }
+                    }else{
+                      dataPath = dataPath[dataArray[i]];
+                    }
+
+                  }
+                }else{
+                  dataPath = window.blade.view[this.viewName].data[data];
+                }
+
+                return dataPath;
+              }
+
+
+              const hasIfAttribute = (attrs, data) => {
+                for(let nodeAttr of attrs){
+                  if(nodeAttr.name === 'data-blade-if'){
+
+                    let data = getData(nodeAttr.value)
+
+                    if(!data){
+                      return true;
+                    }
+
+                  }
+                }
+                return false;
+              }
+
+              if(hasIfAttribute(node.attributes)){
+                let iou = document.createComment('element-hidden');
+                node = iou;
+              }else{
+                this.switchCase = true;
+              };
+
+
+            }
+
+          }
+
+
+
 
         this.directives(node, this.viewName, type, index, this.currentIteration)
+
+
+        // var removeComment = document.createComment('REMOVED')
+        // console.log('============================')
+        // node = removeComment;
+        // console.log('============================')
+
+
 
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 

@@ -275,7 +275,7 @@ export default class Dom{
         switch(attr.name){
 
           case 'data-blade-for':
-            this.directiveFor(attr.value, node, viewName);
+            // this.directiveFor(attr.value, node, viewName);
           break;
 
           case 'data-blade-switch':

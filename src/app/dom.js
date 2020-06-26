@@ -204,7 +204,6 @@ export default class Dom{
           }
         },1);
 
-
       function stopPoller() {
         clearInterval(pollerElm);
       }
@@ -225,7 +224,6 @@ export default class Dom{
             i++;
           }
         },1);
-
 
       function stopPoller() {
         clearInterval(pollerElm);
@@ -306,7 +304,7 @@ export default class Dom{
               }
             }
 
-            setCaseDirective(node)
+            setCaseDirective(node);
 
           break;
 
@@ -1137,7 +1135,7 @@ export default class Dom{
 
     const buildNodes = (thisnode) => {
 
-      // console.log(thisnode.childNodes)
+      // console.log(thisnode)
 
 
 

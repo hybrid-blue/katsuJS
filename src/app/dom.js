@@ -354,15 +354,13 @@ export default class Dom{
             }
 
             setTimeout(() => {
-              // let target = document.querySelector(`[data-blade-click="${attr.value}"]`);
 
               const setClickEvent = (target) => {
-
-
 
                 if(!target.getAttribute('data-blade-listening')){
                   target.setAttribute('data-blade-listening', 'true');
                   target.addEventListener('click', (e) => {
+
 
                     let regex = /(?<=\()(.*?)(?=\s*\))/g;
                     let arg = attr.value.match(regex);
@@ -388,11 +386,12 @@ export default class Dom{
 
                           var foundIndex;
 
-                          const findIndex = (parentNode, childNode) => {
-                            // let elmTag = childNode.tagName;
-                            let nodes = parentNode.children;
+                          const findIndex = (parentNode) => {
+                            let nodes = parentNode.parentNode.children;
+                            let thisNode = parentNode;
+
                             for(let i=0;i<nodes.length;i++){
-                              if(nodes[i].isEqualNode(childNode)){
+                              if(nodes[i].isEqualNode(thisNode)){
                                 return i;
                               }
                             }
@@ -405,7 +404,7 @@ export default class Dom{
                             if(elm.parentNode.getAttribute('data-blade-for')){
                               parentNode = elm.parentNode;
                               childNode = elm;
-                              foundIndex = findIndex(parentNode, childNode);
+                              foundIndex = findIndex(parentNode);
                               newArgs['index'] = foundIndex;
                             }else{
                               findParent(elm.parentNode);

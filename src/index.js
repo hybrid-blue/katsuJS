@@ -11,24 +11,39 @@ export class Blade{
   constructor(viewName){
 
     this.module = class{
-      constructor(viewName){
+      constructor(viewName, data = null){
+
+
+        // if(data){
+        //   console.log(data.view());
+        //   console.log(data.data());
+        //   console.log(data.controller);
+        // }
+
         this.viewName = viewName;
         window.blade.module = viewName;
         window.blade.view[this.viewName] = {};
         this.targetElement;
+
+        window.blade.view[this.viewName].template = data.view();
+
+        window.blade.view[this.viewName].data = data.data();
+
+        window.blade.view[this.viewName].controller = data.controller;
+
       }
 
-      view(template){
-          window.blade.view[this.viewName].template = template;
-      }
-
-      data(state){
-        window.blade.view[this.viewName].data = state;
-      }
-
-      controller(func){
-        window.blade.view[this.viewName].controller = func;
-      }
+      // view(template){
+      //     window.blade.view[this.viewName].template = template;
+      // }
+      //
+      // data(state){
+      //   window.blade.view[this.viewName].data = state;
+      // }
+      //
+      // controller(func){
+      //   window.blade.view[this.viewName].controller = func;
+      // }
 
       updateData(data, target){
         console.log('======= updateData ======')
@@ -62,6 +77,15 @@ export class Blade{
       render(target){
 
         window.blade.view[this.viewName].root = target;
+
+
+
+        console.log(window.blade.view[this.viewName].template)
+
+        console.log(window.blade.view[this.viewName].data)
+
+        console.log(window.blade.view[this.viewName].controller)
+
 
         const $event = {
           on: (name, func) => this.event(name, func)
@@ -285,6 +309,7 @@ export class Blade{
     window.blade.controller = {};
     window.blade.component = {};
     window.blade.hiddenElements = [];
+    window.blade.forLoop = [];
     // window.blade.module = viewName
     // window.blade.view[window.blade.module] = {};
 

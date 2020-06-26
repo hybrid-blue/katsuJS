@@ -1383,6 +1383,9 @@ export default class Dom{
 
     let builtDom = this.buildDom(dom);
 
+    console.log('[@@@@@@@@@@@@@@@@@@@@@@@@@@@@]')
+    console.log(builtDom)
+    window.blade.forLoop = [];
 
     return builtDom;
 

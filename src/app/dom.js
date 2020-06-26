@@ -236,11 +236,6 @@ export default class Dom{
 
   directives(node, viewName, type = 'default', index = null, topObj = null){
 
-    // console.log('[@@@@@@@@@@@@@@@@@@@@@]');
-    // console.log(index);
-    // console.log(type);
-    // console.log('[@@@@@@@@@@@@@@@@@@@@@]');
-
     const virtualDom = this.virtualDom.bind(this);
     const updateDom = this.updateDom.bind(this);
 
@@ -289,8 +284,6 @@ export default class Dom{
 
             const hasCaseAttribute = (attrs, data) => {
               for(let nodeAttr of attrs){
-
-                console.log(attr.name)
                 if(nodeAttr.name === 'data-blade-case' && nodeAttr.value !== data){
                   return true;
                 }
@@ -1073,9 +1066,6 @@ export default class Dom{
 
 
 
-            // window.addEventListener('DOMContentLoaded', (event) => {
-            //     console.log('DOM fully loaded and parsed');
-            // });
 
 
               window.blade.if = attr.value;
@@ -1086,11 +1076,6 @@ export default class Dom{
 
                   if(nodeAttr.name === 'data-blade-if' && !data){
 
-                    // console.log('+++++++++++++++++++++++++++')
-                    // console.log(attr.name)
-                    // console.log(data)
-                    // console.log(nodeAttr)
-                    // console.log('+++++++++++++++++++++++++++')
 
                     return true;
                   }
@@ -1269,10 +1254,6 @@ export default class Dom{
         }
 
         // console.log('============================')
-        // console.log(node);
-        // console.log(this.viewName);
-        // console.log(type);
-        // console.log(index);
         // console.log('============================')
 
         this.directives(node, this.viewName, type, index, this.currentIteration)
@@ -1301,18 +1282,6 @@ export default class Dom{
 
     let builtDom = this.buildDom(dom);
 
-    // setTimeout(() => {
-    //   console.log('[@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]')
-    //   console.log(document.querySelectorAll('[data-blade-remove="true"]'))
-    //   if(document.querySelectorAll('[data-blade-remove="true"]').length > 0){
-    //     let removedElms = document.querySelectorAll('[data-blade-remove="true"]')
-    //     let iou = document.createComment('element-removed');
-    //     for(let elm of removedElms){
-    //       elm.replaceWith(iou)
-    //     }
-    //   }
-    //   console.log('[@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]')
-    // },1000)
 
     return builtDom;
 

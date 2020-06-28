@@ -176,8 +176,10 @@ export default class Dom{
 
     const func = (html, items, exp) => {
 
+      if(!items) items = [];
+
       return items.map((item, i) => {
-        let htmlContent = cleanExp(html, item, exp)
+        let htmlContent = cleanExp(html, item, exp);
         return replaceExp(htmlContent, item, exp, i);
       }).join('');
     }

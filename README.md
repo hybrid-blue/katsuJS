@@ -1,10 +1,10 @@
-# bladeJS
+# KatsuJS
 
 A reactive, directive-based library for creating User Interfaces.
 
-BladeJS is the go-to solution for creating fully functional UI components in short-time, by using an minimal coding and vast array of built-in directives.
+KatsuJS is the go-to solution for creating fully functional UI components in short-time, by using an minimal coding and vast array of built-in directives.
 
-Rather than competing to be the smallest UI library, BladeJs focuses on offering the best tools to create awesome User Interfaces!
+Rather than competing to be the smallest UI library, KatsuJs focuses on offering the best tools to create awesome User Interfaces!
 
 
 This library is currently in Beta/Development stage and may contain error that are currently being address
@@ -12,26 +12,27 @@ This library is currently in Beta/Development stage and may contain error that a
 
 
 ```javascript
+// Basic Component
 
 const app = new Blade();
 
-class greetingMod{
+class Hello{
   view(){
     return `
       <div>
-        <h1>{{message}}</h1>
+        <h1>{{msg}}</h1>
       </div>
     `
   }
   data(){
     return {
-      message: 'Hello World'
+      msg: 'Hello World'
     }
   }
 }
 
-const greeting = new app.module(greetingMod);
+app.module(Hello);
 
-greeting.render('#root')
+app.render('Hello', '#root')
 
 ```

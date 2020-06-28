@@ -24,8 +24,13 @@
     }
     window.blade.view[viewName].service = {};
 
+    var $data, $state;
+    if(window.blade.store) $state = wrap(window.blade.store, 'state', console.log)
+    if(window.blade.view[viewName].data) $data = wrap(window.blade.view[viewName].data, 'data', console.log)
       $emit: $emit(viewName),
       $service: $service(viewName),
+      $state: $state
+    }
           if(mod.service){
             window.blade.view[viewName].service[options[i].name] = mod.service();
           }else{

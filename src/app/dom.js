@@ -1132,116 +1132,9 @@ export default class Dom{
     let domparser = new DOMParser();
     var htmlobject = index !== null ? domparser.parseFromString(dom, 'text/html').querySelectorAll(root)[0] : domparser.parseFromString(dom, 'text/html').querySelector(root);
 
-
-    // console.log(htmlobject)
-
-
     const buildNodes = (thisnode) => {
 
-      // console.log(thisnode)
-
-
-
       return Array.prototype.map.call(thisnode.childNodes, (node => {
-
-
-        // if(node.attributes){
-        //
-        //
-        //     let selector = node.getAttribute(`data-blade-if`);
-        //
-        //     if(selector){
-        //
-        //         var thisElm = window.blade.elements['id1'];
-        //         let iou = document.createComment('element-removed');
-        //         var forSelector;
-        //         var dataStr = null;
-        //
-        //         if(type === 'for'){
-        //           var dataStr = {};
-        //           var dataObj = {};
-        //           let selectorArray = selector.split('.');
-        //
-        //           selectorArray.splice(0, 1, `${topObj}`);
-        //
-        //           forSelector = selectorArray.join('.');
-        //
-        //           var bladeData = window.blade.view[this.viewName].data
-        //
-        //           var forSelectorArray = forSelector.split('.')
-        //
-        //           for(let i=0;i<forSelectorArray.length;i++){
-        //             if(i === 0){
-        //               var baseProp = forSelectorArray[0];
-        //               dataStr = bladeData[baseProp][index]
-        //               dataObj = dataStr
-        //             }else{
-        //               let prop = forSelectorArray[i]
-        //               dataStr = dataStr[prop]
-        //
-        //             }
-        //           }
-        //
-        //           if(typeof dataStr === 'boolean'){
-        //             console.log(node)
-        //             if(!dataStr){
-        //               node = iou;
-        //             }
-        //           }
-        //
-        //         }else{
-        //
-        //           // console.log('############')
-        //           // console.log(selector)
-        //           // console.log(node)
-        //           // console.log(dataStr)
-        //           // console.log(index)
-        //           // console.log(topObj)
-        //           // console.log('############')
-        //
-        //
-        //           if(typeof window.blade.view[this.viewName].data[selector] === 'boolean'){
-        //
-        //             if(!window.blade.view[this.viewName].data[selector]){
-        //
-        //               node = iou;
-        //             }
-        //           }
-        //
-        //         }
-        //
-        //       }
-        //
-        //
-        // }
-
-        // this.directives(node, this.viewName, this.virtualDom, type, index)
-
-        // const getParent = (elm) => {
-        //
-        // }
-
-
-        // if(node.attributes){
-        //
-        //   const checkchildfor = (elm) => {
-        //     console.log(elm)
-        //     if(elm.getElementsByTagName('body')){
-        //       return false;
-        //     }
-        //     if(elm.parentNode.hasAttribute('data-blade-for')){
-        //       console.log(node)
-        //       return true
-        //     }else{
-        //       checkchildfor(elm.parentNode)
-        //     }
-        //
-        //   }
-        //
-        //   checkchildfor(node)
-        //
-        // }
-
 
         // Prepare For elments
 
@@ -1261,13 +1154,8 @@ export default class Dom{
           }
         }
 
-
         if(node.nodeName === '#comment'){
-          // console.log('#################')
-          // console.log(node.textContent)
-          // console.log('#################')
           if(node.textContent.trim().indexOf('[') > -1){
-            // console.log('++++ Comment ++++')
             index = parseInt(node.textContent.slice((node.textContent.indexOf('[') + 1), node.textContent.indexOf(']')));
             type = 'for'
             this.currentIteration = node.textContent.split('[')[0].trim();
@@ -1277,28 +1165,13 @@ export default class Dom{
 
         }
 
-        // console.log('######################');
-        // console.log(index);
-        // console.log(type);
-        // console.log(this.currentIteration)
-        // console.log(node);
-        // console.log('######################');
-
         if(node.attributes){
-
           let selector = node.getAttribute(`data-blade-if`);
-
             if(selector){
-
-
               const getData = (data) => {
                 var dataPath;
-
                 let dataArray = data.split('.')
-
-                const findRoot = () =>{
-
-                }
+                const findRoot = () => {}
 
                 if(data.indexOf('.') > -1){
                   for(let i = 0;i<dataArray.length;i++){
@@ -1343,23 +1216,11 @@ export default class Dom{
                 this.switchCase = true;
               };
 
-
             }
 
           }
 
-
-
-
         this.directives(node, this.viewName, type, index, this.currentIteration)
-
-
-        // var removeComment = document.createComment('REMOVED')
-        // console.log('============================')
-        // node = removeComment;
-        // console.log('============================')
-
-
 
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 
@@ -1385,8 +1246,6 @@ export default class Dom{
 
     let builtDom = this.buildDom(dom);
 
-    console.log('[@@@@@@@@@@@@@@@@@@@@@@@@@@@@]')
-    console.log(builtDom)
     window.blade.forLoop = [];
 
     return builtDom;

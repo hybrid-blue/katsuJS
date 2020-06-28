@@ -1,1 +1,1 @@
-module.exports = require('./katsu.js').default;
+module.exports = require('./app/katsu.js').default;

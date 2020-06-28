@@ -44,18 +44,29 @@ export default class Dom{
           for(let i=0;i<expArray.length;i++){
 
             if(i === (expArray.length - 1)){
-              return data.replace(`{{${exp}}}`, currentData[expArray[i]]);
+              // Possibly has a bug for rendering multiple expressions in the same element
+              try{
+                return data.replace(`{{${exp}}}`, currentData[expArray[i]]);
+              }
+              catch{
+                return false
+              }
+
             }else{
               currentData = currentData[expArray[i]];
             }
           }
         }else{
+
           if(window.blade.view[target].data[exp] !== null){
-            return data.replace(`{{${exp}}}`, window.blade.view[target].data[exp]);
+            data = data.replace(`{{${exp}}}`, window.blade.view[target].data[exp]);
           }
         }
 
       }
+
+      return data
+
   }
 
   generateExp(obj, key){

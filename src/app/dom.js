@@ -1146,8 +1146,10 @@ export default class Dom{
               if(childNodes[i].getAttribute('data-blade-for')){
                 if(!window.blade.forLoop.includes(childNodes[i].getAttribute('data-blade-for'))){
                   var elmCount = this.directiveFor(childNodes[i].getAttribute('data-blade-for'), childNodes[i], this.viewName);
-                  window.blade.forLoop.push(childNodes[i].getAttribute('data-blade-for'))
-                  childCount = childCount + (elmCount - 1)
+                  if(elmCount > 0){
+                    window.blade.forLoop.push(childNodes[i].getAttribute('data-blade-for'))
+                  }
+                  childCount = childCount + (elmCount - 1);
                 }
               }
             }

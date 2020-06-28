@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+
 module.exports = {
   entry: './src/index.js',
   plugins: [
@@ -14,7 +15,8 @@ module.exports = {
     path: `${__dirname}/dist`,
     publicPath: '/',
     filename: 'bundle.js',
-    library: '_'
+    library: 'Blade',
+    libraryTarget: 'umd',
   },
   devServer: {
     contentBase: './dist',

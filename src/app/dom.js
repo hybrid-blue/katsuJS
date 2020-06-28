@@ -187,9 +187,16 @@ export default class Dom{
     let oldChildNode = document.createRange().createContextualFragment(node.innerHTML)
     var newHTML =  func(htmlContent, items, exp);
 
-    node.parentNode.replaceChild(document.createRange().createContextualFragment(newHTML), node);
+    var itemCount;
 
-    return items.length;
+    if(newHTML.length > 0){
+      node.parentNode.replaceChild(document.createRange().createContextualFragment(newHTML), node);
+      itemCount = items.length;
+    }else{
+      itemCount = 0;
+    }
+
+    return itemCount;
 
   }
 

@@ -516,12 +516,16 @@ export default class Dom{
 
 
                         let domparser = new DOMParser();
-                        const root = document.querySelector('#root').innerHTML
+
+                        const root = child ? document.querySelector(`[data-blade-component="${this.viewName}"]`).innerHTML : document.querySelector(window.blade.view[target].root).innerHTML;
+
                         var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
                         const htmlContent = virtualDom(window.blade.view[view].template);
 
                         window.blade.view[view].vDomNew = htmlContent;
-                        const targetElm = document.querySelector('#root');
+
+                        const targetElm = child ? document.querySelector(`[data-blade-component="${this.viewName}"]`) : document.querySelector(window.blade.view[target].root);
+
                         updateDom(targetElm, window.blade.view[view].vDomNew[0], window.blade.view[view].vDomPure[0]);
 
                         window.blade.view[view].vDomPure = window.blade.view[view].vDomNew

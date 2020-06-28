@@ -1,6 +1,6 @@
 # KatsuJS
 
-A reactive, directive-based library for creating User Interfaces.
+A reactive, directive-based library for creating User Interfaces with simple components.
 
 KatsuJS is the go-to solution for creating fully functional UI components in short-time, by using an minimal coding and vast array of built-in directives.
 

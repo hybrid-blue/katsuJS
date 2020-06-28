@@ -1,3 +1,6 @@
+        receive: (name, func) => {
+          window.blade.view[selector].emit[name] = func;
+        }
     const $emit = (selector) => {
       return{
         send: (data) => {

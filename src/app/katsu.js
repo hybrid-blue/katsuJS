@@ -1,8 +1,5 @@
-import './style.css';
-
-import App from './app/';
-import Api from './app/api';
-import Dom from './app/dom';
+import '../style.css';
+import Dom from './dom';
 
 export default class Blade{
   constructor(viewName){

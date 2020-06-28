@@ -3,3 +3,9 @@ $ cat .gitignore
 
 /dist/*
 /node_modules/*
+
+# Untracked files:
+/src/index.html
+/src/index.txt
+/src/style.css
+/src/style.scss

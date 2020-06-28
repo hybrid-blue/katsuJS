@@ -19,9 +19,7 @@ const app = new Blade();
 class Hello{
   view(){
     return `
-      <div>
-        <h1>{{msg}}</h1>
-      </div>
+      <h1>{{message}}</h1>
     `
   }
   data(){

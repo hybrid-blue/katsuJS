@@ -39,7 +39,7 @@ export default class Dom{
                 return data.replace(`{{${exp}}}`, currentData[expArray[i]]);
               }
               catch{
-                return false
+                return data.replace(`{{${exp}}}`, '');
               }
 
             }else{

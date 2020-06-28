@@ -4,7 +4,6 @@
 
 export default class Dom{
   constructor(viewName){
-    // super()
     this.viewName = viewName;
     this.dom = document.querySelector('#root');
     this.vDom = []
@@ -18,17 +17,8 @@ export default class Dom{
 
   expressions(content, target){
 
-    // console.log(content);
-    // console.log(target);
-
     var regex = /(?<={{)(.*?)(?=\s*}})/g;
     let expressions = content.match(regex);
-
-    // console.log(expressions)
-
-
-
-
 
     var data = content;
 
@@ -175,8 +165,6 @@ export default class Dom{
           const expArray = html.match(regex);
           newHtml = removeExp(html, item, expArray);
         }
-      }else{
-        // newHtml = html.replace(`{{${expression}}}`, item)
       }
 
       return newHtml
@@ -285,10 +273,6 @@ export default class Dom{
       [...node.attributes].forEach((attr) => {
 
         switch(attr.name){
-
-          case 'data-blade-for':
-            // this.directiveFor(attr.value, node, viewName);
-          break;
 
           case 'data-blade-switch':
 
@@ -441,14 +425,8 @@ export default class Dom{
               }
 
 
-
-
               if(node.getAttribute("data-blade-click") === attr.value){
                 var elms;
-
-                // console.log(type)
-
-                // let data = type === 'for' ? Object.values(temp)[0] : window.blade.view[viewName].data[attr.value];
                 if(type === 'for'){
                   elms = document.querySelectorAll(`[data-blade-click="${attr.value}"]`)[index];
                   setClickEvent(elms)
@@ -467,16 +445,7 @@ export default class Dom{
 
           var temp, selectorAttr, tempVal;
 
-            // if(attr.value.indexOf('.') > -1){
-            //   temp = window.blade.view[viewName].data['temp'];
-            //   selectorAttr = Object.keys(temp)[0];
-            // }else{
-            //   selectorAttr = attr.value
-            // }
-
             function setBindEvent(target, type){
-
-              // setTimeout(() => {
 
                 console.log(target)
                 console.log(type)
@@ -493,12 +462,8 @@ export default class Dom{
                     eventType = 'keydown';
                   }
 
-                  // console.log(target)
-                  // console.log(eventType)
-
                   target.addEventListener(eventType, function(e){
 
-                      // console.log(e)
                       setTimeout(() => {
 
                         var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
@@ -560,16 +525,7 @@ export default class Dom{
 
                 }
 
-              // },10)
-              // let target = document.querySelector(`[data-blade-bind="${attr.value}"]`);
-
-
             }
-
-
-
-
-
 
             if(node.getAttribute("data-blade-bind") === attr.value){
 
@@ -641,11 +597,6 @@ export default class Dom{
                     for(let className of newClassNameArray){
                       let key = Object.keys(className);
                       let value = Object.values(className);
-
-                      // console.log(value)
-                      // let data = type === 'for' ? window.blade.view[viewName].data['temp'] : window.blade.view[viewName].data[value]
-                      // console.log(data);
-
                       let nodeClass = node.classList.value.split(' ');
                       let targetClass = target.classList.value.split(' ');
 
@@ -660,10 +611,8 @@ export default class Dom{
                     let targetClass = target.classList.value.split(' ');
 
                     let newClasses = nameArray.filter(item => {
-                      // console.log(item)
                       var classArray = [];
                       for(let thisClass of bladeClasses){
-                        // console.log(thisClass)
                         classArray.push(item !== thisClass);
                       }
                       return classArray;
@@ -696,7 +645,6 @@ export default class Dom{
                       let targetClassArr = node.classList.value.split(', ');
                       let classArray = targetClassArr.concat(newClasses);
                       for(let className of classArray){
-                        // console.log('~~~~~ Class 1 ~~~~~')
                         target.classList.add(className);
                       }
 
@@ -713,10 +661,6 @@ export default class Dom{
                       }
                     })
 
-                    // let data = type === 'for' ? window.blade.view[viewName].data['temp'] : window.blade.view[viewName].data[attr.value];
-                    // console.log(data)
-
-
                     if(type === 'boolean'){
 
                       for(let item of newClasses){
@@ -724,8 +668,6 @@ export default class Dom{
                       }
 
                       var stringObj = JSON.stringify(data);
-
-                      // console.log(stringObj)
 
                       stringObj = stringObj.substr(1, stringObj.length);
                       stringObj = stringObj.substr(0, stringObj.length - 1);
@@ -750,14 +692,9 @@ export default class Dom{
                           }
                         }
 
-                        // console.log(a);
-                        // console.log(b)
-
                         bladeClasses.push(a)
                         newClassNameArray.push(JSON.parse(`{${a}: ${b}}`));
 
-                        // console.log(bladeClasses);
-                        // console.log(newClassNameArray)
                       }
 
                       target.classList.add(node.classList.value);
@@ -768,20 +705,6 @@ export default class Dom{
 
                         let key = Object.keys(className);
                         let value = Object.values(className);
-
-                        // console.log(value)
-                        // let data = type === 'for' ? window.blade.view[viewName].data['temp'] : window.blade.view[viewName].data[value]
-                        // console.log(data);
-
-                        // let nodeClass = node.classList.value.split(' ');
-                        // let targetClass = target.classList.value.split(' ');
-                        //
-                        // console.log(nodeClass);
-                        // console.log(targetClass);
-
-                        // if(window.blade.view[viewName].data[key]){
-                        //   nameArray.push(key[0])
-                        // }
 
                         if(value[0]) nameArray.push(key[0])
 
@@ -797,52 +720,6 @@ export default class Dom{
                       }
 
 
-                      // console.log('====== 2 ======')
-
-                      // let currentClasses = targetClass.filter(item => {
-                      //   for(let thisClass of nodeClass){
-                      //     return item !== thisClass;
-                      //   }
-                      // })
-                      //
-                      // console.log(currentClasses)
-
-                      // console.log('====== 3 ======')
-
-                      // if(JSON.stringify(newClasses) !== JSON.stringify(currentClasses)){
-
-                        // console.log('====== 4 ======')
-
-                        // var removedClasses;
-                        //
-                        // if(newClasses.length > 0){
-                        //   removedClasses = currentClasses.filter(item => {
-                        //     for(let thisClass of newClasses){
-                        //       return item !== thisClass;
-                        //     }
-                        //   })
-                        // }else{
-                        //   removedClasses = currentClasses
-                        // }
-                        //
-                        // for(let item of removedClasses){
-                        //   target.classList.remove(item);
-                        // }
-                        //
-                        // let targetClassArr = node.classList.value.split(', ');
-                        // let classArray = targetClassArr.concat(newClasses);
-                        // for(let className of classArray){
-                        //   target.classList.add(className);
-                        // }
-
-                      // }
-
-
-
-
-
-
-
                     }else if(JSON.stringify(newClasses) !== JSON.stringify([data])){
 
 
@@ -854,8 +731,6 @@ export default class Dom{
                       let classArray = [node.classList.value, data];
 
                       for(let className of classArray){
-                        // console.log('~~~~~ Class 2 ~~~~~')
-                        // console.log(className)
                         target.classList.add(className);
                       }
                     }
@@ -864,24 +739,12 @@ export default class Dom{
 
                 }
 
-                // console.log('==== data-blade-class SUCCESS ====');
-                // console.log(window.blade.view[viewName].data['temp'])
-                // console.log(node.getAttribute("data-blade-class"))
-                // console.log(selectorAttr)
-                // const target = document.querySelector(`[data-blade-class="${attr.value}"]`);
-
-                // console.log('[======================]')
-                // console.log(node.getAttribute("data-blade-class"));
-                // console.log(selectorAttr)
-                // console.log('[======================]')
 
                 if(node.getAttribute("data-blade-class") === attr.value){
 
                   var elms, data;
 
-                  // if(attr.value.indexOf('{') > -1){
-                    data  = attr.value;
-                  // }
+                  data  = attr.value;
 
                   if(type === 'for'){
                     elms = document.querySelectorAll(`[data-blade-class="${attr.value}"]`)[index];
@@ -945,23 +808,10 @@ export default class Dom{
             }, 1)
 
 
-
-
-
           break;
           case 'data-blade-src':
 
             var temp, selectorAttr, tempVal;
-
-            // if(window.blade.view[viewName].data['temp'] !== null){
-            // if(attr.value.indexOf('.') > -1){
-            //   temp = window.blade.view[viewName].data['temp'];
-            //   selectorAttr = Object.keys(temp)[0];
-            // }else{
-            //   selectorAttr = attr.value
-            // }
-
-            // setTimeout(() => {
 
             this.poller(`[data-blade-src="${attr.value}"]`).then(res => {
               if(node.getAttribute("data-blade-src") === attr.value){
@@ -982,147 +832,8 @@ export default class Dom{
               }
             })
 
-
-
-            // }, 1)
-
-
-
           break;
 
-
-          case 'data-blade-if':
-
-            // var temp, selectorAttr, tempVal;
-            //
-            //   const setIfDirective = function(elm){
-            //
-            //     var forSelector;
-            //     var dataStr = null;
-            //
-            //     if(type === 'for'){
-            //
-            //         var dataStr = {};
-            //         var dataObj = {};
-            //         let selectorArray = attr.value.split('.');
-            //
-            //         forSelector = selectorArray.join('.');
-            //
-            //         var bladeData = window.blade.view[viewName].data
-            //
-            //         var forSelectorArray = forSelector.split('.')
-            //
-            //         for(let i=0;i<forSelectorArray.length;i++){
-            //           if(i === 0){
-            //             var baseProp = forSelectorArray[0];
-            //             dataStr = bladeData[topObj][index]
-            //             dataObj = dataStr
-            //           }else{
-            //             let prop = forSelectorArray[i]
-            //             dataStr = dataStr[prop]
-            //
-            //           }
-            //         }
-            //
-            //         if(typeof dataStr === 'boolean'){
-            //           if(!dataStr){
-            //             elm.setAttribute('data-blade-remove', true);
-            //           }
-            //         }
-            //
-            //     }else{
-            //
-            //       if(typeof window.blade.view[viewName].data[attr.value] === 'boolean'){
-            //         if(!window.blade.view[viewName].data[attr.value]){
-            //           elm.setAttribute('data-blade-remove', true);
-            //         }
-            //       }
-            //
-            //     }
-            //
-            //   }
-            //
-            //
-            //   this.poller(`[data-blade-if="${attr.value}"]`).then(res => {
-            //
-            //     if(node.getAttribute("data-blade-if") === attr.value){
-            //
-            //       var elms;
-            //
-            //       let data = getData(attr.value)
-            //
-            //       if(type === 'for'){
-            //
-            //         elms = document.querySelectorAll(`[data-blade-if="${attr.value}"]`)[index];
-            //
-            //         if(elms) setIfDirective(elms)
-            //
-            //       }else{
-            //         elms = document.querySelectorAll(`[data-blade-if="${attr.value}"]`);
-            //         for(let elm of elms){
-            //           if(elm) setIfDirective(elm)
-            //         }
-            //
-            //       }
-            //
-            //     }
-            //
-            //   })
-            //
-            //
-            //
-            //
-            //
-
-
-
-
-
-
-
-
-              //
-              // window.blade.if = attr.value;
-              //
-              // const hasIfAttribute = (attrs, data) => {
-              //   for(let nodeAttr of attrs){
-              //     if(nodeAttr.name === 'data-blade-if' && !data){
-              //       return true;
-              //     }
-              //   }
-              //   return false;
-              // }
-              //
-              // var hide;
-              //
-              // // const setIfDirective = (node) => {
-              //   console.log('==== set If Directive ====')
-              //   let data = getData(window.blade.if)
-              //
-              //
-              //   let elms = node.parentNode.childNodes;
-              //   for(let i=0;i<elms.length;i++){
-              //     if(elms[i].nodeType === 1){
-              //       if(hasIfAttribute(elms[i].attributes, data)){
-              //         let iou = document.createComment('element-hidden');
-              //         console.log('==== Element Hidden ====')
-              //         console.log(node.parentNode.childNodes[i])
-              //         // node.parentNode.childNodes[i].replaceWith(iou);
-              //         node.parentNode.childNodes[i].replaceWith(iou);
-              //       }else{
-              //         this.switchCase = true;
-              //       };
-              //     };
-              //   };
-              // // };
-
-
-              // setIfDirective(node)
-
-
-              // console.log(node)
-
-          break;
         }
 
       });
@@ -1363,44 +1074,23 @@ export default class Dom{
   }
 
   changed(node1, node2){
-    // console.log('========= Changed Nodes ===========')
-
-    // if(node1) console.log(node1.content);
-    // if(node2) console.log(node2.content);
     return typeof node1 !== typeof node2 ||
          typeof node1 === 'string' && node1 !== node2 ||
          node1.type !== node2.type || node1.content !== node2.content
   }
 
   updateDom(root, newNode, oldNode, index = 0){
-
-    // console.log('========= Nodes ===========')
-    // console.log(root.childNodes[index])
-    // console.log(this.createElm(newNode))
-    // console.log(this.changed(newNode, oldNode))
-    // console.log('===========================')
     if(!oldNode){
-      // console.log('========= Created Elm ===========')
-      // console.log(this.createElm(newNode))
-      // console.log('=================================')
       root.appendChild(this.createElm(newNode));
     }else if (!newNode && root.childNodes[index]){
-      // console.log('========= Remove Elm ===========')
-      // console.log(root.childNodes[index])
-      // console.log('=================================')
       root.removeChild(root.childNodes[index]);
     }else if (this.changed(newNode, oldNode) && root.childNodes[index]) {
-      // console.log('========= Replace Elm ===========')
-      // console.log(root.childNodes[index])
-      // console.log(this.createElm(newNode))
-      // console.log('=================================')
       root.replaceChild(this.createElm(newNode), root.childNodes[index]);
 
     }else if(newNode){
       // Add root !== undefined handle new comments
       if(root !== undefined && root.childNodes[index] !== undefined){
         if(typeof root.childNodes[index].attributes !== 'undefined'){
-          // prevent if node has no new attr
 
           if(newNode.attr !== null){
 

@@ -366,11 +366,10 @@ export default class Dom{
                   target.setAttribute('data-blade-listening', 'true');
                   target.addEventListener('click', (e) => {
 
-
                     let regex = /(?<=\()(.*?)(?=\s*\))/g;
                     let arg = attr.value.match(regex);
 
-                    let func = window.blade.events[attr.value.split('(')[0]];
+                    let func = window.blade.view[viewName].events[attr.value.split('(')[0]];
 
                     var newArgs = {};
 

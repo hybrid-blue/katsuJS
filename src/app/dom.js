@@ -1048,7 +1048,7 @@ export default class Dom{
 
           }
 
-        this.directives(node, this.viewName, type, index, this.currentIteration)
+        this.directives(node, child, this.viewName, type, index, this.currentIteration)
 
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 

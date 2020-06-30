@@ -419,16 +419,138 @@ export default class Dom{
             },1)
 
           break;
+
+
+
+          case 'data-blade-key':
+
+          var temp, selectorAttr, tempVal;
+
+            if(attr.value.indexOf('.') > -1){
+              temp = window.blade.view[viewName].data['temp'];
+              selectorAttr = Object.keys(temp)[0];
+            }else{
+              selectorAttr = attr.value
+            }
+
+            setTimeout(() => {
+
+              const setKeyEvent = (target) => {
+
+                var hasEvent = this.checkListener(target, 'key');
+
+                if(!hasEvent){
+
+                  target.addEventListener('keydown', (e) => {
+
+                    setTimeout(() => {
+
+                      let regex = /(?<=\()(.*?)(?=\s*\))/g;
+                      let arg = attr.value.match(regex);
+
+                      let func = window.blade.view[viewName].events[attr.value.split('(')[0]];
+
+                      var newArgs = {};
+
+                      let args = arg[0].split(',')
+
+                      for(let i = 0;i<args.length;i++){
+
+                        if(/\'(.*?)\'/g.test(args[i])){
+
+                          let val = args[i].trim();
+                          let trimed = val.substr(1, val.length-2);
+
+                          newArgs['args'] = trimed;
+
+
+                        }else{
+                          if(args[i].trim() === 'index'){
+
+                            var foundIndex;
+
+                            const findIndex = (parentNode) => {
+                              let nodes = parentNode.parentNode.children;
+                              let thisNode = parentNode;
+
+                              for(let i=0;i<nodes.length;i++){
+                                if(nodes[i].isEqualNode(thisNode)){
+                                  return i;
+                                }
+                              }
+                            }
+
+                            const findParent = (elm) => {
+
+                              var parentNode, childNode;
+
+                              if(elm.parentNode.getAttribute('data-blade-for')){
+                                parentNode = elm.parentNode;
+                                childNode = elm;
+                                foundIndex = findIndex(parentNode);
+                                newArgs['index'] = foundIndex;
+                              }else{
+                                findParent(elm.parentNode);
+                              }
+
+                            }
+
+                            findParent(target);
+
+                          }else{
+                            newArgs['data'] = window.blade.view[viewName].data[args[i].trim()];
+                          }
+
+                        }
+                      }
+
+                      func(newArgs);
+
+                    },1)
+
+                  })
+
+                }
+
+              }
+
+
+              if(node.getAttribute("data-blade-key") === attr.value){
+                var elms;
+                if(type === 'for'){
+                  elms = document.querySelectorAll(`[data-blade-key="${attr.value}"]`)[index];
+                  setKeyEvent(elms)
+                }else{
+                  elms = document.querySelectorAll(`[data-blade-key="${attr.value}"]`);
+                  for(let elm of elms){
+                    setKeyEvent(elm)
+                  }
+                }
+              }
+
+            },1)
+
+          break;
+
+
           case 'data-blade-bind':
 
           var temp, selectorAttr, tempVal;
 
+          const setPorxyData = (e) => {
+            this.proxyData  = e;
+          }
+
+          const checkListener = this.checkListener
+
             function setBindEvent(target, type){
 
-                console.log(target)
-                console.log(type)
-                if(!target.getAttribute('data-blade-listening')){
-                  target.setAttribute('data-blade-listening', 'true');
+                var hasEvent = checkListener(target, 'bind');
+
+                console.log('==== bind ====')
+                console.log(hasEvent)
+
+                if(!hasEvent){
 
                   var eventType;
 

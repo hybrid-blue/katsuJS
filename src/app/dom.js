@@ -242,6 +242,21 @@ export default class Dom{
     })
   }
 
+  checkListener(target, ev){
+    if(!target.getAttribute('data-blade-listening')){
+      target.setAttribute('data-blade-listening', ev);
+      return false
+    }else{
+      let events = target.getAttribute('data-blade-listening');
+      if(events.indexOf(ev) > -1){
+        return true;
+      }else{
+        events += `,${ev}`
+        target.setAttribute('data-blade-listening', events)
+        return false
+      }
+    }
+  }
 
 
 

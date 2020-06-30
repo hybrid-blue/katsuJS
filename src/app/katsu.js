@@ -305,50 +305,6 @@ export default class Blade{
     const updateDom = this.updateDom.bind(this);
     const updateData = this.updateData.bind(this);
 
-
-    // TO BE REMOVED
-    // const updateData = (data, viewName, child, type = 'data') => {
-    //
-    //   console.log(data)
-    //   console.log(viewName)
-    //   console.log(child)
-    //
-    //   if(type === 'data'){
-    //     window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, data);
-    //   }else{
-    //     window.blade.state = Object.assign({}, window.blade.state, data);
-    //   }
-    //
-    //   let domparser = new DOMParser();
-    //
-    //   const root = child ? document.querySelector(`[data-blade-component="${viewName}"]`).innerHTML : document.querySelector(window.blade.view[viewName].root).innerHTML;
-    //
-    //   var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
-    //
-    //   const htmlContent = virtualDom(window.blade.view[viewName].template, child);
-    //
-    //   window.blade.view[viewName].vDomNew = htmlContent;
-    //
-    //   const targetElm = child ? document.querySelector(`[data-blade-component="${viewName}"]`) : document.querySelector(window.blade.view[viewName].root);
-    //
-    //
-    //   console.log('_________________________');
-    //   // console.log(app.data());
-    //   console.log(this.proxyData);
-    //   console.log('_________________________');
-    //
-    //   updateDom(targetElm, window.blade.view[viewName].vDomNew[0], window.blade.view[viewName].vDomPure[0]);
-    //
-    //   window.blade.view[viewName].vDomPure = window.blade.view[viewName].vDomNew;
-    //
-    //   // setTimeout(() => {
-    //
-    //   // }, 100)
-    //
-    // }
-
-
-
     const getData = (data) => {
       var dataPath;
 
@@ -751,29 +707,6 @@ export default class Blade{
                         // console.log(window.blade.view[viewName].data)
 
                         updateData(data, viewName, child);
-
-
-
-
-
-
-                        // console.log('[+++++++++++++++++++++++++++++++++++++++++]')
-                        // console.log($data)
-
-                        // let domparser = new DOMParser();
-                        //
-                        // const root = child ? document.querySelector(`[data-blade-component="${viewName}"]`).innerHTML : document.querySelector(window.blade.view[viewName].root).innerHTML;
-                        //
-                        // var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
-                        // const htmlContent = virtualDom(window.blade.view[viewName].template, child);
-                        //
-                        // window.blade.view[viewName].vDomNew = htmlContent;
-                        //
-                        // const targetElm = child ? document.querySelector(`[data-blade-component="${viewName}"]`) : document.querySelector(window.blade.view[viewName].root);
-                        //
-                        // updateDom(targetElm, window.blade.view[viewName].vDomNew[0], window.blade.view[viewName].vDomPure[0]);
-                        //
-                        // window.blade.view[viewName].vDomPure = window.blade.view[viewName].vDomNew
 
                       },1)
 

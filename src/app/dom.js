@@ -243,7 +243,9 @@ export default class Dom{
   }
 
 
-  directives(node, viewName, type = 'default', index = null, topObj = null){
+
+
+  directives(node, child, viewName, type = 'default', index = null, topObj = null){
 
     const virtualDom = this.virtualDom.bind(this);
     const updateDom = this.updateDom.bind(this);
@@ -953,7 +955,7 @@ export default class Dom{
 
 // DOM Building
 
-  buildDom(dom, root = "body", type = "default", index = null, topObj = null){
+  buildDom(dom, child, root = "body", type = "default", index = null, topObj = null){
 
     let domparser = new DOMParser();
     var htmlobject = index !== null ? domparser.parseFromString(dom, 'text/html').querySelectorAll(root)[0] : domparser.parseFromString(dom, 'text/html').querySelector(root);
@@ -1070,9 +1072,9 @@ export default class Dom{
 
   };
 
-  virtualDom(dom){
+  virtualDom(dom, child){
 
-    let builtDom = this.buildDom(dom);
+    let builtDom = this.buildDom(dom, child);
 
     window.blade.forLoop = [];
 

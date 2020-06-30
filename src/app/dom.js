@@ -315,36 +315,6 @@ export default class Dom{
 
           break;
 
-          // case 'data-blade-default':
-          //
-          //   const setCaseDefaultDirective = (elm) => {
-          //     if(this.switchCase){
-          //       // console.log('=== Set default for removal ===')
-          //       elm.setAttribute('data-blade-remove', true);
-          //     }
-          //   }
-          //
-          //   this.poller(`[data-blade-default="${attr.value}"]`).then(res => {
-          //     if(node.getAttribute("data-blade-default") === attr.value){
-          //       var elm;
-          //       if(type === 'for'){
-          //         // elms = document.querySelectorAll(`[data-blade-default="${attr.value}"]`)[index];
-          //         elm = node.parentNode.querySelector(`[data-blade-default="${attr.value}"]`);
-          //         // for(let elm of elms){
-          //         //   setCaseDefaultDirective(elm)
-          //         // }
-          //         setCaseDefaultDirective(elm)
-          //       }else{
-          //         elm = node.parentNode.querySelector(`[data-blade-default="${attr.value}"]`);
-          //         // for(let elm of elms){
-          //         //   setCaseDefaultDirective(elm)
-          //         // }
-          //         setCaseDefaultDirective(elm)
-          //       }
-          //     }
-          //   })
-          //
-          // break;
 
           case 'data-blade-click':
 

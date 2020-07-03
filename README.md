@@ -9,12 +9,12 @@ Rather than competing to be the smallest UI library, KatsuJs focuses on offering
 
 This library is currently in Beta/Development stage and may contain error that are currently being address
 
-
+```javascript
+const app = new Katsu();
+```
 
 ```javascript
 // Basic Component
-
-const app = new Blade();
 
 class Hello{
   view(){
@@ -29,11 +29,17 @@ class Hello{
   }
 }
 
+```
+```javascript
+
 app.module(Hello);
 
-app.render('Hello', '#root')
-
 ```
+
+```javascript
+app.render('Hello', '#root')
+```
+
 
 ```javascript
 // Functional Component

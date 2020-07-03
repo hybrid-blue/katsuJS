@@ -1799,19 +1799,28 @@ export default class Blade{
 
 
     // Apply Controller
+
     var controller = window.blade.view[viewName].controller;
 
     if(controller){
-      let extScript = () => {eval(controller(params))}
+      var regex = /\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g
+      var augs = controller.toString().match(regex)[0];
+      var attr = [];
+      var argsArray = augs.substr(1, augs.length - 2).split(',');
+
+      argsArray.forEach((item, i) => {
+        attr.push(params[item.trim()])
+      })
+
+      let extScript = () => {eval(controller(...attr))};
+
       let event = new Event('executeScript');
+
       window.addEventListener('executeScript', extScript)
       window.dispatchEvent(event)
       window.removeEventListener('executeScript', extScript);
     }
 
-
-
   }
-
 
 }

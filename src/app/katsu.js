@@ -9,11 +9,12 @@ export default class Blade{
     this.viewName;
     this.targetElement;
 
+    this.component = {}
 
     // Needs to be converted to Class variables like above (General)
     window.blade = {};
     window.blade.temp = {};
-    window.blade.view = {};
+    // this.component = {};
     window.blade.route = [];
     window.blade.data = {};
     window.blade.elements = {};
@@ -60,7 +61,7 @@ export default class Blade{
 
           let expArray = exp.split('.');
 
-          var currentData = window.blade.view[target].data;
+          var currentData = this.component[target].data;
 
           for(let i=0;i<expArray.length;i++){
 
@@ -84,8 +85,8 @@ export default class Blade{
             }
           }
         }else{
-          if(window.blade.view[target].data[exp] !== null){
-            if(window.blade.view[target].data[exp]) data = data.replace(`{{${exp}}}`, window.blade.view[target].data[exp]);
+          if(this.component[target].data[exp] !== null){
+            if(this.component[target].data[exp]) data = data.replace(`{{${exp}}}`, this.component[target].data[exp]);
           }
         }
 
@@ -154,7 +155,7 @@ export default class Blade{
             let obj = {};
             obj[selector] = itemValue;
 
-            // window.blade.view[target].data['temp'] = obj
+            // this.component[target].data['temp'] = obj
 
         }
       }else{
@@ -211,7 +212,7 @@ export default class Blade{
 
     const htmlContent = node.outerHTML;
 
-    let items = window.blade.view[target].data ? window.blade.view[target].data[selector] : null;
+    let items = this.component[target].data ? this.component[target].data[selector] : null;
 
     const func = (html, items, exp) => {
 
@@ -317,8 +318,8 @@ export default class Blade{
       if(data.indexOf('.') > -1){
         for(let i = 0;i<dataArray.length;i++){
           if(i === 0){
-            if(window.blade.view[viewName].data[topObj]){
-              dataPath = window.blade.view[viewName].data[topObj][index];
+            if(this.component[viewName].data[topObj]){
+              dataPath = this.component[viewName].data[topObj][index];
             }else{
 
             }
@@ -328,7 +329,7 @@ export default class Blade{
 
         }
       }else{
-        dataPath = window.blade.view[viewName].data[data];
+        dataPath = this.component[viewName].data[data];
       }
 
       return dataPath;
@@ -404,7 +405,7 @@ export default class Blade{
           var temp, selectorAttr, tempVal;
 
             // if(attr.value.indexOf('.') > -1){
-            //   temp = window.blade.view[viewName].data['temp'];
+            //   temp = this.component[viewName].data['temp'];
             //   selectorAttr = Object.keys(temp)[0];
             //
             // }else{
@@ -426,7 +427,7 @@ export default class Blade{
                       let regex = /(?<=\()(.*?)(?=\s*\))/g;
                       let arg = attr.value.match(regex);
 
-                      let func = window.blade.view[viewName].events[attr.value.split('(')[0]];
+                      let func = this.component[viewName].events[attr.value.split('(')[0]];
 
                       var newArgs = {};
 
@@ -476,7 +477,7 @@ export default class Blade{
                             findParent(target);
 
                           }else{
-                            newArgs['data'] = window.blade.view[viewName].data[args[i].trim()];
+                            newArgs['data'] = this.component[viewName].data[args[i].trim()];
                           }
 
                         }
@@ -516,7 +517,7 @@ export default class Blade{
           var temp, selectorAttr, tempVal;
 
             // if(attr.value.indexOf('.') > -1){
-            //   temp = window.blade.view[viewName].data['temp'];
+            //   temp = this.component[viewName].data['temp'];
             //   selectorAttr = Object.keys(temp)[0];
             // }else{
             //   selectorAttr = attr.value
@@ -537,9 +538,9 @@ export default class Blade{
                       let regex = /(?<=\()(.*?)(?=\s*\))/g;
                       let arg = attr.value.match(regex);
 
-                      let func = window.blade.view[viewName].events[attr.value.split('(')[0]];
+                      let func = this.component[viewName].events[attr.value.split('(')[0]];
 
-                      // console.log(window.blade.view[viewName].events)
+                      // console.log(this.component[viewName].events)
 
                       var newArgs = {};
 
@@ -589,7 +590,7 @@ export default class Blade{
                             findParent(target);
 
                           }else{
-                            newArgs['data'] = window.blade.view[viewName].data[args[i].trim()];
+                            newArgs['data'] = this.component[viewName].data[args[i].trim()];
                           }
 
                         }
@@ -660,13 +661,13 @@ export default class Blade{
 
                           data[attr.value] = eventValue;
 
-                          // window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, data);
+                          // this.component[viewName].data = Object.assign({}, this.component[viewName].data, data);
 
                         }else{
 
                           var dataArray = attr.value.split('.');
                           var targetParent;
-                          var bladeData = window.blade.view[viewName].data
+                          var bladeData = this.component[viewName].data
                           var bladeDataPath;
                           var obj;
 
@@ -692,17 +693,17 @@ export default class Blade{
 
                           // console.log('==== Updating via Bind ====')
                           // console.log(topObj)
-                          // console.log(window.blade.view[viewName].data);
+                          // console.log(this.component[viewName].data);
                           // console.log(obj)
 
-                          // window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, obj);
+                          // this.component[viewName].data = Object.assign({}, this.component[viewName].data, obj);
 
                         }
 
 
                         console.log(data[attr.value])
 
-                        window.blade.view[viewName].localStore.store[attr.value] = eventValue;
+                        this.component[viewName].localStore.store[attr.value] = eventValue;
 
                         // console.log('@@@@@@@@@@@@@@@@@@@@@@@@')
                         // console.log(attr.value)
@@ -790,7 +791,7 @@ export default class Blade{
                       let nodeClass = node.classList.value.split(' ');
                       let targetClass = target.classList.value.split(' ');
 
-                      if(window.blade.view[viewName].data[value]){
+                      if(this.component[viewName].data[value]){
                         nameArray.push(key[0])
                       }
 
@@ -943,7 +944,7 @@ export default class Blade{
                     var bladeDataClass = data;
 
                     // find value
-                    var bladeData = window.blade.view[viewName].data;
+                    var bladeData = this.component[viewName].data;
                     var dataArray = data.split('.')
                     var path;
                     var targetParent;
@@ -1006,7 +1007,7 @@ export default class Blade{
             this.poller(`[data-blade-src="${attr.value}"]`).then(res => {
               if(node.getAttribute("data-blade-src") === attr.value){
                 var elms;
-                // let data = type === 'for' ? Object.values(temp)[0] : window.blade.view[viewName].data[attr.value];
+                // let data = type === 'for' ? Object.values(temp)[0] : this.component[viewName].data[attr.value];
 
                 let data = getData(attr.value)
 
@@ -1027,7 +1028,7 @@ export default class Blade{
         }
 
       });
-      // window.blade.view[viewName].data.temp = null;
+      // this.component[viewName].data.temp = null;
     }
 
   }
@@ -1108,8 +1109,8 @@ export default class Blade{
                 if(data.indexOf('.') > -1){
                   for(let i = 0;i<dataArray.length;i++){
                     if(i === 0){
-                      if(window.blade.view[name].data[this.currentIteration]){
-                        dataPath = window.blade.view[name].data[this.currentIteration][index];
+                      if(this.component[name].data[this.currentIteration]){
+                        dataPath = this.component[name].data[this.currentIteration][index];
                       }else{
 
                       }
@@ -1119,7 +1120,7 @@ export default class Blade{
 
                   }
                 }else{
-                  dataPath = window.blade.view[name].data[data];
+                  dataPath = this.component[name].data[data];
                 }
 
                 return dataPath;
@@ -1195,7 +1196,7 @@ export default class Blade{
 
       if(expressions){
         for(let i=0;i<expressions.length;i++){
-          value = attr.value.replace(`{{${expressions[i]}}}`, window.blade.view[this.viewName].data[expressions[i]]);
+          value = attr.value.replace(`{{${expressions[i]}}}`, this.component[this.viewName].data[expressions[i]]);
         }
       }else{
         value = attr.value;
@@ -1218,7 +1219,7 @@ export default class Blade{
 
     // if(expressions){
     //   for(let i=0;i<expressions.length;i++){
-    //     value = value.replace(`{{${expressions[i]}}}`, window.blade.view[this.viewName].data[expressions[i]]);
+    //     value = value.replace(`{{${expressions[i]}}}`, this.component[this.viewName].data[expressions[i]]);
     //   }
     // }
 
@@ -1335,7 +1336,7 @@ export default class Blade{
 
   dataProxy(storeType, name, type, childComponent){
 
-    var _data = wrap(window.blade.view[name].data, 'data', console.log)
+    var _data = wrap(this.component[name].data, 'data', console.log)
 
     const updateData = this.updateData.bind(this)
 
@@ -1405,9 +1406,9 @@ export default class Blade{
       if(window.blade.store){
         // return wrap(window.blade.store, 'state', console.log);
 
-        // var _data = wrap(window.blade.view[this.viewName].data, console.log)
+        // var _data = wrap(this.component[this.viewName].data, console.log)
 
-        Object.defineProperty(window.blade.view[name].localStore, 'store', {
+        Object.defineProperty(this.component[name].localStore, 'store', {
           get: function(){
             return _data
           },
@@ -1419,10 +1420,10 @@ export default class Blade{
 
       }
     }else{
-      if(window.blade.view[name].data){
-        // return wrap(window.blade.view[name].data, 'data', console.log);
+      if(this.component[name].data){
+        // return wrap(this.component[name].data, 'data', console.log);
 
-        Object.defineProperty(window.blade.view[name].localStore, 'store', {
+        Object.defineProperty(this.component[name].localStore, 'store', {
           get: function(){
             console.log('Get')
             return _data
@@ -1453,15 +1454,15 @@ export default class Blade{
 
       this.viewName = data.name;
 
-      window.blade.view[this.viewName] = {};
+      this.component[this.viewName] = {};
 
-      window.blade.view[this.viewName].template = mod.view();
+      this.component[this.viewName].template = mod.view();
 
-      mod.data ? window.blade.view[this.viewName].data = mod.data() : window.blade.view[this.viewName].data = {};
+      mod.data ? this.component[this.viewName].data = mod.data() : this.component[this.viewName].data = {};
 
-      mod.controller ? window.blade.view[this.viewName].controller = mod.controller  : window.blade.view[this.viewName].controller = null;
+      mod.controller ? this.component[this.viewName].controller = mod.controller  : this.component[this.viewName].controller = null;
 
-      options ? window.blade.view[this.viewName].options = options : window.blade.view[this.viewName].options = null;
+      options ? this.component[this.viewName].options = options : this.component[this.viewName].options = null;
 
 
   }
@@ -1477,43 +1478,43 @@ export default class Blade{
   updateData(data, target, child, type = 'data'){
 
     if(type === 'data'){
-      window.blade.view[target].data = Object.assign({}, window.blade.view[target].data, data);
+      this.component[target].data = Object.assign({}, this.component[target].data, data);
     }else{
       window.blade.state = Object.assign({}, window.blade.state, data);
     }
 
     let domparser = new DOMParser();
 
-    const root = child ? document.querySelector(`[data-blade-component="${target}"]`).innerHTML : document.querySelector(window.blade.view[target].root).innerHTML;
+    const root = child ? document.querySelector(`[data-blade-component="${target}"]`).innerHTML : document.querySelector(this.component[target].root).innerHTML;
 
     var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
 
 
-    const htmlContent = this.virtualDom(window.blade.view[target].template, target, child);
+    const htmlContent = this.virtualDom(this.component[target].template, target, child);
 
-    window.blade.view[target].vDomNew = htmlContent;
+    this.component[target].vDomNew = htmlContent;
 
-    const targetElm = child ? document.querySelector(`[data-blade-component="${target}"]`) : document.querySelector(window.blade.view[target].root);
+    const targetElm = child ? document.querySelector(`[data-blade-component="${target}"]`) : document.querySelector(this.component[target].root);
 
-    this.updateDom(targetElm, window.blade.view[target].vDomNew[0], window.blade.view[target].vDomPure[0]);
+    this.updateDom(targetElm, this.component[target].vDomNew[0], this.component[target].vDomPure[0]);
 
-    window.blade.view[target].vDomPure = window.blade.view[target].vDomNew;
+    this.component[target].vDomPure = this.component[target].vDomNew;
 
 
 
     // #This should detect which componets to update / Performance Suggestion
 
-    if(window.blade.view[target].components){
-      let components = window.blade.view[target].components
+    if(this.component[target].components){
+      let components = this.component[target].components
       for(let comp of components){
-        if(window.blade.view[comp].data){
+        if(this.component[comp].data){
 
           let props = {};
           let componentElm = document.querySelectorAll(`[data-blade-component="${comp}"]`)[0];
           let attrProps = componentElm.getAttribute('props');
 
-          props[attrProps] = window.blade.view[target].data[attrProps];
-          window.blade.view[comp].data = props;
+          props[attrProps] = this.component[target].data[attrProps];
+          this.component[comp].data = props;
           this.updateData(props[attrProps], comp, true, type = 'data')
         }
       }
@@ -1528,20 +1529,20 @@ export default class Blade{
 
     if(childComponent){
       viewName = target;
-      window.blade.view[viewName].parent = parent
+      this.component[viewName].parent = parent
     }else{
       viewName = name;
     }
 
-    window.blade.view[viewName].root = target;
+    this.component[viewName].root = target;
 
     const $event = (selector) => {
       return{
         on: (name, func) => {
-          window.blade.view[selector].events[name] = func;
+          this.component[selector].events[name] = func;
         },
         receive: (name, func) => {
-          window.blade.view[selector].emit[name] = func;
+          this.component[selector].emit[name] = func;
         }
       }
 
@@ -1552,12 +1553,12 @@ export default class Blade{
         send: (data) => {
           try{
             if(data){
-              let views = window.blade.view
-              var parent = window.blade.view[selector].parent
-              let func = window.blade.view[parent].emit[selector];
+              let views = this.component
+              var parent = this.component[selector].parent
+              let func = this.component[parent].emit[selector];
 
               try{
-                if(Object.keys(window.blade.view[parent].emit).length > 0){
+                if(Object.keys(this.component[parent].emit).length > 0){
                   func(data);
                 }else{
                   throw(`Parent component ${parent} needs an $event.recieve()`)
@@ -1590,22 +1591,22 @@ export default class Blade{
     }
 
     const $service = (selector) => {
-      return new Proxy(window.blade.view[selector].service, serviceHandler)
+      return new Proxy(this.component[selector].service, serviceHandler)
     }
 
     const updateData = this.updateData.bind(this)
 
-    window.blade.view[viewName].targetData = {};
-    window.blade.view[viewName].events = {};
-    window.blade.view[viewName].emit = {};
-    window.blade.view[viewName].service = {};
-    window.blade.view[viewName].localStore = {}
+    this.component[viewName].targetData = {};
+    this.component[viewName].events = {};
+    this.component[viewName].emit = {};
+    this.component[viewName].service = {};
+    this.component[viewName].localStore = {}
 
     this.dataProxy('data', viewName, childComponent);
 
     // Set params
     const params = {
-      $data: window.blade.view[viewName].localStore.store,
+      $data: this.component[viewName].localStore.store,
       $event: $event(viewName),
       $emit: $emit(viewName),
       $service: $service(viewName),
@@ -1636,11 +1637,11 @@ export default class Blade{
 
     };
 
-    if(window.blade.view[viewName].options && window.blade.view[viewName].options.length > 0){
+    if(this.component[viewName].options && this.component[viewName].options.length > 0){
 
-      const options = window.blade.view[viewName].options;
+      const options = this.component[viewName].options;
 
-      window.blade.view[viewName].components = []
+      this.component[viewName].components = []
 
       var rendered = [];
 
@@ -1650,7 +1651,7 @@ export default class Blade{
 
 
         if(mod.service){
-          window.blade.view[viewName].service[options[i].name] = mod.service();
+          this.component[viewName].service[options[i].name] = mod.service();
         }else{
 
           pollerComponent(options[i].name).then(res => {
@@ -1659,24 +1660,24 @@ export default class Blade{
 
               if(mod.view){
 
-                window.blade.view[options[i].name] = {};
+                this.component[options[i].name] = {};
 
-                window.blade.view[options[i].name].template = mod.view();
+                this.component[options[i].name].template = mod.view();
 
                 if(mod.data){
                   let props = {};
                   let componentElm = document.querySelectorAll(`[data-blade-component="${options[i].name}"]`)[0];
                   let attrProps = componentElm.getAttribute('props');
-                  mod.data(window.blade.view[viewName].data[attrProps]);
-                  window.blade.view[options[i].name].data = window.blade.view[viewName].data[attrProps];
+                  mod.data(this.component[viewName].data[attrProps]);
+                  this.component[options[i].name].data = this.component[viewName].data[attrProps];
 
                 }else{
-                  window.blade.view[options[i].name].data = {};
+                  this.component[options[i].name].data = {};
                 }
 
-                mod.controller ? window.blade.view[options[i].name].controller = mod.controller  : window.blade.view[options[i].name].controller = null;
+                mod.controller ? this.component[options[i].name].controller = mod.controller  : this.component[options[i].name].controller = null;
 
-                window.blade.view[viewName].components.push(options[i].name)
+                this.component[viewName].components.push(options[i].name)
 
               }else{
                 throw(options[i].name)
@@ -1689,8 +1690,8 @@ export default class Blade{
             }
 
             // Render Child Components
-            if(window.blade.view[viewName].components){
-              for(let comp of window.blade.view[viewName].components){
+            if(this.component[viewName].components){
+              for(let comp of this.component[viewName].components){
                 if(!rendered.includes(comp)){
                   this.render(comp, comp, true, viewName);
                 }
@@ -1711,9 +1712,9 @@ export default class Blade{
 
 
     // Generate View
-    var template = window.blade.view[viewName].template;
+    var template = this.component[viewName].template;
     const htmlContent = this.virtualDom(template, viewName, childComponent);
-    window.blade.view[viewName].vDomPure = htmlContent;
+    this.component[viewName].vDomPure = htmlContent;
 
     let domparser = new DOMParser();
     var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
@@ -1722,12 +1723,12 @@ export default class Blade{
 
     this.updateDom(targetElm, htmlContent[0]);
 
-    window.blade.view[viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
+    this.component[viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
 
 
     // Apply Controller
 
-    var controller = window.blade.view[viewName].controller;
+    var controller = this.component[viewName].controller;
 
     if(controller){
       var regex = /\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g

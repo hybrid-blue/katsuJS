@@ -1556,21 +1556,31 @@ export default class Blade{
     const $emit = (selector) => {
       return{
         send: (data) => {
-          let views = window.blade.view
-          var parent = window.blade.view[selector].parent
-          let func = window.blade.view[parent].emit[selector];
-
           try{
-            if(Object.keys(window.blade.view[parent].emit).length > 0){
-              func(data);
-            }else{
-              throw(`Parent component ${parent} needs an $event.recieve()`)
-            }
+            if(data){
+              let views = window.blade.view
+              var parent = window.blade.view[selector].parent
+              let func = window.blade.view[parent].emit[selector];
 
+              try{
+                if(Object.keys(window.blade.view[parent].emit).length > 0){
+                  func(data);
+                }else{
+                  throw(`Parent component ${parent} needs an $event.recieve()`)
+                }
+
+              }
+              catch(e){
+                console.error(e)
+              }
+            }else{
+              throw(`There was not data sent from ${selector}`);
+            }
           }
           catch(e){
             console.error(e)
           }
+
 
         }
       }

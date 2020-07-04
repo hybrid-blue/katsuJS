@@ -1492,20 +1492,12 @@ export default class Blade{
 
     var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
 
-    // this.viewName = target;
-
-    console.log(target)
 
     const htmlContent = this.virtualDom(window.blade.view[target].template, target, child);
 
     window.blade.view[target].vDomNew = htmlContent;
 
     const targetElm = child ? document.querySelector(`[data-blade-component="${target}"]`) : document.querySelector(window.blade.view[target].root);
-
-    console.log('--------------------------------')
-    console.log(targetElm)
-    console.log(window.blade.view[target].vDomNew[0])
-    console.log(window.blade.view[target].vDomPure[0])
 
     this.updateDom(targetElm, window.blade.view[target].vDomNew[0], window.blade.view[target].vDomPure[0]);
 
@@ -1690,19 +1682,7 @@ export default class Blade{
 
     // Generate View
     var template = window.blade.view[viewName].template;
-
-    // const app = new Dom(viewName);
-
-    console.log('==== Before VirtualDom ====')
-    console.log(template)
-    console.log(viewName)
-    console.log(childComponent)
-
     const htmlContent = this.virtualDom(template, viewName, childComponent);
-
-    console.log('==== This Render ====')
-    console.log(htmlContent)
-
     window.blade.view[viewName].vDomPure = htmlContent;
 
     let domparser = new DOMParser();

@@ -8,31 +8,14 @@ export default class Blade{
 
     this.viewName;
     this.targetElement;
-
     this.component = {}
+    this.forLoop = []
+    this.forCount = [];
+    this.store = {};
 
-    // Needs to be converted to Class variables like above (General)
     window.blade = {};
     window.blade.temp = {};
-    // this.component = {};
-    window.blade.route = [];
-    window.blade.data = {};
-    window.blade.elements = {};
-    window.blade.events = {};
-    window.blade.emit = {};
-    window.blade.module = {};
-    window.blade.switch;
-    window.blade.nodes = {};
-    window.blade.controller = {};
-    window.blade.component = {};
-    window.blade.hiddenElements = [];
-    window.blade.forLoop = [];
-    window.blade.forCount = [];
-    window.blade.store = {};
 
-
-    window.blade.localStore = {};
-    window.blade.access = {};
 
   }
 
@@ -343,7 +326,8 @@ export default class Blade{
 
           case 'data-blade-switch':
 
-            window.blade.switch = attr.value;
+            // window.blade.switch = attr.value;
+            var switchCase = attr.value
             let iou = document.createComment('element-removed');
             let elms = node.childNodes;
 
@@ -367,7 +351,7 @@ export default class Blade{
             }
 
             const setCaseDirective = (node) => {
-              let data = getData(window.blade.switch)
+              let data = getData(switchCase)
 
               for(let i=0;i<elms.length;i++){
                 if(elms[i].nodeType === 1){
@@ -654,7 +638,7 @@ export default class Blade{
                       setTimeout(() => {
 
                         var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
-                        let view = window.blade.module
+                        // let view = window.blade.module
                         let data = {};
 
                         if(type !== 'for'){
@@ -1057,11 +1041,11 @@ export default class Blade{
           for(let i = 0;i<childCount;i++){
             if(childNodes[i].attributes){
               if(childNodes[i].getAttribute('data-blade-for')){
-                if(!window.blade.forLoop.includes(childNodes[i].getAttribute('data-blade-for'))){
+                if(!this.forLoop.includes(childNodes[i].getAttribute('data-blade-for'))){
                   var elmCount = this.directiveFor(childNodes[i].getAttribute('data-blade-for'), childNodes[i], name);
                   if(elmCount > 0){
-                    window.blade.forLoop.push(childNodes[i].getAttribute('data-blade-for'))
-                    window.blade.forCount.push({
+                    this.forLoop.push(childNodes[i].getAttribute('data-blade-for'))
+                    this.forCount.push({
                       name: childNodes[i].getAttribute('data-blade-for'),
                       count: elmCount + i
                     })
@@ -1069,17 +1053,17 @@ export default class Blade{
                   }
                   childCount = childCount + (elmCount - 1);
                 }else{
-                  window.blade.forCount.forEach((item, index) => {
+                  this.forCount.forEach((item, index) => {
                     if(item.name === childNodes[i].getAttribute('data-blade-for')){
                       if((item.count - 1) === i){
-                        window.blade.forCount.splice(index,1);
-                        window.blade.forLoop = window.blade.forLoop.filter(item => item.name !== window.blade.forLoop.name);
+                        this.forCount.splice(index,1);
+                        this.forLoop = this.forLoop.filter(item => item.name !== this.forLoop.name);
                       }
                     }
                   })
 
-                  // if(window.blade.forCount === i){
-                  //   window.blade.forLoop
+                  // if(this.forCount === i){
+                  //   this.forLoop
                   // }
                 }
               }
@@ -1179,7 +1163,7 @@ export default class Blade{
 
     let builtDom = this.buildDom(dom, name, child);
 
-    window.blade.forLoop = [];
+    this.forLoop = [];
 
     return builtDom;
 
@@ -1403,8 +1387,8 @@ export default class Blade{
     }
 
     if(storeType === 'state'){
-      if(window.blade.store){
-        // return wrap(window.blade.store, 'state', console.log);
+      if(this.store){
+        // return wrap(this.store, 'state', console.log);
 
         // var _data = wrap(this.component[this.viewName].data, console.log)
 
@@ -1469,9 +1453,9 @@ export default class Blade{
 
   state(e){
     if(typeof e === 'object'){
-      window.blade.store = e;
+      this.store = e;
     }else{
-      return window.blade.store;
+      return this.store;
     }
   }
 

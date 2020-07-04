@@ -622,21 +622,17 @@ export default class Blade{
 
           break;
 
-
+          // ##### Bind Directive #####
           case 'data-blade-bind':
 
           var temp, selectorAttr, tempVal;
 
-          // const setPorxyData = (e) => {
-          //   this.proxyData  = e;
-          // }
-
           const checkListener = this.checkListener
+          // var $data = this.$data
 
             function setBindEvent(target, type){
 
                 var hasEvent = checkListener(target, 'bind');
-
 
                 if(!hasEvent){
 
@@ -652,8 +648,6 @@ export default class Blade{
 
                   target.addEventListener(eventType, function(e){
 
-                    console.log(viewName)
-
                     var data;
 
                       setTimeout(() => {
@@ -666,7 +660,7 @@ export default class Blade{
 
                           data[attr.value] = eventValue;
 
-                          window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, data);
+                          // window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, data);
 
                         }else{
 
@@ -694,18 +688,26 @@ export default class Blade{
                             }
                           }
 
-                          data[attr.value] = eventValue;
+                          data[topObj] = obj;
 
-                          window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, obj);
+                          // console.log('==== Updating via Bind ====')
+                          // console.log(topObj)
+                          // console.log(window.blade.view[viewName].data);
+                          // console.log(obj)
+
+                          // window.blade.view[viewName].data = Object.assign({}, window.blade.view[viewName].data, obj);
 
                         }
 
 
-                        // window.blade.dataProxy = wrap(window.blade.view[viewName].data, 'data', console.log);
-                        // window.blade.dataProxy.output = eventValue;
-                        // console.log(window.blade.view[viewName].data)
+                        console.log(data[attr.value])
 
-                        updateData(data, viewName, child);
+                        window.blade.view[viewName].localStore.store[attr.value] = eventValue;
+
+                        // console.log('@@@@@@@@@@@@@@@@@@@@@@@@')
+                        // console.log(attr.value)
+                        // console.log(window.blade.localStore.store)
+                        // updateData(data, viewName, child);
 
                       },1)
 

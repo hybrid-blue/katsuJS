@@ -737,9 +737,9 @@ export default class Blade{
 
           }
 
-
-
           break;
+
+          // ##### Class Directive #####
           case 'data-blade-class':
 
             var temp, selectorAttr, tempVal;

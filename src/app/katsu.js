@@ -1503,6 +1503,26 @@ export default class Blade{
 
     window.blade.view[target].vDomPure = window.blade.view[target].vDomNew;
 
+
+
+    // #This should detect which componets to update / Performance Suggestion
+
+    if(window.blade.view[target].components){
+      let components = window.blade.view[target].components
+      for(let comp of components){
+        if(window.blade.view[comp].data){
+
+          let props = {};
+          let componentElm = document.querySelectorAll(`[data-blade-component="${comp}"]`)[0];
+          let attrProps = componentElm.getAttribute('props');
+
+          props[attrProps] = window.blade.view[target].data[attrProps];
+          window.blade.view[comp].data = props;
+          this.updateData(props[attrProps], comp, true, type = 'data')
+        }
+      }
+    }
+
   }
 
 

@@ -153,7 +153,7 @@ export default class Blade{
             let obj = {};
             obj[selector] = itemValue;
 
-            window.blade.view[target].data['temp'] = obj
+            // window.blade.view[target].data['temp'] = obj
 
         }
       }else{
@@ -372,7 +372,7 @@ export default class Blade{
                   if(hasCaseAttribute(elms[i].attributes, data, 'case')){
                     node.childNodes[i].replaceWith(iou)
                   }else{
-                    console.log(node.childNodes[i])
+                    // console.log(node.childNodes[i])
                     if(!node.childNodes[i].getAttribute('data-blade-default')) this.switchCase = true;
                   };
                 }
@@ -402,13 +402,13 @@ export default class Blade{
 
           var temp, selectorAttr, tempVal;
 
-            if(attr.value.indexOf('.') > -1){
-              temp = window.blade.view[viewName].data['temp'];
-              selectorAttr = Object.keys(temp)[0];
-
-            }else{
-              selectorAttr = attr.value
-            }
+            // if(attr.value.indexOf('.') > -1){
+            //   temp = window.blade.view[viewName].data['temp'];
+            //   selectorAttr = Object.keys(temp)[0];
+            //
+            // }else{
+            //   selectorAttr = attr.value
+            // }
 
             setTimeout(() => {
 
@@ -514,12 +514,12 @@ export default class Blade{
 
           var temp, selectorAttr, tempVal;
 
-            if(attr.value.indexOf('.') > -1){
-              temp = window.blade.view[viewName].data['temp'];
-              selectorAttr = Object.keys(temp)[0];
-            }else{
-              selectorAttr = attr.value
-            }
+            // if(attr.value.indexOf('.') > -1){
+            //   temp = window.blade.view[viewName].data['temp'];
+            //   selectorAttr = Object.keys(temp)[0];
+            // }else{
+            //   selectorAttr = attr.value
+            // }
 
             setTimeout(() => {
 
@@ -538,7 +538,7 @@ export default class Blade{
 
                       let func = window.blade.view[viewName].events[attr.value.split('(')[0]];
 
-                      console.log(window.blade.view[viewName].events)
+                      // console.log(window.blade.view[viewName].events)
 
                       var newArgs = {};
 

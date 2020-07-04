@@ -1476,12 +1476,6 @@ export default class Blade{
 
   updateData(data, target, child, type = 'data'){
 
-    console.log('===== Update Data =====')
-    console.log(data);
-    console.log(target);
-    console.log(child);
-    console.log(type);
-
     if(type === 'data'){
       window.blade.view[target].data = Object.assign({}, window.blade.view[target].data, data);
     }else{

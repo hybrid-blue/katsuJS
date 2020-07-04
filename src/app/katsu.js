@@ -1575,120 +1575,24 @@ export default class Blade{
       return new Proxy(window.blade.view[selector].service, serviceHandler)
     }
 
-
     const updateData = this.updateData.bind(this)
 
     window.blade.view[viewName].targetData = {};
     window.blade.view[viewName].events = {};
     window.blade.view[viewName].emit = {};
     window.blade.view[viewName].service = {};
+    window.blade.view[viewName].localStore = {}
 
-
-    // var trueTypeOf = function (obj) {
-    //   return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
-    // };
-
-    // function wrap(o, type, fn, scope = []){
-    //
-    //   const handler = {
-    //     get(target, prop, receiver) {
-    //       // fn('get value in scope: ', scope.concat(prop))
-    //
-    //       console.log(target)
-    //       console.log(window.blade.view[name].data)
-    //
-    //       // Force update target
-    //       target = Object.assign({}, target, window.blade.view[name].data);
-    //
-    //
-    //
-    //       if (['object', 'array'].indexOf(trueTypeOf(target[prop])) > -1) {
-    //         return new Proxy(target[prop], handler);
-    //       }
-    //
-    //       return target[prop]
-    //     },
-    //     set(target, prop, value, receiver) {
-    //       // fn('set value in scope: ', scope.concat(prop))
-    //       target[prop] = value
-    //
-    //       var obj = {};
-    //       let pathArray = scope.concat(prop);
-    //
-    //       if(pathArray.length > 1){
-    //         for(let i=0;i<pathArray.length;i++){
-    //           if(i === (pathArray.length - 1)){
-    //             let thisObj = {}
-    //             thisObj[pathArray[(i)]] = value;
-    //             obj[pathArray[(i - 1)]] = thisObj;
-    //           }else if(i === 0){
-    //             obj[pathArray[i]] = {}
-    //           }else{
-    //             obj[pathArray[(i - 1)]] = {}
-    //           }
-    //         }
-    //       }else{
-    //         obj[pathArray[0]] = value
-    //       }
-    //
-    //       updateData(obj, name, childComponent, type);
-    //
-    //       return true
-    //     }
-    //   }
-    //
-    //   return new Proxy(
-    //     Object.keys(o).reduce((result, key) => {
-    //       if (isObject(o[key])) {
-    //         result[key] = wrap(o[key], fn, scope.concat(key))
-    //       } else {
-    //         result[key] = o[key]
-    //       }
-    //       return result
-    //     }, {}),
-    //     handler
-    //   )
-    //
-    // }
-    //
-    // function isObject(obj) {
-    //   return typeof obj === 'object' && !Array.isArray(obj)
-    // }
-
-
-
-
-    // window.blade.dataProxy = wrap(window.blade.view[name].data, 'data', console.log)
-    // window.blade.stateProxy = this.dataProxy.bind(this);
-
-    // console.log(window.blade.dataProxy)
-    // console.log(window.blade.stateProxy)
-
-    // window.blade.dataProxy('data', viewName, childComponent);
-    // window.blade.stateProxy('state', viewName, childComponent);
-
-    var $data = this.dataProxy('data', viewName, childComponent);
-    var $state = this.dataProxy('state', viewName, childComponent);
-
-    // console.log('==== Proxies ====')
-    // console.log($data)
-    // console.log($state)
-
+    this.dataProxy('data', viewName, childComponent);
 
     // Set params
-
     const params = {
-      $data: $data,
+      $data: window.blade.view[viewName].localStore.store,
       $event: $event(viewName),
       $emit: $emit(viewName),
       $service: $service(viewName),
-      $state: $state
+      // $state: $state
     }
-
-    console.log('@@@@@@@@@@@')
-    console.log(name)
-    console.log(params)
-
 
     const pollerComponent = (target) => {
 

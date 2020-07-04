@@ -28,6 +28,10 @@ export default class Blade{
     window.blade.forCount = [];
     window.blade.store = {};
 
+
+    window.blade.localStore = {};
+    window.blade.access = {};
+
   }
 
 
@@ -48,7 +52,6 @@ export default class Blade{
     let expressions = content.match(regex);
 
     var data = content;
-
 
       for(let exp of expressions){
 
@@ -80,12 +83,8 @@ export default class Blade{
             }
           }
         }else{
-
-          console.log('==== Expressions ====')
-          console.log(window.blade.view[target])
-
           if(window.blade.view[target].data[exp] !== null){
-            data = data.replace(`{{${exp}}}`, window.blade.view[target].data[exp]);
+            if(window.blade.view[target].data[exp]) data = data.replace(`{{${exp}}}`, window.blade.view[target].data[exp]);
           }
         }
 
@@ -1328,24 +1327,13 @@ export default class Blade{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
   // ###############################################################
-  // #                    Component Render                         #
+  // #                    Data Proxy                               #
   // ###############################################################
 
+  dataProxy(storeType, name, type, childComponent){
 
-  dataProxy(storeType, name, childComponent){
+    var _data = wrap(window.blade.view[name].data, 'data', console.log)
 
     const updateData = this.updateData.bind(this)
 
@@ -1353,59 +1341,51 @@ export default class Blade{
       return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
     };
 
-    function wrap(o, type, fn, scope = []){
+    function wrap(o, type, fn, scope = []) {
 
-      const handler = {
-        get(target, prop, receiver) {
-          // fn('get value in scope: ', scope.concat(prop))
+      // Force update Proxy
 
-          if (['object', 'array'].indexOf(trueTypeOf(target[prop])) > -1) {
-            return new Proxy(target[prop], handler);
-          }
+        const handler = {
+          get(target, prop, receiver) {
+            fn('get value in scope: ', scope.concat(prop))
 
-          // Force update target
-          if(type === 'state'){
-            target = Object.assign({}, target, window.blade.store);
-          }else{
-            target = Object.assign({}, target, window.blade.view[name].data);
-          }
+            return target[prop]
+          },
+          set(target, prop, value, receiver) {
+            fn('set value in scope: ', scope.concat(prop))
 
+            var obj = {};
+            let pathArray = scope.concat(prop);
 
-          return target[prop]
-        },
-        set(target, prop, value, receiver) {
-          // fn('set value in scope: ', scope.concat(prop))
-          target[prop] = value
-
-          var obj = {};
-          let pathArray = scope.concat(prop);
-
-          if(pathArray.length > 1){
-            for(let i=0;i<pathArray.length;i++){
-              if(i === (pathArray.length - 1)){
-                let thisObj = {}
-                thisObj[pathArray[(i)]] = value;
-                obj[pathArray[(i - 1)]] = thisObj;
-              }else if(i === 0){
-                obj[pathArray[i]] = {}
-              }else{
-                obj[pathArray[(i - 1)]] = {}
+            if(pathArray.length > 1){
+              for(let i=0;i<pathArray.length;i++){
+                if(i === (pathArray.length - 1)){
+                  let thisObj = {}
+                  thisObj[pathArray[(i)]] = value;
+                  obj[pathArray[(i - 1)]] = thisObj;
+                }else if(i === 0){
+                  obj[pathArray[i]] = {}
+                }else{
+                  obj[pathArray[(i - 1)]] = {}
+                }
               }
+            }else{
+              obj[pathArray[0]] = value
             }
-          }else{
-            obj[pathArray[0]] = value
+
+            target[prop] = value
+
+            updateData(obj, name, childComponent, type);
+
+            return true
           }
 
-          updateData(obj, name, childComponent, type);
-
-          return true
         }
-      }
 
       return new Proxy(
         Object.keys(o).reduce((result, key) => {
           if (isObject(o[key])) {
-            result[key] = wrap(o[key], fn, scope.concat(key))
+            result[key] = wrap(o[key], type, fn, scope.concat(key))
           } else {
             result[key] = o[key]
           }
@@ -1413,7 +1393,6 @@ export default class Blade{
         }, {}),
         handler
       )
-
     }
 
     function isObject(obj) {
@@ -1422,15 +1401,49 @@ export default class Blade{
 
     if(storeType === 'state'){
       if(window.blade.store){
-        return wrap(window.blade.store, 'state', console.log);
+        // return wrap(window.blade.store, 'state', console.log);
+
+        // var _data = wrap(window.blade.view[this.viewName].data, console.log)
+
+        Object.defineProperty(window.blade.view[name].localStore, 'store', {
+          get: function(){
+            return _data
+          },
+          set: function(data){
+            _data = wrap(data, 'state', console.log);
+            return true
+          }
+        })
+
       }
     }else{
       if(window.blade.view[name].data){
-        return wrap(window.blade.view[name].data, 'data', console.log);
+        // return wrap(window.blade.view[name].data, 'data', console.log);
+
+        Object.defineProperty(window.blade.view[name].localStore, 'store', {
+          get: function(){
+            console.log('Get')
+            return _data
+          },
+          set: function(e){
+            console.log('Set')
+            console.log(e)
+            _data = wrap(e, 'data', console.log);
+            return true
+          }
+        })
+
       }
     }
 
   }
+
+
+
+  // ###############################################################
+  // #                    Component Render                         #
+  // ###############################################################
+
 
   module(data, options){
 

@@ -9,6 +9,7 @@ export default class Blade{
     this.viewName;
     this.targetElement;
 
+
     // Needs to be converted to Class variables like above (General)
     window.blade = {};
     window.blade.temp = {};
@@ -628,7 +629,6 @@ export default class Blade{
           var temp, selectorAttr, tempVal;
 
           const checkListener = this.checkListener
-          // var $data = this.$data
 
             function setBindEvent(target, type){
 

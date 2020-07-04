@@ -27,14 +27,9 @@ class Hello{
 }
 
 ```
-```javascript
-
-app.module(Hello);
-
-```
 
 ```javascript
-app.render('Hello', '#root')
+app.render([Hello], '#root')
 ```
 
 

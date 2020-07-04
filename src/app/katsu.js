@@ -1642,58 +1642,62 @@ export default class Blade{
 
         let mod = new options[i]();
 
-        pollerComponent(options[i].name).then(res => {
 
-          try{
+        if(mod.service){
+          window.blade.view[viewName].service[options[i].name] = mod.service();
+        }else{
 
-            if(mod.view){
+          pollerComponent(options[i].name).then(res => {
 
-              window.blade.view[options[i].name] = {};
+            try{
 
-              window.blade.view[options[i].name].template = mod.view();
+              if(mod.view){
 
-              if(mod.data){
-                let props = {};
-                let componentElm = document.querySelectorAll(`[data-blade-component="${options[i].name}"]`)[0];
-                let attrProps = componentElm.getAttribute('props');
-                props[attrProps] = window.blade.view[viewName].data[attrProps];
-                window.blade.view[options[i].name].data = mod.data(props);
+                window.blade.view[options[i].name] = {};
+
+                window.blade.view[options[i].name].template = mod.view();
+
+                if(mod.data){
+                  let props = {};
+                  let componentElm = document.querySelectorAll(`[data-blade-component="${options[i].name}"]`)[0];
+                  let attrProps = componentElm.getAttribute('props');
+                  mod.data(window.blade.view[viewName].data[attrProps]);
+                  window.blade.view[options[i].name].data = window.blade.view[viewName].data[attrProps];
+
+                }else{
+                  window.blade.view[options[i].name].data = {};
+                }
+
+                mod.controller ? window.blade.view[options[i].name].controller = mod.controller  : window.blade.view[options[i].name].controller = null;
+
+                window.blade.view[viewName].components.push(options[i].name)
+
               }else{
-                window.blade.view[options[i].name].data = {};
+                throw(options[i].name)
               }
 
-              mod.controller ? window.blade.view[options[i].name].controller = mod.controller  : window.blade.view[options[i].name].controller = null;
-
-              window.blade.view[viewName].components.push(options[i].name)
-
-            }else{
-
-              throw(options[i].name)
-
             }
-
-          }
-          catch(err){
-            if(mod.service){
-              window.blade.view[viewName].service[options[i].name] = mod.service();
-            }else{
+            catch(err){
               console.error(`Class ${err} is not a valid block`)
               return false;
             }
 
-          }
-
-          // Render Child Components
-          if(window.blade.view[viewName].components){
-            for(let comp of window.blade.view[viewName].components){
-              if(rendered.includes(comp)){
-                this.render(comp, comp, true, viewName);
+            // Render Child Components
+            if(window.blade.view[viewName].components){
+              for(let comp of window.blade.view[viewName].components){
+                if(!rendered.includes(comp)){
+                  this.render(comp, comp, true, viewName);
+                }
+                rendered.push(comp)
               }
-              rendered.push(comp)
             }
-          }
 
-        });
+          });
+
+
+        }
+
+
 
       }
 

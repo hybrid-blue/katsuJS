@@ -67,4 +67,5 @@ class Hello{
 
 ```
 
-Basic Component example -> https://codepen.io/hybrid-blue/pen/KKVozgj
+Basic Component example => https://codepen.io/hybrid-blue/pen/KKVozgj
+Clock example => https://codepen.io/hybrid-blue/pen/WNrzxbv

@@ -1,36 +1,108 @@
 import '../style.css';
-// import Dom from './dom';
 
-// export default class Blade{
+/**
+* 1.0 DOM
+* 1.1 Expressions
+* 1.2
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*/
 
-export default class Blade{
-  constructor(viewName){
+export default class Katsu{
+  constructor(){
 
     this.viewName;
     this.targetElement;
     this.component = {}
     this.forLoop = []
     this.forCount = [];
-    this.store = {};
-
-    window.blade = {};
-    window.blade.temp = {};
-
+    this.currentIteration;
+    this.switchCase;
+    this.expressStr;
+    this.state = {};
+    this.root;
 
   }
 
 
-// ###############################################################
-// #                    DOM                                      #
-// ###############################################################
+  /**
+  * Poller for Elmement of targted attribute.
+  */
+  poller(elm, index = null){
+    return new Promise((resolve, reject) => {
+      var i = 0;
 
-  // Allows access to con
-  data(){
-    return this.proxyData;
+      var selector = index ? 'document.querySelectorAll('+elm+')'+'['+index+']' : 'document.querySelectorAll('+elm+')'
+
+        var pollerElm = setInterval(() => {
+          if(selector || i === 1000){
+            stopPoller()
+            resolve(true);
+          }else{
+            i++;
+          }
+        },1);
+
+      function stopPoller() {
+        clearInterval(pollerElm);
+      }
+    })
   }
 
-  // Expressions
+  /**
+  * Poller Case directive for switch elements.
+  */
+  pollerCase(elm){
+    return new Promise((resolve, reject) => {
+      var i = 0;
 
+      var selector = 'elm.querySelectorAll("div")'
+
+        var pollerElm = setInterval(() => {
+          if(selector || i === 1000){
+            stopPoller()
+            resolve(elm);
+          }else{
+            i++;
+          }
+        },1);
+
+      function stopPoller() {
+        clearInterval(pollerElm);
+      }
+    })
+  }
+
+  /**
+  * Check if element as a listener
+  */
+  checkListener(target, ev){
+    if(!target.getAttribute('data-kat-listening')){
+      target.setAttribute('data-kat-listening', ev);
+      return false
+    }else{
+      let events = target.getAttribute('data-kat-listening');
+      if(events.indexOf(ev) > -1){
+        return true;
+      }else{
+        events += `,${ev}`
+        target.setAttribute('data-kat-listening', events)
+        return false
+      }
+    }
+  }
+
+
+  /**
+  * Expression interpolation
+  */
   expressions(content, target){
 
     var regex = /(?<={{)(.*?)(?=\s*}})/g;
@@ -79,6 +151,7 @@ export default class Blade{
 
   }
 
+  //
   generateExp(obj, key){
     if(typeof obj[key] === 'object'){
       this.expressStr += `${key}.`;
@@ -89,10 +162,69 @@ export default class Blade{
     return this.expressStr;
   }
 
-  directiveIf(dom, node){
+  getEventValues(target, viewName, topObj, arg){
+    var foundIndex;
+    var newArgs = {};
+
+    const findIndex = (parentNode) => {
+      let nodes = parentNode.parentNode.children;
+      let thisNode = parentNode;
+      let forCount = 0;
+
+      let array = Array.prototype.slice.call(document.querySelectorAll(`[data-kat-for="${thisNode.getAttribute('data-kat-for')}"]`));
+      let dataCount = this.component[viewName].data[topObj].length;
+      let elmCount = array.length / dataCount;
+
+      for(let i=0;i<elmCount;i++){
+        for(let x=0;x<dataCount;x++){
+          if(array[((dataCount * i) + x)].getAttribute('key-active')){
+            array[((dataCount * i) + x)].removeAttribute('key-active')
+            let index = ((dataCount * i) + x) - (dataCount * i)
+            return index;
+          }
+        }
+      }
+    }
+
+    const findParent = (elm) => {
+      var parentNode, childNode;
+      // console.log(elm)
+      if(elm.parentNode.getAttribute('data-kat-for')){
+        parentNode = elm.parentNode;
+        childNode = elm;
+        parentNode.setAttribute('key-active', true)
+        foundIndex = findIndex(parentNode);
+      }else{
+        console.log()
+        if(elm.tagName !== 'BODY'){
+          findParent(elm.parentNode);
+        }
+
+
+      }
+
+    }
+
+    findParent(target);
+
+    if(arg.trim() === 'index'){
+      newArgs['index'] = foundIndex
+    }else{
+      let selector = arg.trim();
+      if(selector.indexOf('.') > -1){
+        let data = this.component[viewName].data[topObj][foundIndex];
+        newArgs['data'] = data[selector.split('.')[1]];
+      }else{
+        newArgs['data'] = this.component[viewName].data[selector];
+      }
+    }
+
+    return newArgs;
 
   }
 
+
+  // Duplicate elements with kat-for attribute and interpolate the expressions
   directiveFor(value, node, target){
 
     let selector = value.split(' ').pop();
@@ -104,10 +236,11 @@ export default class Blade{
       var values = expression;
       var dataObj = []
 
+      // If item is not a string, but an object, generate a selector for interpolation. If not, Interpolate using base expression.
       if(typeof item === 'object'){
 
         let expKeys = Object.keys(item);
-        let expVals = Object.values(item);
+        // let expVals = Object.values(item);
 
         for(let key of expKeys){
 
@@ -131,20 +264,16 @@ export default class Blade{
             itemValue = item[key]
           }
 
-
             html = html.replace(`{{${selector}}}`, `{{${key}}}`);
             html = html.replace(`{{${key}}}`, itemValue);
 
             let obj = {};
             obj[selector] = itemValue;
 
-            // this.component[target].data['temp'] = obj
-
         }
       }else{
         html.replace(`{{${expression}}}`, item)
       }
-
 
       html = `<!-- ${topSelector}[${index}] -->` + html + `<!-- END -->`
 
@@ -159,7 +288,7 @@ export default class Blade{
       if(typeof item === 'object'){
 
         let expKeys = Object.keys(item);
-        let expVals = Object.values(item);
+        // let expVals = Object.values(item);
 
         for(let key of expKeys){
 
@@ -223,67 +352,11 @@ export default class Blade{
 
   }
 
-  poller(elm, index = null){
-    return new Promise((resolve, reject) => {
-      var i = 0;
+  /**
+  * Set directives of node
+  */
 
-      var selector = index ? 'document.querySelectorAll('+elm+')'+'['+index+']' : 'document.querySelectorAll('+elm+')'
-
-        var pollerElm = setInterval(() => {
-          if(selector || i === 1000){
-            stopPoller()
-            resolve(true);
-          }else{
-            i++;
-          }
-        },1);
-
-      function stopPoller() {
-        clearInterval(pollerElm);
-      }
-    })
-  }
-
-  pollerCase(elm){
-    return new Promise((resolve, reject) => {
-      var i = 0;
-
-      var selector = 'elm.querySelectorAll("div")'
-
-        var pollerElm = setInterval(() => {
-          if(selector || i === 1000){
-            stopPoller()
-            resolve(elm);
-          }else{
-            i++;
-          }
-        },1);
-
-      function stopPoller() {
-        clearInterval(pollerElm);
-      }
-    })
-  }
-
-  checkListener(target, ev){
-    if(!target.getAttribute('data-blade-listening')){
-      target.setAttribute('data-blade-listening', ev);
-      return false
-    }else{
-      let events = target.getAttribute('data-blade-listening');
-      if(events.indexOf(ev) > -1){
-        return true;
-      }else{
-        events += `,${ev}`
-        target.setAttribute('data-blade-listening', events)
-        return false
-      }
-    }
-  }
-
-
-
-  directives(node, child, viewName, type = 'default', index = null, topObj = null){
+  directives(node, child, viewName, type = 'default', index = null, topObj = null, domRoot){
 
     const virtualDom = this.virtualDom.bind(this);
     const updateDom = this.updateDom.bind(this);
@@ -324,9 +397,9 @@ export default class Blade{
 
         switch(attr.name){
 
-          case 'data-blade-switch':
+          case 'data-kat-switch':
 
-            // window.blade.switch = attr.value;
+            // window.kat.switch = attr.value;
             var switchCase = attr.value
             let iou = document.createComment('element-removed');
             let elms = node.childNodes;
@@ -335,13 +408,13 @@ export default class Blade{
 
               if(data){
                 for(let nodeAttr of attrs){
-                  if(nodeAttr.name === 'data-blade-case' && nodeAttr.value !== data){
+                  if(nodeAttr.name === 'data-kat-case' && nodeAttr.value !== data){
                     return true;
                   }
                 }
               }else{
                 for(let nodeAttr of attrs){
-                  if(nodeAttr.name === 'data-blade-default'){
+                  if(nodeAttr.name === 'data-kat-default'){
                     return true;
                   }
                 }
@@ -359,7 +432,7 @@ export default class Blade{
                     node.childNodes[i].replaceWith(iou)
                   }else{
                     // console.log(node.childNodes[i])
-                    if(!node.childNodes[i].getAttribute('data-blade-default')) this.switchCase = true;
+                    if(!node.childNodes[i].getAttribute('data-kat-default')) this.switchCase = true;
                   };
                 }
               }
@@ -384,17 +457,12 @@ export default class Blade{
 
           break;
 
-          case 'data-blade-click':
+          case 'data-kat-click':
 
-          var temp, selectorAttr, tempVal;
+          var temp, selectorAttr, tempVal, count, currentElm;
 
-            // if(attr.value.indexOf('.') > -1){
-            //   temp = this.component[viewName].data['temp'];
-            //   selectorAttr = Object.keys(temp)[0];
-            //
-            // }else{
-            //   selectorAttr = attr.value
-            // }
+          // const checkListener = this.checkListener;
+          var _this = this.component;
 
             setTimeout(() => {
 
@@ -426,48 +494,23 @@ export default class Blade{
 
                           newArgs['args'] = trimed;
 
-
                         }else{
-                          if(args[i].trim() === 'index'){
 
-                            var foundIndex;
-
-                            const findIndex = (parentNode) => {
-                              let nodes = parentNode.parentNode.children;
-                              let thisNode = parentNode;
-
-                              for(let i=0;i<nodes.length;i++){
-                                if(nodes[i].isEqualNode(thisNode)){
-                                  return i;
-                                }
-                              }
-                            }
-
-                            const findParent = (elm) => {
-
-                              var parentNode, childNode;
-
-                              if(elm.parentNode.getAttribute('data-blade-for')){
-                                parentNode = elm.parentNode;
-                                childNode = elm;
-                                foundIndex = findIndex(parentNode);
-                                newArgs['index'] = foundIndex;
-                              }else{
-                                findParent(elm.parentNode);
-                              }
-
-                            }
-
-                            findParent(target);
-
-                          }else{
-                            newArgs['data'] = this.component[viewName].data[args[i].trim()];
-                          }
+                          newArgs = this.getEventValues(target, viewName, topObj, args[i])
 
                         }
                       }
 
-                      func(newArgs);
+                      try{
+                        if(func){
+                          func(newArgs);
+                        }else{
+                          throw(`Cannot find event "${attr.value.split('(')[0]}"`)
+                        }
+                      }
+                      catch(e){
+                        console.error(e)
+                      }
 
                     },1)
 
@@ -477,13 +520,65 @@ export default class Blade{
               }
 
 
-              if(node.getAttribute("data-blade-click") === attr.value){
+              if(node.getAttribute("data-kat-click") === attr.value){
                 var elms;
                 if(type === 'for'){
-                  elms = document.querySelectorAll(`[data-blade-click="${attr.value}"]`)[index];
-                  setClickEvent(elms)
+                  // elms = document.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index];
+                  // setClickEvent(elms)
+
+
+
+
+
+                  elms = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index];
+
+                  var attrs = elms.getAttribute('data-kat-listening');
+
+                  const findNextValidElm = (attrs, elms, count) => {
+                    if(Array.isArray(attrs)){
+                      for(let attr of attrs){
+                        if(attr === 'click'){
+                          let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
+                          // let attrs = elms.getAttribute('data-kat-listening');
+                          if(elm){
+                            if(!elm.getAttribute('data-kat-listening')){
+                              currentElm = elm;
+                            }else{
+                              count += count;
+                              findNextValidElm(attrs, elm, count)
+                            }
+                          }
+                        }
+                      }
+                    }else{
+                      if(attrs === 'click'){
+
+                        let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
+                        let attrs = elms.getAttribute('data-kat-listening');
+                        if(elm){
+                          if(!elm.getAttribute('data-kat-listening')){
+                            currentElm = elm;
+                          }else{
+                            count += count;
+                            findNextValidElm(attrs, elm, count)
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  if(attrs){
+                    var count = _this[viewName].localStore.store[topObj].length;
+                    findNextValidElm(attrs, elms, count);
+                    elms = currentElm
+                  }
+                  if(elms){
+                    setClickEvent(elms)
+                  }
+
+
                 }else{
-                  elms = document.querySelectorAll(`[data-blade-click="${attr.value}"]`);
+                  elms = document.querySelectorAll(`[data-kat-click="${attr.value}"]`);
                   for(let elm of elms){
                     setClickEvent(elm)
                   }
@@ -496,16 +591,10 @@ export default class Blade{
 
 
 
-          case 'data-blade-key':
+          case 'data-kat-key':
 
-          var temp, selectorAttr, tempVal;
-
-            // if(attr.value.indexOf('.') > -1){
-            //   temp = this.component[viewName].data['temp'];
-            //   selectorAttr = Object.keys(temp)[0];
-            // }else{
-            //   selectorAttr = attr.value
-            // }
+          var temp, selectorAttr, tempVal, count, currentElm;
+          var _this = this.component;
 
             setTimeout(() => {
 
@@ -524,8 +613,6 @@ export default class Blade{
 
                       let func = this.component[viewName].events[attr.value.split('(')[0]];
 
-                      // console.log(this.component[viewName].events)
-
                       var newArgs = {};
 
                       let args = arg[0].split(',')
@@ -539,48 +626,24 @@ export default class Blade{
 
                           newArgs['args'] = trimed;
 
-
                         }else{
-                          if(args[i].trim() === 'index'){
 
-                            var foundIndex;
-
-                            const findIndex = (parentNode) => {
-                              let nodes = parentNode.parentNode.children;
-                              let thisNode = parentNode;
-
-                              for(let i=0;i<nodes.length;i++){
-                                if(nodes[i].isEqualNode(thisNode)){
-                                  return i;
-                                }
-                              }
-                            }
-
-                            const findParent = (elm) => {
-
-                              var parentNode, childNode;
-
-                              if(elm.parentNode.getAttribute('data-blade-for')){
-                                parentNode = elm.parentNode;
-                                childNode = elm;
-                                foundIndex = findIndex(parentNode);
-                                newArgs['index'] = foundIndex;
-                              }else{
-                                findParent(elm.parentNode);
-                              }
-
-                            }
-
-                            findParent(target);
-
-                          }else{
-                            newArgs['data'] = this.component[viewName].data[args[i].trim()];
-                          }
+                          newArgs = this.getEventValues(target, viewName, topObj, args, i)
 
                         }
                       }
 
-                      func(newArgs);
+                      try{
+                        if(func){
+                          func(newArgs);
+                        }else{
+                          throw(`Cannot find event ${attr.value.split('(')[0]}`)
+                        }
+                      }
+                      catch(e){
+                        console.log(e)
+                      }
+
 
                     },1)
 
@@ -591,13 +654,60 @@ export default class Blade{
               }
 
 
-              if(node.getAttribute("data-blade-key") === attr.value){
+              if(node.getAttribute("data-kat-key") === attr.value){
                 var elms;
                 if(type === 'for'){
-                  elms = document.querySelectorAll(`[data-blade-key="${attr.value}"]`)[index];
-                  setKeyEvent(elms)
+                  // elms = document.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index];
+                  // setKeyEvent(elms)
+
+                  elms = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index];
+
+                  var attrs = elms.getAttribute('data-kat-listening');
+
+                  const findNextValidElm = (attrs, elms, count) => {
+                    if(Array.isArray(attrs)){
+                      for(let attr of attrs){
+                        if(attr === 'key'){
+                          let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
+                          // let attrs = elms.getAttribute('data-kat-listening');
+                          if(elm){
+                            if(!elm.getAttribute('data-kat-listening')){
+                              currentElm = elm;
+                            }else{
+                              count += count;
+                              findNextValidElm(attrs, elm, count)
+                            }
+                          }
+                        }
+                      }
+                    }else{
+                      if(attrs === 'key'){
+
+                        let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
+                        let attrs = elms.getAttribute('data-kat-listening');
+                        if(elm){
+                          if(!elm.getAttribute('data-kat-listening')){
+                            currentElm = elm;
+                          }else{
+                            count += count;
+                            findNextValidElm(attrs, elm, count)
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  if(attrs){
+                    var count = _this[viewName].localStore.store[topObj].length;
+                    findNextValidElm(attrs, elms, count);
+                    elms = currentElm
+                  }
+                  if(elms){
+                    setKeyEvent(elms)
+                  }
+
                 }else{
-                  elms = document.querySelectorAll(`[data-blade-key="${attr.value}"]`);
+                  elms = document.querySelectorAll(`[data-kat-key="${attr.value}"]`);
                   for(let elm of elms){
                     setKeyEvent(elm)
                   }
@@ -609,11 +719,13 @@ export default class Blade{
           break;
 
           // ##### Bind Directive #####
-          case 'data-blade-bind':
+          case 'data-kat-bind':
 
           var temp, selectorAttr, tempVal;
 
-          const checkListener = this.checkListener
+          var checkListener = this.checkListener;
+          var _this = this.component;
+          // const root = this.root;
 
             function setBindEvent(target, type){
 
@@ -638,25 +750,25 @@ export default class Blade{
                       setTimeout(() => {
 
                         var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
-                        // let view = window.blade.module
+                        // let view = window.kat.module
                         let data = {};
 
                         if(type !== 'for'){
 
                           data[attr.value] = eventValue;
 
-                          // this.component[viewName].data = Object.assign({}, this.component[viewName].data, data);
+                          _this[viewName].localStore.store[attr.value] = eventValue;
 
                         }else{
 
                           var dataArray = attr.value.split('.');
                           var targetParent;
-                          var bladeData = this.component[viewName].data
+                          var bladeData = _this[viewName].data
                           var bladeDataPath;
                           var obj;
 
                           function getParent(elm){
-                            if(elm.parentNode.getAttribute('data-blade-for')){
+                            if(elm.parentNode.getAttribute('data-kat-for')){
                               targetParent = elm.parentNode
                             }else{
                               getParent(elm.parentNode)
@@ -666,7 +778,7 @@ export default class Blade{
                           for(let i=0;i<dataArray.length;i++){
                             if(i === 0){
                               getParent(target);
-                              var baseProp = targetParent.getAttribute('data-blade-for').split(' ').pop();
+                              var baseProp = targetParent.getAttribute('data-kat-for').split(' ').pop();
                               obj = bladeData[baseProp];
                             }else{
                               obj[index][dataArray[i]] = eventValue;
@@ -675,24 +787,11 @@ export default class Blade{
 
                           data[topObj] = obj;
 
-                          // console.log('==== Updating via Bind ====')
-                          // console.log(topObj)
-                          // console.log(this.component[viewName].data);
-                          // console.log(obj)
-
-                          // this.component[viewName].data = Object.assign({}, this.component[viewName].data, obj);
+                          _this[viewName].localStore.store[topObj] = data[topObj]
 
                         }
 
 
-                        console.log(data[attr.value])
-
-                        this.component[viewName].localStore.store[attr.value] = eventValue;
-
-                        // console.log('@@@@@@@@@@@@@@@@@@@@@@@@')
-                        // console.log(attr.value)
-                        // console.log(window.blade.localStore.store)
-                        // updateData(data, viewName, child);
 
                       },1)
 
@@ -702,16 +801,62 @@ export default class Blade{
 
             }
 
-            if(node.getAttribute("data-blade-bind") === attr.value){
+            if(node.getAttribute("data-kat-bind") === attr.value){
 
-              this.poller(`[data-blade-bind="${attr.value}"]`).then(res => {
+              this.poller(`[data-kat-bind="${attr.value}"]`).then(res => {
 
-                var elms;
+                var elms, count, currentElm;
+
                 if(type === 'for'){
-                  elms = document.querySelectorAll(`[data-blade-bind="${attr.value}"]`)[index];
-                  setBindEvent(elms, type)
+
+                  elms = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index];
+
+                  var attrs = elms.getAttribute('data-kat-listening');
+
+                  const findNextValidElm = (attrs, elms, count) => {
+                    if(Array.isArray(attrs)){
+                      for(let attr of attrs){
+                        if(attr === 'bind'){
+                          let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
+                          let attrs = elms.getAttribute('data-kat-listening');
+                          if(elm){
+                            if(!elm.getAttribute('data-kat-listening')){
+                              currentElm = elm;
+                            }else{
+                              count += count;
+                              findNextValidElm(attrs, elm, count)
+                            }
+                          }
+                        }
+                      }
+                    }else{
+                      if(attrs === 'bind'){
+
+                        let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
+                        let attrs = elms.getAttribute('data-kat-listening');
+                        if(elm){
+                          if(!elm.getAttribute('data-kat-listening')){
+                            currentElm = elm;
+                          }else{
+                            count += count;
+                            findNextValidElm(attrs, elm, count)
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  if(attrs){
+                    var count = _this[viewName].localStore.store[topObj].length;
+                    findNextValidElm(attrs, elms, count);
+                    elms = currentElm
+                  }
+                  if(elms){
+                    setBindEvent(elms, type)
+                  }
+
                 }else{
-                  elms = document.querySelectorAll(`[data-blade-bind="${attr.value}"]`);
+                  elms = document.querySelectorAll(`[data-kat-bind="${attr.value}"]`);
                   for(let elm of elms){
                     setBindEvent(elm, type)
                   }
@@ -725,7 +870,7 @@ export default class Blade{
           break;
 
           // ##### Class Directive #####
-          case 'data-blade-class':
+          case 'data-kat-class':
 
             var temp, selectorAttr, tempVal;
 
@@ -915,14 +1060,14 @@ export default class Blade{
                 }
 
 
-                if(node.getAttribute("data-blade-class") === attr.value){
+                if(node.getAttribute("data-kat-class") === attr.value){
 
                   var elms, data;
 
                   data  = attr.value;
 
                   if(type === 'for'){
-                    elms = document.querySelectorAll(`[data-blade-class="${attr.value}"]`)[index];
+                    elms = document.querySelectorAll(`[data-kat-class="${attr.value}"]`)[index];
 
                     let classSelector = data.split('.').pop();
                     var bladeDataClass = data;
@@ -935,7 +1080,7 @@ export default class Blade{
 
                     function getParent(elm){
 
-                      if(elm.parentNode.getAttribute('data-blade-for')){
+                      if(elm.parentNode.getAttribute('data-kat-for')){
                         targetParent = elm.parentNode
                       }else{
                         getParent(elm.parentNode)
@@ -948,7 +1093,7 @@ export default class Blade{
                     for(let i=0;i<dataArray.length;i++){
                       if(i === 0){
                         getParent(elms);
-                        var baseProp = targetParent.getAttribute('data-blade-for').split(' ').pop();
+                        var baseProp = targetParent.getAttribute('data-kat-for').split(' ').pop();
                         let targetObj = bladeData[baseProp];
                         bladeDataClass = targetObj[index];
                       }else{
@@ -968,7 +1113,7 @@ export default class Blade{
                     }
 
                   }else{
-                    elms = document.querySelectorAll(`[data-blade-class="${attr.value}"]`);
+                    elms = document.querySelectorAll(`[data-kat-class="${attr.value}"]`);
                     for(let elm of elms){
                       let obj = {};
                       let data = getData(attr.value)
@@ -984,24 +1129,22 @@ export default class Blade{
 
 
           break;
-          case 'data-blade-src':
+          case 'data-kat-src':
 
             var temp, selectorAttr, tempVal;
 
-            this.poller(`[data-blade-src="${attr.value}"]`).then(res => {
-              if(node.getAttribute("data-blade-src") === attr.value){
+            this.poller(`[data-kat-src="${attr.value}"]`).then(res => {
+              if(node.getAttribute("data-kat-src") === attr.value){
+
                 var elms;
-                // let data = type === 'for' ? Object.values(temp)[0] : this.component[viewName].data[attr.value];
-
                 let data = getData(attr.value)
-
                 if(type === 'for'){
-                  elms = document.querySelectorAll(`[data-blade-src="${attr.value}"]`)[index];
-                  if(!elms.src) elms.setAttribute('src', data);
+                  elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`)[index];
+                  elms.setAttribute('src', data);
                 }else{
-                  elms = document.querySelectorAll(`[data-blade-src="${attr.value}"]`);
+                  elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`);
                   for(let elm of elms){
-                    if(!elm.src) elm.setAttribute('src', data);
+                    elm.setAttribute('src', data);
                   }
                 }
               }
@@ -1012,7 +1155,6 @@ export default class Blade{
         }
 
       });
-      // this.component[viewName].data.temp = null;
     }
 
   }
@@ -1024,7 +1166,7 @@ export default class Blade{
 
 // DOM Building
 
-  buildDom(dom, name, child, root = "body", type = "default", index = null, topObj = null){
+  buildDom(dom, name, child, domRoot, root = "body", type = "default", index = null, topObj = null){
 
     let domparser = new DOMParser();
     var htmlobject = index !== null ? domparser.parseFromString(dom, 'text/html').querySelectorAll(root)[0] : domparser.parseFromString(dom, 'text/html').querySelector(root);
@@ -1033,20 +1175,20 @@ export default class Blade{
 
       return Array.prototype.map.call(thisnode.childNodes, (node => {
 
-        // Prepare For elments
 
+        // Check child elements for kat-for attributes. If there are, set them up,
         if(node.children){
           let childNodes = node.children;
           let childCount = childNodes.length;
           for(let i = 0;i<childCount;i++){
             if(childNodes[i].attributes){
-              if(childNodes[i].getAttribute('data-blade-for')){
-                if(!this.forLoop.includes(childNodes[i].getAttribute('data-blade-for'))){
-                  var elmCount = this.directiveFor(childNodes[i].getAttribute('data-blade-for'), childNodes[i], name);
+              if(childNodes[i].getAttribute('data-kat-for')){
+                if(!this.forLoop.includes(childNodes[i].getAttribute('data-kat-for'))){
+                  var elmCount = this.directiveFor(childNodes[i].getAttribute('data-kat-for'), childNodes[i], name);
                   if(elmCount > 0){
-                    this.forLoop.push(childNodes[i].getAttribute('data-blade-for'))
+                    this.forLoop.push(childNodes[i].getAttribute('data-kat-for'))
                     this.forCount.push({
-                      name: childNodes[i].getAttribute('data-blade-for'),
+                      name: childNodes[i].getAttribute('data-kat-for'),
                       count: elmCount + i
                     })
 
@@ -1054,23 +1196,20 @@ export default class Blade{
                   childCount = childCount + (elmCount - 1);
                 }else{
                   this.forCount.forEach((item, index) => {
-                    if(item.name === childNodes[i].getAttribute('data-blade-for')){
+                    if(item.name === childNodes[i].getAttribute('data-kat-for')){
                       if((item.count - 1) === i){
                         this.forCount.splice(index,1);
                         this.forLoop = this.forLoop.filter(item => item.name !== this.forLoop.name);
                       }
                     }
                   })
-
-                  // if(this.forCount === i){
-                  //   this.forLoop
-                  // }
                 }
               }
             }
           }
         }
 
+        // If node is a Comment, check if it is a For flag
         if(node.nodeName === '#comment'){
           if(node.textContent.trim().indexOf('[') > -1){
             index = parseInt(node.textContent.slice((node.textContent.indexOf('[') + 1), node.textContent.indexOf(']')));
@@ -1082,8 +1221,9 @@ export default class Blade{
 
         }
 
+        // Check for katsu-if attribute. If it is then set directive.
         if(node.attributes){
-          let selector = node.getAttribute(`data-blade-if`);
+          let selector = node.getAttribute(`data-kat-if`);
             if(selector){
               const getData = (data) => {
                 var dataPath;
@@ -1113,7 +1253,7 @@ export default class Blade{
 
               const hasIfAttribute = (attrs, data) => {
                 for(let nodeAttr of attrs){
-                  if(nodeAttr.name === 'data-blade-if'){
+                  if(nodeAttr.name === 'data-kat-if'){
 
                     let data = getData(nodeAttr.value)
 
@@ -1137,7 +1277,8 @@ export default class Blade{
 
           }
 
-        this.directives(node, child, name, type, index, this.currentIteration)
+        // Run through the node's attributes and set directives.
+        this.directives(node, child, name, type, index, this.currentIteration, domRoot)
 
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 
@@ -1159,9 +1300,9 @@ export default class Blade{
 
   };
 
-  virtualDom(dom, name, child){
+  virtualDom(dom, name, child, root){
 
-    let builtDom = this.buildDom(dom, name, child);
+    let builtDom = this.buildDom(dom, name, child, root);
 
     this.forLoop = [];
 
@@ -1312,11 +1453,10 @@ export default class Blade{
 
   }
 
-
-
-  // ###############################################################
-  // #                    Data Proxy                               #
-  // ###############################################################
+  /**
+  * Set Component's Data Proxy
+  * Proxy concept referenced from Chris Ferdinandi's reef.js, special thanks.
+  */
 
   dataProxy(storeType, name, type, childComponent){
 
@@ -1334,16 +1474,21 @@ export default class Blade{
 
         const handler = {
           get(target, prop, receiver) {
-            fn('get value in scope: ', scope.concat(prop))
+            // fn('get value in scope: ', scope.concat(prop));
 
-            return target[prop]
+            if (['object', 'array'].indexOf(trueTypeOf(target[prop])) > -1) {
+      				return new Proxy(target[prop], handler);
+      			}
+
+            return target[prop];
           },
           set(target, prop, value, receiver) {
-            fn('set value in scope: ', scope.concat(prop))
+            // fn('set value in scope: ', scope.concat(prop))
 
             var obj = {};
             let pathArray = scope.concat(prop);
 
+            // Build object for updateData method to use for updating the componets data.
             if(pathArray.length > 1){
               for(let i=0;i<pathArray.length;i++){
                 if(i === (pathArray.length - 1)){
@@ -1362,6 +1507,7 @@ export default class Blade{
 
             target[prop] = value
 
+            // Update component's Data
             updateData(obj, name, childComponent, type);
 
             return true
@@ -1386,13 +1532,13 @@ export default class Blade{
       return typeof obj === 'object' && !Array.isArray(obj)
     }
 
+
+    // Set Global Object as entry-way to data proxy
+
     if(storeType === 'state'){
-      if(this.store){
-        // return wrap(this.store, 'state', console.log);
+      if(this.state){
 
-        // var _data = wrap(this.component[this.viewName].data, console.log)
-
-        Object.defineProperty(this.component[name].localStore, 'store', {
+        Object.defineProperty(this.state, 'store', {
           get: function(){
             return _data
           },
@@ -1405,16 +1551,12 @@ export default class Blade{
       }
     }else{
       if(this.component[name].data){
-        // return wrap(this.component[name].data, 'data', console.log);
 
         Object.defineProperty(this.component[name].localStore, 'store', {
           get: function(){
-            console.log('Get')
             return _data
           },
           set: function(e){
-            console.log('Set')
-            console.log(e)
             _data = wrap(e, 'data', console.log);
             return true
           }
@@ -1431,31 +1573,11 @@ export default class Blade{
   // #                    Component Render                         #
   // ###############################################################
 
-
-  module(data, options){
-
-      const mod = new data();
-
-      this.viewName = data.name;
-
-      this.component[this.viewName] = {};
-
-      this.component[this.viewName].template = mod.view();
-
-      mod.data ? this.component[this.viewName].data = mod.data() : this.component[this.viewName].data = {};
-
-      mod.controller ? this.component[this.viewName].controller = mod.controller  : this.component[this.viewName].controller = null;
-
-      options ? this.component[this.viewName].options = options : this.component[this.viewName].options = null;
-
-
-  }
-
   state(e){
     if(typeof e === 'object'){
-      this.store = e;
+      this.state = e;
     }else{
-      return this.store;
+      return this.state;
     }
   }
 
@@ -1464,21 +1586,22 @@ export default class Blade{
     if(type === 'data'){
       this.component[target].data = Object.assign({}, this.component[target].data, data);
     }else{
-      window.blade.state = Object.assign({}, window.blade.state, data);
+      this.state = Object.assign({}, this.state, data);
     }
 
     let domparser = new DOMParser();
 
-    const root = child ? document.querySelector(`[data-blade-component="${target}"]`).innerHTML : document.querySelector(this.component[target].root).innerHTML;
+    const root = child ? document.querySelector(`[data-kat-component="${target}"]`).innerHTML : document.querySelector(this.component[target].root).innerHTML;
 
     var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
 
+    const targetElm = child ? document.querySelector(`[data-kat-component="${target}"]`) : document.querySelector(this.component[target].root);
 
-    const htmlContent = this.virtualDom(this.component[target].template, target, child);
+    const htmlContent = this.virtualDom(this.component[target].template, target, child, targetElm);
 
     this.component[target].vDomNew = htmlContent;
 
-    const targetElm = child ? document.querySelector(`[data-blade-component="${target}"]`) : document.querySelector(this.component[target].root);
+
 
     this.updateDom(targetElm, this.component[target].vDomNew[0], this.component[target].vDomPure[0]);
 
@@ -1494,7 +1617,7 @@ export default class Blade{
         if(this.component[comp].data){
 
           let props = {};
-          let componentElm = document.querySelectorAll(`[data-blade-component="${comp}"]`)[0];
+          let componentElm = document.querySelectorAll(`[data-kat-component="${comp}"]`)[0];
           let attrProps = componentElm.getAttribute('props');
 
           props[attrProps] = this.component[target].data[attrProps];
@@ -1506,8 +1629,11 @@ export default class Blade{
 
   }
 
+  /**
+  * Render and inilizes the component(s)
+  */
 
-  render(name, target, childComponent = false, parent = null){
+  render(module, target, childComponent = false, parent = null){
 
     var viewName;
 
@@ -1515,7 +1641,16 @@ export default class Blade{
       viewName = target;
       this.component[viewName].parent = parent
     }else{
-      viewName = name;
+      const mod = new module[0]();
+
+      this.viewName = module[0].name;
+      this.component[this.viewName] = {};
+      this.component[this.viewName].template = mod.view();
+      mod.data ? this.component[this.viewName].data = mod.data() : this.component[this.viewName].data = {};
+      mod.controller ? this.component[this.viewName].controller = mod.controller  : this.component[this.viewName].controller = null;
+      module[1] ? this.component[this.viewName].options = module[1] : this.component[this.viewName].options = null;
+      viewName = module[0].name;
+
     }
 
     this.component[viewName].root = target;
@@ -1567,7 +1702,7 @@ export default class Blade{
     }
 
 
-    // Service Proxy
+    // Set proxy for getting services
     const serviceHandler = {
       get(target, prop, receiver) {
         return target[prop]
@@ -1597,12 +1732,13 @@ export default class Blade{
       // $state: $state
     }
 
+    // Poller for child components
     const pollerComponent = (target) => {
 
       return new Promise((resolve, reject) => {
 
         var i = 0;
-        const selector = `document.querySelector('[data-blade-component="${target}"]')`
+        const selector = `document.querySelector('[data-kat-component="${target}"]')`
 
         var poller = setInterval(() => {
           if(selector || i === 1000){
@@ -1621,6 +1757,7 @@ export default class Blade{
 
     };
 
+    // Check if there is any options with this Component
     if(this.component[viewName].options && this.component[viewName].options.length > 0){
 
       const options = this.component[viewName].options;
@@ -1650,7 +1787,7 @@ export default class Blade{
 
                 if(mod.data){
                   let props = {};
-                  let componentElm = document.querySelectorAll(`[data-blade-component="${options[i].name}"]`)[0];
+                  let componentElm = document.querySelectorAll(`[data-kat-component="${options[i].name}"]`)[0];
                   let attrProps = componentElm.getAttribute('props');
                   mod.data(this.component[viewName].data[attrProps]);
                   this.component[options[i].name].data = this.component[viewName].data[attrProps];
@@ -1697,13 +1834,17 @@ export default class Blade{
 
     // Generate View
     var template = this.component[viewName].template;
-    const htmlContent = this.virtualDom(template, viewName, childComponent);
+
+    const targetElm = document.querySelector(target) || document.querySelectorAll(`[data-kat-component="${viewName}"]`)[0];
+
+    const htmlContent = this.virtualDom(template, viewName, childComponent, targetElm);
+
     this.component[viewName].vDomPure = htmlContent;
+
+    // this.root = target;
 
     let domparser = new DOMParser();
     var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
-
-    const targetElm = document.querySelector(target) || document.querySelectorAll(`[data-blade-component="${viewName}"]`)[0];
 
     this.updateDom(targetElm, htmlContent[0]);
 

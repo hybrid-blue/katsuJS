@@ -21,7 +21,7 @@ class Hello{
   }
   data(){
     return {
-      msg: 'Hello World'
+      message: 'Hello World'
     }
   }
 }
@@ -31,6 +31,24 @@ class Hello{
 ```javascript
 app.render([Hello], '#root')
 ```
+
+
+```javascript
+// Functional Component
+
+class Hello{
+  view(){
+    return `
+      <h1>{{message}}</h1>
+    `
+  }
+  controller($data){
+    $data.message = 'Hello World'
+  }
+}
+
+```
+
 
 
 ```javascript

@@ -6,7 +6,7 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       hash: true,
-      title: 'A BladeJS App',
+      title: 'A KatsuJS App',
       template: './src/index.html',
       filename: './index.html'
     })
@@ -15,7 +15,7 @@ module.exports = {
     path: `${__dirname}/dist`,
     publicPath: '/',
     filename: 'bundle.js',
-    library: 'Blade',
+    library: 'Katsu',
     libraryTarget: 'umd',
   },
   devServer: {

@@ -1712,7 +1712,7 @@ export default class Blade{
 
     // Apply Controller
 
-    var controller = this.component[viewName].controller;
+    var controller = this.component[viewName].controller || null;
 
     if(controller){
       var regex = /\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g
@@ -1732,6 +1732,8 @@ export default class Blade{
       window.dispatchEvent(event)
       window.removeEventListener('executeScript', extScript);
     }
+
+
 
   }
 

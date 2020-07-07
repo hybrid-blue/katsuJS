@@ -107,7 +107,6 @@ export default class Katsu{
 
     var regex = /(?<={{)(.*?)(?=\s*}})/g;
     let expressions = content.match(regex);
-
     var data = content;
 
       for(let exp of expressions){
@@ -115,7 +114,6 @@ export default class Katsu{
         if(exp.indexOf('.') > -1){
 
           let expArray = exp.split('.');
-
           var currentData = this.component[target].data;
 
           for(let i=0;i<expArray.length;i++){
@@ -128,7 +126,6 @@ export default class Katsu{
               catch{
                 return data.replace(`{{${exp}}}`, '');
               }
-
             }else{
               try{
                 currentData = currentData[expArray[i]];
@@ -170,7 +167,6 @@ export default class Katsu{
       let nodes = parentNode.parentNode.children;
       let thisNode = parentNode;
       let forCount = 0;
-
       let array = Array.prototype.slice.call(document.querySelectorAll(`[data-kat-for="${thisNode.getAttribute('data-kat-for')}"]`));
       let dataCount = this.component[viewName].data[topObj].length;
       let elmCount = array.length / dataCount;
@@ -188,7 +184,6 @@ export default class Katsu{
 
     const findParent = (elm) => {
       var parentNode, childNode;
-      // console.log(elm)
       if(elm.parentNode.getAttribute('data-kat-for')){
         parentNode = elm.parentNode;
         childNode = elm;
@@ -199,8 +194,6 @@ export default class Katsu{
         if(elm.tagName !== 'BODY'){
           findParent(elm.parentNode);
         }
-
-
       }
 
     }
@@ -240,8 +233,6 @@ export default class Katsu{
       if(typeof item === 'object'){
 
         let expKeys = Object.keys(item);
-        // let expVals = Object.values(item);
-
         for(let key of expKeys){
 
           this.expressStr = '';
@@ -263,22 +254,16 @@ export default class Katsu{
           }else{
             itemValue = item[key]
           }
-
             html = html.replace(`{{${selector}}}`, `{{${key}}}`);
             html = html.replace(`{{${key}}}`, itemValue);
-
             let obj = {};
             obj[selector] = itemValue;
-
         }
       }else{
         html.replace(`{{${expression}}}`, item)
       }
-
       html = `<!-- ${topSelector}[${index}] -->` + html + `<!-- END -->`
-
       return html;
-
     }
 
     const cleanExp = (html, item, expression) => {
@@ -288,14 +273,10 @@ export default class Katsu{
       if(typeof item === 'object'){
 
         let expKeys = Object.keys(item);
-        // let expVals = Object.values(item);
-
         for(let key of expKeys){
 
           function removeExp(html, dataArray, expArray){
-
             var newHtml = html;
-
             if(expArray){
               for(let exp of expArray){
                 var isMissing = true;
@@ -323,13 +304,10 @@ export default class Katsu{
     }
 
     const htmlContent = node.outerHTML;
-
     let items = this.component[target].data ? this.component[target].data[selector] : null;
 
     const func = (html, items, exp) => {
-
       if(!items) items = [];
-
       return items.map((item, i) => {
         let htmlContent = cleanExp(html, item, exp);
         return replaceExp(htmlContent, item, exp, i);
@@ -364,12 +342,10 @@ export default class Katsu{
 
     const getData = (data) => {
       var dataPath;
-
       let dataArray = data.split('.')
 
-      const findRoot = () =>{
-
-      }
+      // This is possible required
+      const findRoot = () => {}
 
       if(data.indexOf('.') > -1){
         for(let i = 0;i<dataArray.length;i++){
@@ -398,14 +374,11 @@ export default class Katsu{
         switch(attr.name){
 
           case 'data-kat-switch':
-
-            // window.kat.switch = attr.value;
             var switchCase = attr.value
             let iou = document.createComment('element-removed');
             let elms = node.childNodes;
 
             const hasCaseAttribute = (attrs, data) => {
-
               if(data){
                 for(let nodeAttr of attrs){
                   if(nodeAttr.name === 'data-kat-case' && nodeAttr.value !== data){
@@ -419,13 +392,11 @@ export default class Katsu{
                   }
                 }
               }
-
               return false;
             }
 
             const setCaseDirective = (node) => {
               let data = getData(switchCase)
-
               for(let i=0;i<elms.length;i++){
                 if(elms[i].nodeType === 1){
                   if(hasCaseAttribute(elms[i].attributes, data, 'case')){
@@ -461,21 +432,16 @@ export default class Katsu{
 
           var temp, selectorAttr, tempVal, count, currentElm;
 
-          // const checkListener = this.checkListener;
           var _this = this.component;
 
             setTimeout(() => {
 
               const setClickEvent = (target) => {
-
                 var hasEvent = this.checkListener(target, 'click');
 
                 if(!hasEvent){
-
                   target.addEventListener('click', (e) => {
-
                     setTimeout(() => {
-
                       let regex = /(?<=\()(.*?)(?=\s*\))/g;
                       let arg = attr.value.match(regex);
 
@@ -513,7 +479,6 @@ export default class Katsu{
                       }
 
                     },1)
-
                   })
                 }
 
@@ -523,17 +488,8 @@ export default class Katsu{
               if(node.getAttribute("data-kat-click") === attr.value){
                 var elms;
                 if(type === 'for'){
-                  // elms = document.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index];
-                  // setClickEvent(elms)
-
-
-
-
-
                   elms = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index];
-
                   var attrs = elms.getAttribute('data-kat-listening');
-
                   const findNextValidElm = (attrs, elms, count) => {
                     if(Array.isArray(attrs)){
                       for(let attr of attrs){
@@ -576,7 +532,6 @@ export default class Katsu{
                     setClickEvent(elms)
                   }
 
-
                 }else{
                   elms = document.querySelectorAll(`[data-kat-click="${attr.value}"]`);
                   for(let elm of elms){
@@ -589,47 +544,31 @@ export default class Katsu{
 
           break;
 
-
-
           case 'data-kat-key':
 
           var temp, selectorAttr, tempVal, count, currentElm;
           var _this = this.component;
 
             setTimeout(() => {
-
               const setKeyEvent = (target) => {
-
                 var hasEvent = this.checkListener(target, 'key');
-
                 if(!hasEvent){
 
                   target.addEventListener('keydown', (e) => {
-
                     setTimeout(() => {
-
                       let regex = /(?<=\()(.*?)(?=\s*\))/g;
                       let arg = attr.value.match(regex);
-
                       let func = this.component[viewName].events[attr.value.split('(')[0]];
-
                       var newArgs = {};
-
-                      let args = arg[0].split(',')
+                      let args = arg[0].split(',');
 
                       for(let i = 0;i<args.length;i++){
-
                         if(/\'(.*?)\'/g.test(args[i])){
-
                           let val = args[i].trim();
                           let trimed = val.substr(1, val.length-2);
-
                           newArgs['args'] = trimed;
-
                         }else{
-
                           newArgs = this.getEventValues(target, viewName, topObj, args, i)
-
                         }
                       }
 
@@ -641,35 +580,25 @@ export default class Katsu{
                         }
                       }
                       catch(e){
-                        console.log(e)
+                        console.error(e);
                       }
 
-
                     },1)
-
                   })
-
                 }
-
               }
 
 
               if(node.getAttribute("data-kat-key") === attr.value){
                 var elms;
                 if(type === 'for'){
-                  // elms = document.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index];
-                  // setKeyEvent(elms)
-
                   elms = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index];
-
                   var attrs = elms.getAttribute('data-kat-listening');
-
                   const findNextValidElm = (attrs, elms, count) => {
                     if(Array.isArray(attrs)){
                       for(let attr of attrs){
                         if(attr === 'key'){
                           let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
-                          // let attrs = elms.getAttribute('data-kat-listening');
                           if(elm){
                             if(!elm.getAttribute('data-kat-listening')){
                               currentElm = elm;
@@ -682,7 +611,6 @@ export default class Katsu{
                       }
                     }else{
                       if(attrs === 'key'){
-
                         let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
                         let attrs = elms.getAttribute('data-kat-listening');
                         if(elm){
@@ -722,19 +650,14 @@ export default class Katsu{
           case 'data-kat-bind':
 
           var temp, selectorAttr, tempVal;
-
           var checkListener = this.checkListener;
           var _this = this.component;
-          // const root = this.root;
 
             function setBindEvent(target, type){
 
                 var hasEvent = checkListener(target, 'bind');
-
                 if(!hasEvent){
-
                   var eventType;
-
                   if(target.getAttribute('type') === 'text'){
                     eventType = 'keydown';
                   }else if(target.getAttribute('type') === 'checkbox'){
@@ -744,29 +667,20 @@ export default class Katsu{
                   }
 
                   target.addEventListener(eventType, function(e){
-
                     var data;
-
                       setTimeout(() => {
-
                         var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
-                        // let view = window.kat.module
                         let data = {};
 
                         if(type !== 'for'){
-
                           data[attr.value] = eventValue;
-
                           _this[viewName].localStore.store[attr.value] = eventValue;
-
                         }else{
-
                           var dataArray = attr.value.split('.');
                           var targetParent;
                           var bladeData = _this[viewName].data
                           var bladeDataPath;
                           var obj;
-
                           function getParent(elm){
                             if(elm.parentNode.getAttribute('data-kat-for')){
                               targetParent = elm.parentNode
@@ -784,17 +698,10 @@ export default class Katsu{
                               obj[index][dataArray[i]] = eventValue;
                             }
                           }
-
                           data[topObj] = obj;
-
                           _this[viewName].localStore.store[topObj] = data[topObj]
-
                         }
-
-
-
                       },1)
-
                     })
 
                 }
@@ -804,15 +711,10 @@ export default class Katsu{
             if(node.getAttribute("data-kat-bind") === attr.value){
 
               this.poller(`[data-kat-bind="${attr.value}"]`).then(res => {
-
                 var elms, count, currentElm;
-
                 if(type === 'for'){
-
                   elms = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index];
-
                   var attrs = elms.getAttribute('data-kat-listening');
-
                   const findNextValidElm = (attrs, elms, count) => {
                     if(Array.isArray(attrs)){
                       for(let attr of attrs){
@@ -879,7 +781,6 @@ export default class Katsu{
                 const classBuilder = (target, data, type = 'default', index = null) => {
 
                   if(attr.value.indexOf('{') > -1){
-
                     var stringObj = attr.value;
                     stringObj = stringObj.substr(1, attr.value.length);
                     stringObj = stringObj.substr(0, attr.value.length - 2);
@@ -888,10 +789,8 @@ export default class Katsu{
                     var bladeClasses = [];
                     let objArray = stringObj.split(',');
 
-
                     for(let items of objArray){
                       let array = items.split(':')
-
                       classNameArray.push(array);
                     }
 
@@ -911,9 +810,7 @@ export default class Katsu{
 
 
                     target.classList.add(node.classList.value);
-
                     var nameArray = [];
-
                     for(let className of newClassNameArray){
                       let key = Object.keys(className);
                       let value = Object.values(className);
@@ -924,12 +821,10 @@ export default class Katsu{
                         nameArray.push(key[0])
                       }
 
-
                     }
 
                     let nodeClass = node.classList.value.split(' ');
                     let targetClass = target.classList.value.split(' ');
-
                     let newClasses = nameArray.filter(item => {
                       var classArray = [];
                       for(let thisClass of bladeClasses){
@@ -974,7 +869,6 @@ export default class Katsu{
 
                     let nodeClass = node.classList.value.split(' ');
                     let targetClass = target.classList.value.split(' ');
-
                     let newClasses = targetClass.filter(item => {
                       for(let thisClass of nodeClass){
                         return item !== thisClass;
@@ -988,7 +882,6 @@ export default class Katsu{
                       }
 
                       var stringObj = JSON.stringify(data);
-
                       stringObj = stringObj.substr(1, stringObj.length);
                       stringObj = stringObj.substr(0, stringObj.length - 1);
                       var classNameArray = [];
@@ -1011,23 +904,17 @@ export default class Katsu{
                             b = item[i].trim()
                           }
                         }
-
                         bladeClasses.push(a)
                         newClassNameArray.push(JSON.parse(`{${a}: ${b}}`));
-
                       }
 
                       target.classList.add(node.classList.value);
 
                       var nameArray = [];
-
                       for(let className of newClassNameArray){
-
                         let key = Object.keys(className);
                         let value = Object.values(className);
-
                         if(value[0]) nameArray.push(key[0])
-
                       }
 
                       let nodeClass = node.classList.value.split(' ');
@@ -1039,17 +926,13 @@ export default class Katsu{
                         })
                       }
 
-
                     }else if(JSON.stringify(newClasses) !== JSON.stringify([data])){
-
-
 
                       for(let item of newClasses){
                         target.classList.remove(item);
                       }
 
                       let classArray = [node.classList.value, data];
-
                       for(let className of classArray){
                         target.classList.add(className);
                       }
@@ -1063,7 +946,6 @@ export default class Katsu{
                 if(node.getAttribute("data-kat-class") === attr.value){
 
                   var elms, data;
-
                   data  = attr.value;
 
                   if(type === 'for'){
@@ -1079,13 +961,11 @@ export default class Katsu{
                     var targetParent;
 
                     function getParent(elm){
-
                       if(elm.parentNode.getAttribute('data-kat-for')){
                         targetParent = elm.parentNode
                       }else{
                         getParent(elm.parentNode)
                       }
-
                     }
 
                     var bladeDataClass;
@@ -1124,15 +1004,12 @@ export default class Katsu{
                   }
                 }
 
-
             }, 1)
 
 
           break;
           case 'data-kat-src':
-
             var temp, selectorAttr, tempVal;
-
             this.poller(`[data-kat-src="${attr.value}"]`).then(res => {
               if(node.getAttribute("data-kat-src") === attr.value){
 
@@ -1156,12 +1033,7 @@ export default class Katsu{
 
       });
     }
-
   }
-
-
-/////////////////////////////////////////////
-
 
 
 // DOM Building
@@ -1174,7 +1046,6 @@ export default class Katsu{
     const buildNodes = (thisnode) => {
 
       return Array.prototype.map.call(thisnode.childNodes, (node => {
-
 
         // Check child elements for kat-for attributes. If there are, set them up,
         if(node.children){
@@ -1236,12 +1107,11 @@ export default class Katsu{
                       if(this.component[name].data[this.currentIteration]){
                         dataPath = this.component[name].data[this.currentIteration][index];
                       }else{
-
+                        // For aternative solution
                       }
                     }else{
                       dataPath = dataPath[dataArray[i]];
                     }
-
                   }
                 }else{
                   dataPath = this.component[name].data[data];
@@ -1254,32 +1124,25 @@ export default class Katsu{
               const hasIfAttribute = (attrs, data) => {
                 for(let nodeAttr of attrs){
                   if(nodeAttr.name === 'data-kat-if'){
-
                     let data = getData(nodeAttr.value)
-
                     if(!data){
                       return true;
                     }
-
                   }
                 }
                 return false;
               }
-
               if(hasIfAttribute(node.attributes)){
                 let iou = document.createComment('element-hidden');
                 node = iou;
               }else{
                 this.switchCase = true;
               };
-
             }
-
           }
 
         // Run through the node's attributes and set directives.
         this.directives(node, child, name, type, index, this.currentIteration, domRoot)
-
         var map, thisNode = node.textContent.trim(), emptyArray = [];
 
         var map = {
@@ -1301,13 +1164,9 @@ export default class Katsu{
   };
 
   virtualDom(dom, name, child, root){
-
     let builtDom = this.buildDom(dom, name, child, root);
-
     this.forLoop = [];
-
     return builtDom;
-
   }
 
 
@@ -1341,12 +1200,6 @@ export default class Katsu{
   setAttr($target, name, value){
     var regex = /(?<={{)(.*?)(?=\s*}})/g;
     let expressions = value.match(regex);
-
-    // if(expressions){
-    //   for(let i=0;i<expressions.length;i++){
-    //     value = value.replace(`{{${expressions[i]}}}`, this.component[this.viewName].data[expressions[i]]);
-    //   }
-    // }
 
     $target.setAttribute(name, value)
   }
@@ -1532,9 +1385,7 @@ export default class Katsu{
       return typeof obj === 'object' && !Array.isArray(obj)
     }
 
-
     // Set Global Object as entry-way to data proxy
-
     if(storeType === 'state'){
       if(this.state){
 
@@ -1551,7 +1402,6 @@ export default class Katsu{
       }
     }else{
       if(this.component[name].data){
-
         Object.defineProperty(this.component[name].localStore, 'store', {
           get: function(){
             return _data
@@ -1561,10 +1411,8 @@ export default class Katsu{
             return true
           }
         })
-
       }
     }
-
   }
 
 
@@ -1592,22 +1440,13 @@ export default class Katsu{
     let domparser = new DOMParser();
 
     const root = child ? document.querySelector(`[data-kat-component="${target}"]`).innerHTML : document.querySelector(this.component[target].root).innerHTML;
-
     var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
-
     const targetElm = child ? document.querySelector(`[data-kat-component="${target}"]`) : document.querySelector(this.component[target].root);
-
     const htmlContent = this.virtualDom(this.component[target].template, target, child, targetElm);
 
     this.component[target].vDomNew = htmlContent;
-
-
-
     this.updateDom(targetElm, this.component[target].vDomNew[0], this.component[target].vDomPure[0]);
-
     this.component[target].vDomPure = this.component[target].vDomNew;
-
-
 
     // #This should detect which componets to update / Performance Suggestion
 
@@ -1615,11 +1454,9 @@ export default class Katsu{
       let components = this.component[target].components
       for(let comp of components){
         if(this.component[comp].data){
-
           let props = {};
           let componentElm = document.querySelectorAll(`[data-kat-component="${comp}"]`)[0];
           let attrProps = componentElm.getAttribute('props');
-
           props[attrProps] = this.component[target].data[attrProps];
           this.component[comp].data = props;
           this.updateData(props[attrProps], comp, true, type = 'data')
@@ -1675,14 +1512,12 @@ export default class Katsu{
               let views = this.component
               var parent = this.component[selector].parent
               let func = this.component[parent].emit[selector];
-
               try{
                 if(Object.keys(this.component[parent].emit).length > 0){
                   func(data);
                 }else{
                   throw(`Parent component ${parent} needs an $event.recieve()`)
                 }
-
               }
               catch(e){
                 console.error(e)
@@ -1694,7 +1529,6 @@ export default class Katsu{
           catch(e){
             console.error(e)
           }
-
 
         }
       }
@@ -1767,10 +1601,7 @@ export default class Katsu{
       var rendered = [];
 
       for(let i = 0;i<options.length;i++){
-
         let mod = new options[i]();
-
-
         if(mod.service){
           this.component[viewName].service[options[i].name] = mod.service();
         }else{
@@ -1780,9 +1611,7 @@ export default class Katsu{
             try{
 
               if(mod.view){
-
                 this.component[options[i].name] = {};
-
                 this.component[options[i].name].template = mod.view();
 
                 if(mod.data){
@@ -1797,7 +1626,6 @@ export default class Katsu{
                 }
 
                 mod.controller ? this.component[options[i].name].controller = mod.controller  : this.component[options[i].name].controller = null;
-
                 this.component[viewName].components.push(options[i].name)
 
               }else{
@@ -1822,10 +1650,7 @@ export default class Katsu{
 
           });
 
-
         }
-
-
 
       }
 
@@ -1834,27 +1659,17 @@ export default class Katsu{
 
     // Generate View
     var template = this.component[viewName].template;
-
     const targetElm = document.querySelector(target) || document.querySelectorAll(`[data-kat-component="${viewName}"]`)[0];
-
     const htmlContent = this.virtualDom(template, viewName, childComponent, targetElm);
-
     this.component[viewName].vDomPure = htmlContent;
-
-    // this.root = target;
 
     let domparser = new DOMParser();
     var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
-
     this.updateDom(targetElm, htmlContent[0]);
-
     this.component[viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
 
-
     // Apply Controller
-
     var controller = this.component[viewName].controller || null;
-
     if(controller){
       var regex = /\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g
       var augs = controller.toString().match(regex)[0];
@@ -1866,15 +1681,12 @@ export default class Katsu{
       })
 
       let extScript = () => {eval(controller(...attr))};
-
       let event = new Event('executeScript');
 
       window.addEventListener('executeScript', extScript)
       window.dispatchEvent(event)
       window.removeEventListener('executeScript', extScript);
     }
-
-
 
   }
 

@@ -760,6 +760,9 @@ export default class Katsu{
                 }else{
                   elms = document.querySelectorAll(`[data-kat-bind="${attr.value}"]`);
                   for(let elm of elms){
+
+                    elm.value = _this[viewName].localStore.store[attr.value] || '';
+
                     setBindEvent(elm, type)
                   }
                 }

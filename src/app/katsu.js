@@ -1083,16 +1083,14 @@ export default class Katsu{
           }
         }
 
-        // If node is a Comment, check if it is a For flag
-        if(node.nodeName === '#comment'){
-          if(node.textContent.trim().indexOf('[') > -1){
-            index = parseInt(node.textContent.slice((node.textContent.indexOf('[') + 1), node.textContent.indexOf(']')));
+        if(node.nodeName !== '#text'){
+          if(node.getAttribute('data-index')){
+            index = parseInt(node.getAttribute('data-index').split('-')[1]);
             type = 'for'
-            this.currentIteration = node.textContent.split('[')[0].trim();
+            this.currentIteration = node.getAttribute('data-index').split('-')[0];
           }else{
             type = null
           }
-
         }
 
         // Check for katsu-if attribute. If it is then set directive.

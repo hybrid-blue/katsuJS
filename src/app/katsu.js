@@ -270,34 +270,55 @@ export default class Katsu{
       var values = expression;
       var newHtml;
 
+
+
+
+      function removeExp(html, dataArray, expArray){
+
+        var newHtml = html;
+        if(expArray.length > 1){
+          for(let exp of expArray){
+            var isMissing = true;
+            for(let data of Object.keys(dataArray)){
+              if(exp.indexOf(data) > -1) isMissing = false;
+            }
+            if(isMissing){
+              newHtml = newHtml.replace(exp, '');
+            }else{
+              newHtml = newHtml;
+            }
+          }
+        }else{
+
+          let exp = expArray[0];
+          var isMissing = true;
+
+          if(dataArray) isMissing = false;
+
+          if(isMissing){
+            newHtml = newHtml.replace(exp, '');
+          }else{
+            newHtml = newHtml;
+          }
+        }
+
+        return newHtml;
+      }
+
+
+
       if(typeof item === 'object'){
 
         let expKeys = Object.keys(item);
         for(let key of expKeys){
-
-          function removeExp(html, dataArray, expArray){
-            var newHtml = html;
-            if(expArray){
-              for(let exp of expArray){
-                var isMissing = true;
-                for(let data of Object.keys(dataArray)){
-                  if(exp.indexOf(data) > -1) isMissing = false;
-                }
-                if(isMissing){
-                  newHtml = newHtml.replace(exp, '');
-                }else{
-                  newHtml = newHtml;
-                }
-              }
-            }
-
-            return newHtml;
-          }
-
           const regex = new RegExp(`{{${expression}(.*?)}}`, "g");
           const expArray = html.match(regex);
           newHtml = removeExp(html, item, expArray);
         }
+      }else{
+        const regex = new RegExp(`{{${expression}(.*?)}}`, "g");
+        const expArray = html.match(regex);
+        newHtml = removeExp(html, item, expArray);
       }
 
       return newHtml

@@ -510,13 +510,28 @@ export default class Katsu{
                 var elms;
                 if(type === 'for'){
                   elms = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index];
-                  var attrs = elms.getAttribute('data-kat-listening');
-                  const findNextValidElm = (attrs, elms, count) => {
-                    if(Array.isArray(attrs)){
-                      for(let attr of attrs){
-                        if(attr === 'click'){
+                  if(elms){
+                    var attrs = elms.getAttribute('data-kat-listening');
+                    const findNextValidElm = (attrs, elms, count) => {
+                      if(Array.isArray(attrs)){
+                        for(let attr of attrs){
+                          if(attr === 'click'){
+                            let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
+                            // let attrs = elms.getAttribute('data-kat-listening');
+                            if(elm){
+                              if(!elm.getAttribute('data-kat-listening')){
+                                currentElm = elm;
+                              }else{
+                                count += count;
+                                findNextValidElm(attrs, elm, count)
+                              }
+                            }
+                          }
+                        }
+                      }else{
+                        if(attrs === 'click'){
                           let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
-                          // let attrs = elms.getAttribute('data-kat-listening');
+                          let attrs = elms.getAttribute('data-kat-listening');
                           if(elm){
                             if(!elm.getAttribute('data-kat-listening')){
                               currentElm = elm;
@@ -733,13 +748,29 @@ export default class Katsu{
 
               this.poller(`[data-kat-bind="${attr.value}"]`).then(res => {
                 var elms, count, currentElm;
+
                 if(type === 'for'){
                   elms = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index];
-                  var attrs = elms.getAttribute('data-kat-listening');
-                  const findNextValidElm = (attrs, elms, count) => {
-                    if(Array.isArray(attrs)){
-                      for(let attr of attrs){
-                        if(attr === 'bind'){
+                  if(elms){
+                    var attrs = elms.getAttribute('data-kat-listening');
+                    const findNextValidElm = (attrs, elms, count) => {
+                      if(Array.isArray(attrs)){
+                        for(let attr of attrs){
+                          if(attr === 'bind'){
+                            let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
+                            let attrs = elms.getAttribute('data-kat-listening');
+                            if(elm){
+                              if(!elm.getAttribute('data-kat-listening')){
+                                currentElm = elm;
+                              }else{
+                                count += count;
+                                findNextValidElm(attrs, elm, count)
+                              }
+                            }
+                          }
+                        }
+                      }else{
+                        if(attrs === 'bind'){
                           let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
                           let attrs = elms.getAttribute('data-kat-listening');
                           if(elm){

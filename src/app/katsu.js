@@ -1112,12 +1112,17 @@ export default class Katsu{
                 if(!this.forLoop.includes(childNodes[i].getAttribute('data-kat-for'))){
                   var elmCount = this.directiveFor(childNodes[i].getAttribute('data-kat-for'), childNodes[i], name);
                   if(elmCount > 0){
+
+                    let objName = childNodes[i].getAttribute('data-kat-for').split(' ')[2]
+                    for(let x=0;x<childNodes.length;x++){
+                      childNodes[x].setAttribute('data-index', `${objName}-${x}`)
+                    }
+
                     this.forLoop.push(childNodes[i].getAttribute('data-kat-for'))
                     this.forCount.push({
                       name: childNodes[i].getAttribute('data-kat-for'),
                       count: elmCount + i
                     })
-
                   }
                   childCount = childCount + (elmCount - 1);
                 }else{

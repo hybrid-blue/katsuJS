@@ -1,20 +1,5 @@
 import '../style.css';
 
-/**
-* 1.0 DOM
-* 1.1 Expressions
-* 1.2
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*/
-
 export default class Katsu{
   constructor(){
 
@@ -184,13 +169,16 @@ export default class Katsu{
 
     const findParent = (elm) => {
       var parentNode, childNode;
+
       if(elm.parentNode.getAttribute('data-kat-for')){
         parentNode = elm.parentNode;
         childNode = elm;
         parentNode.setAttribute('key-active', true)
         foundIndex = findIndex(parentNode);
+      }else if(elm.getAttribute('data-kat-for')){
+        elm.setAttribute('key-active', true)
+        foundIndex = findIndex(elm);
       }else{
-        console.log()
         if(elm.tagName !== 'BODY'){
           findParent(elm.parentNode);
         }
@@ -227,7 +215,7 @@ export default class Katsu{
 
     const replaceExp = (html, item, expression, index) => {
       var values = expression;
-      var dataObj = []
+      var dataObj = [];
 
       // If item is not a string, but an object, generate a selector for interpolation. If not, Interpolate using base expression.
       if(typeof item === 'object'){
@@ -463,6 +451,7 @@ export default class Katsu{
 
                 if(!hasEvent){
                   target.addEventListener('click', (e) => {
+
                     setTimeout(() => {
                       let regex = /(?<=\()(.*?)(?=\s*\))/g;
                       let arg = attr.value.match(regex);
@@ -479,12 +468,11 @@ export default class Katsu{
 
                           let val = args[i].trim();
                           let trimed = val.substr(1, val.length-2);
-
                           newArgs['args'] = trimed;
 
                         }else{
 
-                          newArgs = this.getEventValues(target, viewName, topObj, args[i])
+                          newArgs = this.getEventValues(target, viewName, topObj, args[i]);
 
                         }
                       }
@@ -543,30 +531,21 @@ export default class Katsu{
                           }
                         }
                       }
-                    }else{
-                      if(attrs === 'click'){
-
-                        let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
-                        let attrs = elms.getAttribute('data-kat-listening');
-                        if(elm){
-                          if(!elm.getAttribute('data-kat-listening')){
-                            currentElm = elm;
-                          }else{
-                            count += count;
-                            findNextValidElm(attrs, elm, count)
-                          }
-                        }
-                      }
                     }
-                  }
 
-                  if(attrs){
-                    var count = _this[viewName].localStore.store[topObj].length;
-                    findNextValidElm(attrs, elms, count);
-                    elms = currentElm
-                  }
-                  if(elms){
-                    setClickEvent(elms)
+
+
+
+
+                    if(attrs){
+                      var count = _this[viewName].localStore.store[topObj].length;
+                      findNextValidElm(attrs, elms, count);
+                      elms = currentElm
+                    }
+                    if(elms){
+                      setClickEvent(elms)
+                    }
+
                   }
 
                 }else{
@@ -784,21 +763,8 @@ export default class Katsu{
                           }
                         }
                       }
-                    }else{
-                      if(attrs === 'bind'){
-
-                        let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
-                        let attrs = elms.getAttribute('data-kat-listening');
-                        if(elm){
-                          if(!elm.getAttribute('data-kat-listening')){
-                            currentElm = elm;
-                          }else{
-                            count += count;
-                            findNextValidElm(attrs, elm, count)
-                          }
-                        }
-                      }
                     }
+
                   }
 
                   if(attrs){

@@ -123,7 +123,11 @@ export default class Katsu{
           }
         }else{
           if(this.component[target].data[exp] !== null){
-            if(this.component[target].data[exp]) data = data.replace(`{{${exp}}}`, this.component[target].data[exp]);
+            if(this.component[target].data[exp] === undefined){
+              data = data.replace(`{{${exp}}}`, '');
+            }else{
+              if(this.component[target].data[exp]) data = data.replace(`{{${exp}}}`, this.component[target].data[exp]);
+            }
           }
         }
 
@@ -248,7 +252,7 @@ export default class Katsu{
             obj[selector] = itemValue;
         }
       }else{
-        html = html.replace(`{{${expression}}}`, item)
+        html = html.replace(`{{${expression}}}`, item);
       }
       // html = `<!-- ${topSelector}[${index}] -->` + html + `<!-- END -->`;
       // console.log(html)
@@ -258,9 +262,6 @@ export default class Katsu{
     const cleanExp = (html, item, expression) => {
       var values = expression;
       var newHtml;
-
-
-
 
       function removeExp(html, dataArray, expArray){
 

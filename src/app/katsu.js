@@ -260,9 +260,10 @@ export default class Katsu{
             obj[selector] = itemValue;
         }
       }else{
-        html.replace(`{{${expression}}}`, item)
+        html = html.replace(`{{${expression}}}`, item)
       }
-      html = `<!-- ${topSelector}[${index}] -->` + html + `<!-- END -->`
+      // html = `<!-- ${topSelector}[${index}] -->` + html + `<!-- END -->`;
+      // console.log(html)
       return html;
     }
 

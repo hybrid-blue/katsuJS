@@ -1,7 +1,7 @@
 {
-  "name": "BladeJS",
+  "name": "katsujs",
   "version": "1.0.0",
-  "description": "A Single Page Application engine for WebApps",
+  "description": "A reactive, directive-based library for creating User Interfaces with simple components",
   "main": "dist/bundle.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

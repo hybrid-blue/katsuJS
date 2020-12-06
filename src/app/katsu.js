@@ -152,6 +152,13 @@ export default class Katsu{
     var foundIndex;
     var newArgs = {};
 
+    // console.log('#######################');
+    // console.log(target);
+    // console.log(viewName);
+    // console.log(topObj);
+    // console.log(arg);
+    // console.log('#######################');
+
     const findIndex = (parentNode) => {
       let nodes = parentNode.parentNode.children;
       let thisNode = parentNode;
@@ -461,26 +468,37 @@ export default class Katsu{
 
                       var newArgs = {};
 
-                      let args = arg[0].split(',')
+                      let args = arg[0].split(',');
 
                       for(let i = 0;i<args.length;i++){
 
                         if(/\'(.*?)\'/g.test(args[i])){
-
+                          
                           let val = args[i].trim();
                           let trimed = val.substr(1, val.length-2);
+
                           newArgs['args'] = trimed;
 
                         }else{
 
-                          newArgs = this.getEventValues(target, viewName, topObj, args[i]);
-
+                          if(getData(args[i])){
+                            newArgs.args = getData(args[i]);
+                          }else{
+                            newArgs = this.getEventValues(target, viewName, topObj, args[i]);
+                          }
+                        
                         }
                       }
 
                       try{
                         if(func){
-                          func(newArgs);
+                          
+                          if(Object.keys(newArgs)[0] === 'args'){
+                            func(newArgs.args);
+                          }else{
+                            func(newArgs);
+                          }
+                          
                         }else{
                           throw(`Cannot find event "${attr.value.split('(')[0]}"`)
                         }
@@ -1127,6 +1145,8 @@ export default class Katsu{
                 let dataArray = data.split('.')
                 const findRoot = () => {}
 
+                // console.log(data)
+
                 if(data.indexOf('.') > -1){
                   for(let i = 0;i<dataArray.length;i++){
                     if(i === 0){
@@ -1150,10 +1170,31 @@ export default class Katsu{
               const hasIfAttribute = (attrs, data) => {
                 for(let nodeAttr of attrs){
                   if(nodeAttr.name === 'data-kat-if'){
-                    let data = getData(nodeAttr.value)
-                    if(!data){
-                      return true;
+                    let data = getData(nodeAttr.value);
+
+                    if(typeof data === 'boolean'){
+                      if(!data){
+                        return true;
+                      }
+                    }else{
+
+                      let dataArray = nodeAttr.value.split(' ');
+                      let string;
+
+                      dataArray.forEach((val, i) => {
+
+                        if(getData(val)){
+                          dataArray.splice(i,1,getData(val));
+                        };
+                        
+                      });
+
+                      if(!eval(dataArray.join(' '))){
+                          return true;
+                        }
+
                     }
+
                   }
                 }
                 return false;

@@ -90,6 +90,8 @@ export default class Katsu{
   */
   expressions(content, target){
 
+    console.log(content, target);
+
     var regex = /(?<={{)(.*?)(?=\s*}})/g;
     let expressions = content.match(regex);
     var data = content;
@@ -122,6 +124,7 @@ export default class Katsu{
             }
           }
         }else{
+          console.log(this.component[target].data[exp]);
           if(this.component[target].data[exp] !== null){
             if(this.component[target].data[exp] === undefined){
               data = data.replace(`{{${exp}}}`, '');
@@ -132,6 +135,8 @@ export default class Katsu{
         }
 
       }
+
+      console.log(data);
 
       return data
 
@@ -1231,6 +1236,8 @@ export default class Katsu{
   };
 
   virtualDom(dom, name, child, root){
+    // console.log('virtualDom');
+    // console.log(child)
     let builtDom = this.buildDom(dom, name, child, root);
     this.forLoop = [];
     return builtDom;
@@ -1334,20 +1341,27 @@ export default class Katsu{
   }
 
   updateDom(root, newNode, oldNode, index = 0){
+    console.log('Start =========');
+    console.log('------------');
+    console.log(newNode, oldNode);
+    console.log(root, root.childNodes, index);
+    console.log(this.changed(newNode, oldNode), root.childNodes[index]);
+    console.log('------------');
     if(!oldNode){
+      // console.log('updateDom A');
       root.appendChild(this.createElm(newNode));
     }else if (!newNode && root.childNodes[index]){
+      // console.log('updateDom B');
       root.removeChild(root.childNodes[index]);
     }else if (this.changed(newNode, oldNode) && root.childNodes[index]) {
+      console.log('updateDom C');
       root.replaceChild(this.createElm(newNode), root.childNodes[index]);
 
     }else if(newNode){
       // Add root !== undefined handle new comments
       if(root !== undefined && root.childNodes[index] !== undefined){
         if(typeof root.childNodes[index].attributes !== 'undefined'){
-
           if(newNode.attr !== null){
-
             if(newNode.attr.length > 0){
               this.updateAttrs(root.childNodes[index], newNode.attr, oldNode.attr);
             }
@@ -1370,7 +1384,7 @@ export default class Katsu{
       }
 
     }
-
+    console.log('End =========');
   }
 
   /**
@@ -1508,8 +1522,11 @@ export default class Katsu{
 
     const root = child ? document.querySelector(`[data-kat-component="${target}"]`).innerHTML : document.querySelector(this.component[target].root).innerHTML;
     var htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
-    const targetElm = child ? document.querySelector(`[data-kat-component="${target}"]`) : document.querySelector(this.component[target].root);
+    const targetElm = this.component[target].parent ? document.querySelector(`[data-kat-component="${target}"]`) : document.querySelector(this.component[target].root);
     const htmlContent = this.virtualDom(this.component[target].template, target, child, targetElm);
+
+    console.log('==== updateData ====');
+    console.log(target, child, target);
 
     this.component[target].vDomNew = htmlContent;
     this.updateDom(targetElm, this.component[target].vDomNew[0], this.component[target].vDomPure[0]);
@@ -1517,19 +1534,22 @@ export default class Katsu{
 
     // #This should detect which componets to update / Performance Suggestion
 
-    if(this.component[target].components){
-      let components = this.component[target].components
-      for(let comp of components){
-        if(this.component[comp].data){
-          let props = {};
-          let componentElm = document.querySelectorAll(`[data-kat-component="${comp}"]`)[0];
-          let attrProps = componentElm.getAttribute('props');
-          props[attrProps] = this.component[target].data[attrProps];
-          this.component[comp].data = props;
-          this.updateData(props[attrProps], comp, true, type = 'data')
-        }
-      }
-    }
+    console.log(this.component[target]);
+
+    // if(this.component[target].components){
+    //   console.log('==== updateData [Components] ====');
+    //   let components = this.component[target].components
+    //   for(let comp of components){
+    //     if(this.component[comp].data){
+    //       let props = {};
+    //       let componentElm = document.querySelectorAll(`[data-kat-component="${comp}"]`)[0];
+    //       let attrProps = componentElm.getAttribute('props');
+    //       props[attrProps] = this.component[target].data[attrProps];
+    //       this.component[comp].data = props;
+    //       this.updateData(props[attrProps], comp, true, type = 'data')
+    //     }
+    //   }
+    // }
 
   }
 
@@ -1537,223 +1557,284 @@ export default class Katsu{
   * Render and inilizes the component(s)
   */
 
-  render(module, target, childComponent = false, parent = null){
+  render(modules, target, childComponent = false, parent = null) {
+    let module = [];
+
+    if (Array.isArray(modules)) {
+      module = modules
+    } else {
+      module.push(modules);
+    }
+
+    const renderModules = module.map(mod => mod.name);
 
     var viewName;
 
-    if(childComponent){
-      viewName = target;
-      this.component[viewName].parent = parent
-    }else{
-      const mod = new module[0]();
+    module.forEach(component => {
+      this.component[component.name] = {};
+    });
 
-      this.viewName = module[0].name;
-      this.component[this.viewName] = {};
+    module.forEach(singleModule => {
+      const mod = new singleModule();
+
+      this.viewName = singleModule.name;
       this.component[this.viewName].template = mod.view();
+
       mod.data ? this.component[this.viewName].data = mod.data() : this.component[this.viewName].data = {};
       mod.controller ? this.component[this.viewName].controller = mod.controller  : this.component[this.viewName].controller = null;
-      module[1] ? this.component[this.viewName].options = module[1] : this.component[this.viewName].options = null;
-      viewName = module[0].name;
+      // module[1] ? this.component[this.viewName].options = module[1] : this.component[this.viewName].options = null;
+      viewName = singleModule.name;
 
-    }
-
-    this.component[viewName].root = target;
-
-    const $event = (selector) => {
-      return{
-        on: (name, func) => {
-          this.component[selector].events[name] = func;
-        },
-        receive: (name, func) => {
-          this.component[selector].emit[name] = func;
-        }
+      if (renderModules.includes(mod.parent)) {
+        console.log(mod);
+        this.component[mod.parent].options = [];
+        this.component[viewName].parent = mod.parent
+        this.component[mod.parent].options.push(singleModule);
+      } else {
+        this.component[this.viewName].options = null;
       }
+    });
+  
+      // Poller for child components
+      // const pollerComponent = (target) => {
+  
+      //   return new Promise((resolve, reject) => {
+  
+      //     var i = 0;
+      //     const selector = `document.querySelector('[data-kat-component="${target}"]')`
+  
+      //     var poller = setInterval(() => {
+      //       if(selector || i === 1000){
+      //         stopPoller();
+      //         resolve(true);
+      //       }else{
+      //         i++;
+      //       }
+      //     },1);
+  
+      //     function stopPoller() {
+      //       clearInterval(poller);
+      //     }
+  
+      //   })
+  
+      // };
 
-    }
 
-    const $emit = (selector) => {
-      return{
-        send: (data) => {
-          try{
-            if(data){
-              let views = this.component
-              var parent = this.component[selector].parent
-              let func = this.component[parent].emit[selector];
+      Object.keys(this.component).forEach(component => {
+        const viewName = component;
+        const childComponent = this.component[viewName].parent ? true : false;
+
+        this.component[viewName].root = target;
+  
+        const $event = (selector) => {
+          return{
+            on: (name, func) => {
+              this.component[selector].events[name] = func;
+            },
+            receive: (name, func) => {
+              this.component[selector].emit[name] = func;
+            }
+          }
+    
+        }
+    
+        const $emit = (selector) => {
+          return{
+            send: (data) => {
               try{
-                if(Object.keys(this.component[parent].emit).length > 0){
-                  func(data);
+                if(data){
+                  let views = this.component
+                  var parent = this.component[selector].parent
+                  let func = this.component[parent].emit[selector];
+                  try{
+                    if(Object.keys(component[parent].emit).length > 0){
+                      func(data);
+                    }else{
+                      throw(`Parent component ${parent} needs an $event.recieve()`)
+                    }
+                  }
+                  catch(e){
+                    console.error(e)
+                  }
                 }else{
-                  throw(`Parent component ${parent} needs an $event.recieve()`)
+                  throw(`There was not data sent from ${selector}`);
                 }
               }
               catch(e){
                 console.error(e)
               }
-            }else{
-              throw(`There was not data sent from ${selector}`);
+    
             }
           }
-          catch(e){
-            console.error(e)
+    
+        }
+    
+    
+        // Set proxy for getting services
+        const serviceHandler = {
+          get(target, prop, receiver) {
+            return target[prop]
           }
-
         }
-      }
+    
+        const $service = (selector) => {
+          return new Proxy(this.component[selector].service, serviceHandler)
+        }
+    
+        const updateData = this.updateData.bind(this)
+    
+        this.component[viewName].targetData = {};
+        this.component[viewName].events = {};
+        this.component[viewName].emit = {};
+        this.component[viewName].service = {};
+        this.component[viewName].localStore = {}
 
-    }
-
-
-    // Set proxy for getting services
-    const serviceHandler = {
-      get(target, prop, receiver) {
-        return target[prop]
-      }
-    }
-
-    const $service = (selector) => {
-      return new Proxy(this.component[selector].service, serviceHandler)
-    }
-
-    const updateData = this.updateData.bind(this)
-
-    this.component[viewName].targetData = {};
-    this.component[viewName].events = {};
-    this.component[viewName].emit = {};
-    this.component[viewName].service = {};
-    this.component[viewName].localStore = {}
-
-    this.dataProxy('data', viewName, childComponent);
-
-    // Set params
-    const params = {
-      $data: this.component[viewName].localStore.store,
-      $event: $event(viewName),
-      $emit: $emit(viewName),
-      $service: $service(viewName),
-      // $state: $state
-    }
-
-    // Poller for child components
-    const pollerComponent = (target) => {
-
-      return new Promise((resolve, reject) => {
-
-        var i = 0;
-        const selector = `document.querySelector('[data-kat-component="${target}"]')`
-
-        var poller = setInterval(() => {
-          if(selector || i === 1000){
-            stopPoller();
-            resolve(true);
-          }else{
-            i++;
-          }
-        },1);
-
-        function stopPoller() {
-          clearInterval(poller);
+        this.dataProxy('data', viewName, childComponent);
+    
+        // Set params
+        const params = {
+          $data: this.component[viewName].localStore.store,
+          $event: $event(viewName),
+          $emit: $emit(viewName),
+          $service: $service(viewName),
+          // $state: $state
         }
 
-      })
+        console.log(this.component[viewName]);
 
-    };
+              // Check if there is any options with this Component
 
-    // Check if there is any options with this Component
-    if(this.component[viewName].options && this.component[viewName].options.length > 0){
+      // console.log('Before OPtions');
+      // console.log(this.component[viewName].options);
 
-      const options = this.component[viewName].options;
+      // if(this.component[viewName].options !== null){
 
-      this.component[viewName].components = []
+      //   console.log('xxxx');
+  
+      //   const options = this.component[viewName].options;
 
-      var rendered = [];
+      //   this.component[viewName].components = []
+  
+      //   var rendered = [];
 
-      for(let i = 0;i<options.length;i++){
-        let mod = new options[i]();
-        if(mod.service){
-          this.component[viewName].service[options[i].name] = mod.service();
-        }else{
+      //   console.log(this.component[viewName].options)
+  
+      //   for(let i = 0;i<options.length;i++){
+      //     console.log('------------------')
+      //     console.log(options[i]);
+      //     console.log('------------------')
 
-          pollerComponent(options[i].name).then(res => {
+      //     let mod = new options[i]();
 
-            try{
+      //     if(mod.service){
+      //       this.component[viewName].service[options[i].name] = mod.service();
+      //     }else{
+      //       pollerComponent(options[i].name).then(res => {
+      //         console.log('pollerComponent');
+      //         console.log(options[i].name);
+  
+      //         try{
+  
+      //           if(mod.view){
+      //             this.component[options[i].name] = {};
+      //             this.component[options[i].name].template = mod.view();
+  
+      //             if(mod.data){
+      //               let props = {};
+      //               let componentElm = document.querySelectorAll(`[data-kat-component="${options[i].name}"]`)[0];
+      //               let attrProps = componentElm.getAttribute('props');
+      //               mod.data(this.component[viewName].data[attrProps]);
+      //               this.component[options[i].name].data = this.component[viewName].data[attrProps];
+  
+      //             }else{
+      //               this.component[options[i].name].data = {};
+      //             }
+  
+      //             mod.controller ? this.component[options[i].name].controller = mod.controller  : this.component[options[i].name].controller = null;
+      //             this.component[viewName].components = [];
+      //             this.component[viewName].components.push(options[i])
+  
+      //           }else{
+      //             throw(options[i].name)
+      //           }
+  
+      //         }
+      //         catch(err){
+      //           console.error(`Class ${err} is not a valid block`)
+      //           return false;
+      //         }
+  
+      //         // Render Child Components
+      //         if(this.component[viewName].components){
+      //           console.log(this.component[viewName].components);
+      //           for(let comp of this.component[viewName].components){
+      //             if(!rendered.includes(comp)){
+      //               delete this.component[comp.name];
+      //               // this.render(comp, comp, true, viewName);
+      //             }
+      //             rendered.push(comp)
+      //           }
+      //         }
+  
+      //       });
+  
+      //     }
+  
+      //   }
+  
+      // }
+  
+  
+      // Generate View
+      var template = this.component[viewName].template;
+      let targetElm = null;
 
-              if(mod.view){
-                this.component[options[i].name] = {};
-                this.component[options[i].name].template = mod.view();
-
-                if(mod.data){
-                  let props = {};
-                  let componentElm = document.querySelectorAll(`[data-kat-component="${options[i].name}"]`)[0];
-                  let attrProps = componentElm.getAttribute('props');
-                  mod.data(this.component[viewName].data[attrProps]);
-                  this.component[options[i].name].data = this.component[viewName].data[attrProps];
-
-                }else{
-                  this.component[options[i].name].data = {};
-                }
-
-                mod.controller ? this.component[options[i].name].controller = mod.controller  : this.component[options[i].name].controller = null;
-                this.component[viewName].components.push(options[i].name)
-
-              }else{
-                throw(options[i].name)
-              }
-
-            }
-            catch(err){
-              console.error(`Class ${err} is not a valid block`)
-              return false;
-            }
-
-            // Render Child Components
-            if(this.component[viewName].components){
-              for(let comp of this.component[viewName].components){
-                if(!rendered.includes(comp)){
-                  this.render(comp, comp, true, viewName);
-                }
-                rendered.push(comp)
-              }
-            }
-
-          });
-
-        }
-
+      if (!childComponent) {
+        targetElm = document.querySelector(target)
+      } else {
+        targetElm = document.querySelectorAll(`[data-kat-component="${viewName}"]`)[0];
       }
 
-    }
 
+      const htmlContent = this.virtualDom(template, viewName, childComponent, targetElm);
 
-    // Generate View
-    var template = this.component[viewName].template;
-    const targetElm = document.querySelector(target) || document.querySelectorAll(`[data-kat-component="${viewName}"]`)[0];
-    const htmlContent = this.virtualDom(template, viewName, childComponent, targetElm);
-    this.component[viewName].vDomPure = htmlContent;
+      console.log(htmlContent);
 
-    let domparser = new DOMParser();
-    var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
-    this.updateDom(targetElm, htmlContent[0]);
-    this.component[viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
+      this.component[viewName].vDomPure = htmlContent;
+  
+      let domparser = new DOMParser();
+      var htmlObject = domparser.parseFromString(template, 'text/html').querySelector('body');
 
-    // Apply Controller
-    var controller = this.component[viewName].controller || null;
-    if(controller){
-      var regex = /\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g
-      var augs = controller.toString().match(regex)[0];
-      var attr = [];
-      var argsArray = augs.substr(1, augs.length - 2).split(',');
+      console.log('==== updateDom ====');
+      // console.log(htmlContent[0]);
+      console.log(targetElm);
+      this.updateDom(targetElm, htmlContent[0]);
+      this.component[viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
+  
+      // Apply Controller
+      const controller = this.component[viewName].controller || null;
+      console.log(controller);
 
-      argsArray.forEach((item, i) => {
-        attr.push(params[item.trim()])
-      })
+      if(controller){
+        const regex = /\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g
+        const augs = controller.toString().match(regex)[0];
+        const attr = [];
+        const argsArray = augs.substr(1, augs.length - 2).split(',');
+  
+        argsArray.forEach((item, i) => {
+          attr.push(params[item.trim()])
+        })
+  
+        let extScript = () => {eval(controller(...attr))};
+        let event = new Event('executeScript');
+  
+        window.addEventListener('executeScript', extScript)
+        window.dispatchEvent(event)
+        window.removeEventListener('executeScript', extScript);
+      }
 
-      let extScript = () => {eval(controller(...attr))};
-      let event = new Event('executeScript');
-
-      window.addEventListener('executeScript', extScript)
-      window.dispatchEvent(event)
-      window.removeEventListener('executeScript', extScript);
-    }
+    });
 
   }
 

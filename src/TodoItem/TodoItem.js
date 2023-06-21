@@ -3,16 +3,21 @@ class TodoItem {
 
     view() {
       return `
-        <div>Hello, {{name}}</div>
+      <div>
+        <span>{{title}}</span> -
+        <span>Hello, {{name}}</span>
+      </div>
       `;
     }
-    // data() {
-    //   return {
-    //     name: 'Johnny'
-    //   }
-    // }
-    controller($data) {
-      $data.name = 'Johnny';
+    data() {
+      return {
+        name: 'Johnny'
+      }
+    }
+    controller($data, $props) {
+      console.log($props);
+      console.log($data);
+      $data.name = `${$props.title} David`;
     }
   }
 

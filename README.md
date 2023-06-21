@@ -4,7 +4,7 @@ A reactive, directive-based library for creating User Interfaces with simple com
 
 KatsuJS is the go-to solution for front-end development using an minimal coding and vast array of built-in directives.
 
-This library is currently in Beta/Development stage and may contain error that are currently being address
+This library is currently in Alpha/Development stage and may contain error that are currently being address
 
 ```javascript
 const app = new Katsu();

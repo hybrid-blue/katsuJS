@@ -1,8 +1,10 @@
+import { random } from 'lodash';
 import '../style.css';
 
 export default class Katsu{
   constructor(){
 
+    this.dom;
     this.viewName;
     this.targetElement;
     this.component = {}
@@ -13,6 +15,7 @@ export default class Katsu{
     this.expressStr;
     this.state = {};
     this.root;
+    this.eventMap = {};
 
   }
 
@@ -149,23 +152,30 @@ export default class Katsu{
   }
 
   getEventValues(target, viewName, topObj, arg){
-    var foundIndex;
-    var newArgs = {};
-
-    // console.log('#######################');
-    // console.log(target);
-    // console.log(viewName);
-    // console.log(topObj);
-    // console.log(arg);
-    // console.log('#######################');
+    let foundIndex;
+    let newArgs = {};
 
     const findIndex = (parentNode) => {
-      let nodes = parentNode.parentNode.children;
-      let thisNode = parentNode;
+      console.log(parentNode);
+      console.log(this.component[viewName].data[topObj]);
+
+      const nodes = parentNode.parentNode.children;
+      const thisNode = parentNode;
       let forCount = 0;
-      let array = Array.prototype.slice.call(document.querySelectorAll(`[data-kat-for="${thisNode.getAttribute('data-kat-for')}"]`));
-      let dataCount = this.component[viewName].data[topObj].length;
-      let elmCount = array.length / dataCount;
+      const array = Array.prototype.slice.call(document.querySelectorAll(`[data-kat-for="${thisNode.getAttribute('data-kat-for')}"]`));
+      
+      let dataCount = 0;
+
+      if (!this.component[viewName].data[topObj]) {
+        const parent = this.component[viewName].parent;
+        dataCount = this.component[parent].data[topObj].length;
+      } else {
+        dataCount = this.component[viewName].data[topObj].length;
+      }
+
+      console.log(dataCount);
+
+      const elmCount = array.length / dataCount;
 
       for(let i=0;i<elmCount;i++){
         for(let x=0;x<dataCount;x++){
@@ -354,7 +364,6 @@ export default class Katsu{
   */
 
   directives(node, child = null, viewName, type = 'default', index = null, topObj = null, domRoot){
-
     const virtualDom = this.virtualDom.bind(this);
     const updateDom = this.updateDom.bind(this);
     const updateData = this.updateData.bind(this);
@@ -455,51 +464,72 @@ export default class Katsu{
 
             setTimeout(() => {
 
-              const setClickEvent = (target) => {
-                var hasEvent = this.checkListener(target, 'click');
+              const setClickEvent = (target, viewName) => {
+                const hasEvent = this.checkListener(target, 'click');
+
+                // console.log('********************');
+                // console.log('hasEvent', target);
+                // console.log(viewName, attr.value.split('(')[0]);
+
+                const eventKey = this.component[viewName].events[attr.value.split('(')[0]].key;
+                const eventFunc = this.component[viewName].events[attr.value.split('(')[0]].func;
+
+                this.eventMap[eventKey] = {
+                  component: viewName,
+                  target,
+                  func: eventFunc
+                };
+
+                target.key = eventKey;
+
+                // console.log('KEY: ', target.key);
 
                 if(!hasEvent){
                   target.addEventListener('click', (e) => {
+                    // console.log(e.target);
 
                     setTimeout(() => {
-                      let regex = /(?<=\()(.*?)(?=\s*\))/g;
-                      let arg = attr.value.match(regex);
+                      const regex = /(?<=\()(.*?)(?=\s*\))/g;
+                      const arg = attr.value.match(regex);
+                      // const func = this.component[viewName].events[attr.value.split('(')[0]].func;
+                      // console.log(this.component[viewName].events);
 
-                      let func = this.component[viewName].events[attr.value.split('(')[0]];
+                      // console.log(target.key);
+                      // console.log(this.eventMap)
 
-                      var newArgs = {};
+                      const { func, component } = this.eventMap[target.key];
 
-                      let args = arg[0].split(',');
+                      let newArgs = {};
+                      const args = arg[0].split(',');
 
                       for(let i = 0;i<args.length;i++){
-
                         if(/\'(.*?)\'/g.test(args[i])){
-                          
-                          let val = args[i].trim();
-                          let trimed = val.substr(1, val.length-2);
+                          const val = args[i].trim();
+                          const trimed = val.substr(1, val.length-2);
 
                           newArgs['args'] = trimed;
-
-                        }else{
-
+                        } else {
                           if(getData(args[i])){
                             newArgs.args = getData(args[i]);
-                          }else{
-                            newArgs = this.getEventValues(target, viewName, topObj, args[i]);
+                          } else {
+                            
+                            // console.log(`######### ${component} ########`);
+                            // console.log(target);
+                            // console.log(topObj);
+                            // console.log(args);
+                            // console.log('##############################');
+                            newArgs = this.getEventValues(target, component, topObj, args[i]);
                           }
-                        
                         }
                       }
 
                       try{
                         if(func){
-                          
                           if(Object.keys(newArgs)[0] === 'args'){
                             func(newArgs.args);
                           }else{
                             func(newArgs);
                           }
-                          
                         }else{
                           throw(`Cannot find event "${attr.value.split('(')[0]}"`)
                         }
@@ -508,7 +538,7 @@ export default class Katsu{
                         console.error(e)
                       }
 
-                    },1)
+                    },1);
                   })
                 }
 
@@ -554,7 +584,7 @@ export default class Katsu{
                     }
 
                     if(attrs){
-                      var count = _this[viewName].localStore.store[topObj].length;
+                      const count = _this[viewName].localStore.store[topObj].length;
                       findNextValidElm(attrs, elms, count);
                       elms = currentElm
                     }
@@ -565,9 +595,13 @@ export default class Katsu{
                   }
 
                 }else{
+                  // const componentHTML = document.createRange().createContextualFragment(this.component[viewName].template);
+
                   elms = document.querySelectorAll(`[data-kat-click="${attr.value}"]`);
+
                   for(let elm of elms){
-                    setClickEvent(elm)
+                    // console.log(elm);
+                    setClickEvent(elm, viewName)
                   }
                 }
               }
@@ -590,7 +624,7 @@ export default class Katsu{
                     setTimeout(() => {
                       let regex = /(?<=\()(.*?)(?=\s*\))/g;
                       let arg = attr.value.match(regex);
-                      let func = this.component[viewName].events[attr.value.split('(')[0]];
+                      let func = this.component[viewName].events[attr.value.split('(')[0]].func;
                       var newArgs = {};
                       let args = arg[0].split(',');
 
@@ -1082,6 +1116,8 @@ export default class Katsu{
     var htmlobject = index !== null ? domparser.parseFromString(dom, 'text/html').querySelectorAll(root)[0] : domparser.parseFromString(dom, 'text/html').querySelector(root);
 
     const buildNodes = (thisnode) => {
+      // console.log('============///////////=============');
+      // console.log(thisnode);
 
       return Array.prototype.map.call(thisnode.childNodes, (node => {
 
@@ -1203,13 +1239,37 @@ export default class Katsu{
                 this.switchCase = true;
               };
             }
+
+            // Add Data key to component elements
+            let isComponent = node.getAttribute(`data-kat-component`);
+
+            if (isComponent) {
+              // console.log(this.prevComponent);
+              if (!this.prevComponent.hasOwnProperty(isComponent)) {
+                // node.setAttribute(`data-component-name`, `${isComponent}-0`);
+                // node.setAttribute('id', `${isComponent}-0`);
+                node.componentName = `${isComponent}-0`;
+                this.prevComponent[isComponent] = {
+                  name: isComponent,
+                  index: 0
+                }
+              } else {
+                const index = this.prevComponent[isComponent].index + 1
+                // node.setAttribute(`data-component-name`, `${isComponent}-${index}`);
+                // node.setAttribute('id', `${isComponent}-${index}`);
+                node.componentName = `${isComponent}-${index}`;
+                this.prevComponent[isComponent].index = index;
+              }
+            }
+
+            // console.log(node.attributes, isComponent);
           }
 
         // Run through the node's attributes and set directives.
         this.directives(node, null, name, type, index, this.currentIteration, domRoot)
-        var map, thisNode = node.textContent.trim(), emptyArray = [];
+        let map, thisNode = node.textContent.trim(), emptyArray = [];
 
-        var map = {
+        map = {
           type: node.nodeType === 3 ? 'text' : (node.nodeType === 1 ? node.tagName.toLowerCase() : (node.nodeType === 8 ? 'comment' : null)),
           content: node.childNodes && node.childNodes.length > 0 ? null : (/{{(.*?)}}/g.test(node.textContent) ? this.expressions(node.textContent, name) : node.textContent),
           attr: node.attributes ? this.buildAttributes(node.attributes) : (node.nodeType === 8 ? emptyArray : null),
@@ -1230,8 +1290,10 @@ export default class Katsu{
   virtualDom(dom, name, child = null, root){
     // console.log('virtualDom');
     // console.log(child)
+    this.prevComponent = {};
     let builtDom = this.buildDom(dom, name, null, root);
     this.forLoop = [];
+    //this.prevComponent = {};
     return builtDom;
   }
 
@@ -1274,6 +1336,7 @@ export default class Katsu{
     Object.keys(props).forEach(name => {
       let attr = Object.keys(props[name])[0];
       let value = Object.values(props[name])[0];
+
       this.setAttr(root, attr, value)
     })
   }
@@ -1367,6 +1430,40 @@ export default class Katsu{
       }
 
     }
+  }
+
+  cleanDom(root, newNode, index = 0){
+    let newProps = newNode.attr;
+
+    const props = Object.assign({}, newProps);
+
+    Object.values(props).forEach((name, i) => {
+      let valName = Object.keys(name)[0];
+      let newVal = newProps[i] ? Object.values(newProps[i])[0] : null;
+
+      console.log('=== clean dom ===')
+      console.log(valName);
+      console.log(newVal);
+
+      if (valName.includes('data')) {
+        this.removeAttr(root.childNodes[index], valName);
+      }
+
+
+      // this.updateAttr(root, valName, newVal, oldVal);
+      // this.removeAttr(root, name);
+    });
+
+    const newLength = newNode.children.length;
+
+    for(let i = 0; i < newLength; i++){
+      this.cleanDom(
+        root.childNodes[index],
+        newNode.children[i],
+        i
+      );
+    }
+
   }
 
   /**
@@ -1520,10 +1617,26 @@ export default class Katsu{
   
       let domparser = new DOMParser();
   
-      const root = this.component[target].parent ? document.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex].innerHTML : document.querySelector(this.component[target].root).innerHTML;
-      const htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
-      const targetElm = this.component[target].parent ? document.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex] : document.querySelector(this.component[target].root);
+      // const root = this.component[target].parent ? document.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex].innerHTML : document.querySelector(this.component[target].root).innerHTML;
+      
+      const root = this.component[target].oldDom;
+
+      // console.log(this.component[target]);
+
+      const htmlObject = root.innerHTML;
+      
+      // console.log(htmlObject.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex]);
+
+
+      const dom = domparser.parseFromString(this.dom, 'text/html').querySelector('body');
+
+      console.log(dom);
+
+      const targetElm = this.component[target].parent ? dom.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex] : dom;
+    
       const htmlContent = this.virtualDom(this.component[target].template, target, null, targetElm);
+
+      console.log(targetElm);
   
       this.component[target].vDomNew = htmlContent;
   
@@ -1549,9 +1662,10 @@ export default class Katsu{
 
 
        forInnerHtml.querySelectorAll('[data-kat-component]').forEach(comp => {
+        console.log(comp);
         for(let i = 0;i < arrayCount;i++) {
-          console.log(i);
-          console.log(comp.dataset.katComponent);
+          // console.log(i);
+          // console.log(comp.dataset.katComponent);
           const compName = comp.dataset.katComponent;
           let tempCompName = '';
   
@@ -1572,7 +1686,7 @@ export default class Katsu{
             propsDataKeys.forEach((key) => {
               const propsData = {};
               const propsDataValue = comp.getAttribute(`data-kat-props:${key}`);
-              console.log(propsDataValue);
+              // console.log(propsDataValue);
 
               // Is prop data
               if (propsDataValue.substring(0,1) === '(' && propsDataValue.substring(propsDataValue.length - 1)) {
@@ -1601,7 +1715,12 @@ export default class Katsu{
       const $event = (selector) => {
         return{
           on: (name, func) => {
-            this.component[selector].events[name] = func;
+            const key = btoa(((Math.random() * 1234) * (Math.random() * 34)).toFixed());
+            this.eventMap[key] = {};
+            this.component[selector].events[name] = {};
+
+            this.component[selector].events[name].key = key
+            this.component[selector].events[name].func = func;
           },
           receive: (name, func) => {
             this.component[selector].emit[name] = func;
@@ -1704,7 +1823,7 @@ export default class Katsu{
   /**
   * Render and inilizes the component(s)
   */
-  render(modules, target, forModules = false) {
+  render(modules, target) {
     let module = [];
 
     if (Array.isArray(modules)) {
@@ -1740,21 +1859,21 @@ export default class Katsu{
         // Duplicate modules if duplicate components exists on parent tmeplate
         const parentTemplate = this.component[mod.parent].template;
         const forHtml = document.createRange().createContextualFragment(parentTemplate);
-        const childComponent = forHtml.querySelectorAll('[data-kat-component]');
+        let childComponent = forHtml.querySelectorAll('[data-kat-component]');
 
         [...childComponent].forEach((child, i) => {
           this.component[`${viewName}-${i}`] = Object.assign({}, this.component[viewName]);
-            // Set Props, if any
-            const propsRegex = /(?<=data\-kat\-props\:)(.*)(?=\=)/gm;
-            const propsDataKeys = child.outerHTML.match(propsRegex);
+          // Set Props, if any
+          const propsRegex = /(?<=data\-kat\-props\:)(.*)(?=\=)/gm;
+          const propsDataKeys = child.outerHTML.match(propsRegex);
 
-            if (propsDataKeys) {
-              propsDataKeys.forEach((key) => {
-                const propsData = {};
-                propsData[key] = child.getAttribute(`data-kat-props:${key}`);
-                this.component[`${viewName}-${i}`].props = Object.assign({}, propsData, {});
-              });
-            }
+          if (propsDataKeys) {
+            propsDataKeys.forEach((key) => {
+              const propsData = {};
+              propsData[key] = child.getAttribute(`data-kat-props:${key}`);
+              this.component[`${viewName}-${i}`].props = Object.assign({}, propsData, {});
+            });
+          }
           
         });
 
@@ -1773,7 +1892,11 @@ export default class Katsu{
       const $event = (selector) => {
         return{
           on: (name, func) => {
-            this.component[selector].events[name] = func;
+            const key = btoa(((Math.random() * 1234) * (Math.random() * 34)).toFixed());
+            this.eventMap[key] = {};
+            this.component[selector].events[name] = {};
+            this.component[selector].events[name].key = key
+            this.component[selector].events[name].func = func;
           },
           receive: (name, func) => {
             this.component[selector].emit[name] = func;
@@ -1787,9 +1910,9 @@ export default class Katsu{
           send: (data) => {
             try{
               if(data){
-                let views = this.component
-                var parent = this.component[selector].parent
-                let func = this.component[parent].emit[selector];
+                const views = this.component
+                const parent = this.component[selector].parent
+                const func = this.component[parent].emit[selector];
                 try{
                   if(Object.keys(component[parent].emit).length > 0){
                     func(data);
@@ -1833,6 +1956,7 @@ export default class Katsu{
       this.component[viewName].localStore = {}
       this.component[viewName].propsStore = {}
 
+      // console.log(this.component);
       // Set Component Data proxy
       this.dataProxy('data', viewName, null);
 
@@ -1872,6 +1996,8 @@ export default class Katsu{
 
     // Duplicate or create any additional component modules
     this.createAdditionalModules();
+
+    console.log(this.component);
       
     // Generate View
     Object.keys(this.component).forEach(component => {
@@ -1887,6 +2013,9 @@ export default class Katsu{
 
       const htmlContent = this.virtualDom(template, viewName, null, targetElm);
 
+      console.log('===== htmlContent =====');
+      console.log(htmlContent);
+
       this.component[viewName].vDomPure = htmlContent;
   
       let domparser = new DOMParser();
@@ -1894,6 +2023,28 @@ export default class Katsu{
 
       this.updateDom(targetElm, htmlContent[0]);
       this.component[viewName].oldDom = domparser.parseFromString(template, 'text/html').querySelector('body');
+    });
+
+    // Snapshot DOM and clean up
+    this.dom = document.querySelector(target).outerHTML;
+
+    console.log('=== DOM ===')
+
+    Object.keys(this.component).forEach(component => {
+      const viewName = component;
+      let targetElm = null;
+
+      // if (!this.component[viewName].parent) {
+        targetElm = document.querySelector(target)
+      // } else {
+      //   targetElm = document.querySelectorAll(`[data-kat-component="${viewName.split('-')[0]}"]`)[viewName.split('-')[1]];
+      // }
+
+      console.log('=== Snapshot DOM and clean up ===');
+      console.log(targetElm);
+      console.log(this.component[viewName].vDomPure[0])
+
+      this.cleanDom(targetElm, this.component[viewName].vDomPure[0]);
     });
   }
 

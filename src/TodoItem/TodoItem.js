@@ -5,7 +5,7 @@ class TodoItem {
       return `
       <div>
         <span>{{title}}</span> -
-        <span>Hello, {{name}}</span>
+        <span data-kat-click="changeText()">Hello, {{name}}</span>
       </div>
       `;
     }
@@ -14,10 +14,12 @@ class TodoItem {
         name: 'Johnny'
       }
     }
-    controller($data, $props) {
-      console.log($props);
-      console.log($data);
-      $data.name = `${$props.title} David`;
+    controller($data, $props, $event) {
+      // console.log($props);
+      // console.log($data);
+      $event.on('changeText', () => {
+        $data.name = `${$props.title} David`;
+      });
     }
   }
 

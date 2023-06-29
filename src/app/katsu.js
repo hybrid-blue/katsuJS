@@ -16,7 +16,6 @@ export default class Katsu{
     this.state = {};
     this.root;
     this.eventMap = {};
-
   }
 
 
@@ -1246,18 +1245,18 @@ export default class Katsu{
             if (isComponent) {
               // console.log(this.prevComponent);
               if (!this.prevComponent.hasOwnProperty(isComponent)) {
-                // node.setAttribute(`data-component-name`, `${isComponent}-0`);
+                node.setAttribute(`data-component-name`, `${isComponent}-0`);
                 // node.setAttribute('id', `${isComponent}-0`);
-                node.componentName = `${isComponent}-0`;
+                // node.componentName = `${isComponent}-0`;
                 this.prevComponent[isComponent] = {
                   name: isComponent,
                   index: 0
                 }
               } else {
                 const index = this.prevComponent[isComponent].index + 1
-                // node.setAttribute(`data-component-name`, `${isComponent}-${index}`);
+                node.setAttribute(`data-component-name`, `${isComponent}-${index}`);
                 // node.setAttribute('id', `${isComponent}-${index}`);
-                node.componentName = `${isComponent}-${index}`;
+                // node.componentName = `${isComponent}-${index}`;
                 this.prevComponent[isComponent].index = index;
               }
             }
@@ -1432,37 +1431,32 @@ export default class Katsu{
     }
   }
 
-  cleanDom(root, newNode, index = 0){
-    let newProps = newNode.attr;
-
-    const props = Object.assign({}, newProps);
-
-    Object.values(props).forEach((name, i) => {
-      let valName = Object.keys(name)[0];
-      let newVal = newProps[i] ? Object.values(newProps[i])[0] : null;
-
-      console.log('=== clean dom ===')
-      console.log(valName);
-      console.log(newVal);
-
-      if (valName.includes('data')) {
-        this.removeAttr(root.childNodes[index], valName);
+  cleanDom(root){
+    const traverseTree = (node) => {
+      console.log('~~~~~~~ Tree Traversal ONE ~~~~~~~~');
+  
+      Object.values(node.attributes).map((attribute) => {
+        // console.log(attribute.name);
+        if (attribute.name === 'data-component-name') {
+          console.log('Is component', attribute.value);
+          node.componentName = attribute.value;
+          node.removeAttribute('data-component-name');
+          node.removeAttribute('data-kat-component');
+        }
+      });
+      
+  
+      if (node.children) {
+        for(let child of node.children) {
+          if (child.children) {
+            traverseTree(child);
+          }
+        }
       }
+  
+    };
 
-
-      // this.updateAttr(root, valName, newVal, oldVal);
-      // this.removeAttr(root, name);
-    });
-
-    const newLength = newNode.children.length;
-
-    for(let i = 0; i < newLength; i++){
-      this.cleanDom(
-        root.childNodes[index],
-        newNode.children[i],
-        i
-      );
-    }
+    traverseTree(root)
 
   }
 
@@ -1597,6 +1591,30 @@ export default class Katsu{
     }
   }
 
+  findNode(node, target){
+    let foundNode = null;
+
+    const traverseTree = (node, target) => {
+      if (node.componentName === target) {
+        foundNode = node;
+      }
+
+      if (!foundNode) {
+        if (node.children) {
+          for(let child of node.children) {
+            if (child.children && !foundNode) {
+              traverseTree(child, target);
+            }
+          }
+        }
+      }
+    }
+
+    traverseTree(node, target);
+
+    return foundNode;
+  }
+
   updateData (data, target, child = null, type = 'data') {
     // // Set Data
     if(type === 'data'){
@@ -1613,30 +1631,24 @@ export default class Katsu{
         targetName = target.split('-')[0];
         targetIndex = target.split('-')[1];
       }
-  
+
+      let targetElm;
+
+      if (this.component[target].parent) {
+        targetElm = this.findNode(document.querySelector('#root'), target)
+      } else {
+        targetElm = document.querySelector(this.component[target].root);
+      }
+
   
       let domparser = new DOMParser();
   
       // const root = this.component[target].parent ? document.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex].innerHTML : document.querySelector(this.component[target].root).innerHTML;
+      // const htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
+
+      // const targetElm = this.component[target].parent ? document.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex] : document.querySelector(this.component[target].root);
       
-      const root = this.component[target].oldDom;
-
-      // console.log(this.component[target]);
-
-      const htmlObject = root.innerHTML;
-      
-      // console.log(htmlObject.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex]);
-
-
-      const dom = domparser.parseFromString(this.dom, 'text/html').querySelector('body');
-
-      console.log(dom);
-
-      const targetElm = this.component[target].parent ? dom.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex] : dom;
-    
       const htmlContent = this.virtualDom(this.component[target].template, target, null, targetElm);
-
-      console.log(targetElm);
   
       this.component[target].vDomNew = htmlContent;
   
@@ -1825,6 +1837,7 @@ export default class Katsu{
   */
   render(modules, target) {
     let module = [];
+    this.root = target;
 
     if (Array.isArray(modules)) {
       module = modules
@@ -2030,22 +2043,23 @@ export default class Katsu{
 
     console.log('=== DOM ===')
 
-    Object.keys(this.component).forEach(component => {
-      const viewName = component;
-      let targetElm = null;
+    // Object.keys(this.component).forEach(component => {
+    //   const viewName = component;
+    //   let targetElm = null;
 
-      // if (!this.component[viewName].parent) {
-        targetElm = document.querySelector(target)
-      // } else {
-      //   targetElm = document.querySelectorAll(`[data-kat-component="${viewName.split('-')[0]}"]`)[viewName.split('-')[1]];
-      // }
+    //   // if (!this.component[viewName].parent) {
+    //     targetElm = document.querySelector(target)
+    //   // } else {
+    //   //   targetElm = document.querySelectorAll(`[data-kat-component="${viewName.split('-')[0]}"]`)[viewName.split('-')[1]];
+    //   // }
 
-      console.log('=== Snapshot DOM and clean up ===');
-      console.log(targetElm);
-      console.log(this.component[viewName].vDomPure[0])
+    //   console.log('=== Snapshot DOM and clean up ===');
+    //   console.log(targetElm);
+    //   console.log(this.component[viewName].vDomPure[0])
 
-      this.cleanDom(targetElm, this.component[viewName].vDomPure[0]);
-    });
+    this.cleanDom(document.querySelector('#root'));
+    // });
+    
   }
 
 }

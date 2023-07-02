@@ -1,13 +1,13 @@
 <div class="content-wrapper">
-    <div data-kat-for="item of items">
+    <div class="component-wrapper" data-kat-for="item of items">
         <div data-kat-component="TodoItem" data-kat-props:title=(item)></div>
     </div>
 
     <hr />
 
-    <div data-kat-for="item of items">
-        <div data-kat-click="changeText()">{{item}}</div>
-    </div>
+    <li data-kat-for="item of items">
+        <div style="display:inline-block;" data-kat-click="changeText()">{{item}}</div>
+    </li>
 
     <hr />
 

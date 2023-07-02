@@ -19,55 +19,6 @@ export default class Katsu{
     this.prevComponent = {};
   }
 
-
-  /**
-  * Poller for Elmement of targted attribute.
-  */
-  poller(elm, index = null){
-    return new Promise((resolve, reject) => {
-      var i = 0;
-
-      var selector = index ? 'document.querySelectorAll('+elm+')'+'['+index+']' : 'document.querySelectorAll('+elm+')'
-
-        var pollerElm = setInterval(() => {
-          if(selector || i === 1000){
-            stopPoller()
-            resolve(true);
-          }else{
-            i++;
-          }
-        },1);
-
-      function stopPoller() {
-        clearInterval(pollerElm);
-      }
-    })
-  }
-
-  /**
-  * Poller Case directive for switch elements.
-  */
-  pollerCase(elm){
-    return new Promise((resolve, reject) => {
-      var i = 0;
-
-      var selector = 'elm.querySelectorAll("div")'
-
-        var pollerElm = setInterval(() => {
-          if(selector || i === 1000){
-            stopPoller()
-            resolve(elm);
-          }else{
-            i++;
-          }
-        },1);
-
-      function stopPoller() {
-        clearInterval(pollerElm);
-      }
-    })
-  }
-
   /**
   * Expression interpolation
   */
@@ -105,15 +56,26 @@ export default class Katsu{
         }
       }else{
         const componentData = {...this.component[target].data, ...this.component[target].props};
-        if(componentData[exp] !== null){
-          if(componentData[exp] === undefined){
-            data = data.replace(`{{${exp}}}`, '');
-          }else{
-            if(componentData[exp]) data = data.replace(`{{${exp}}}`, componentData[exp]);
+        
+        console.log(componentData[exp], exp);
+        
+        const indexRegex = /(?<=\[)(.*?)(?=\s*\])/g;
+        console.log(exp.match(indexRegex));
+
+        if (exp.match(indexRegex)) {
+          let forExp = exp.split('[')[0];
+          const forIndex = exp.match(indexRegex)[0];
+          if(componentData[forExp][forIndex]) data = data.replace(`{{${exp}}}`, componentData[forExp][forIndex]);
+        } else {
+          if(componentData[exp] !== null){
+            if(componentData[exp] === undefined){
+              data = data.replace(`{{${exp}}}`, '');
+            }else{
+              if(componentData[exp]) data = data.replace(`{{${exp}}}`, componentData[exp]);
+            }
           }
         }
       }
-
     }
 
     return data
@@ -209,6 +171,7 @@ export default class Katsu{
 
 
   // Duplicate elements with kat-for attribute and interpolate the expressions
+  // This is now redundant and needs to be removed
   directiveFor(value, node, target){
     let selector = value.split(' ').pop();
     let exp = value.split(' ')[0];
@@ -1107,42 +1070,42 @@ export default class Katsu{
         let options = {}; 
 
         // Check child elements for kat-for attributes. If there are, set them up,
-        if(node.children){
-          let childNodes = node.children;
-          let childCount = childNodes.length;
-          for(let i = 0;i<childCount;i++){
-            if(childNodes[i].attributes){
-              if(childNodes[i].getAttribute('data-kat-for')){
-                if(!this.forLoop.includes(childNodes[i].getAttribute('data-kat-for'))){
-                  const elmCount = this.directiveFor(childNodes[i].getAttribute('data-kat-for'), childNodes[i], name);
-                  if(elmCount > 0){
+        // if(node.children){
+        //   let childNodes = node.children;
+        //   let childCount = childNodes.length;
+        //   for(let i = 0;i<childCount;i++){
+        //     if(childNodes[i].attributes){
+        //       if(childNodes[i].getAttribute('data-kat-for')){
+        //         if(!this.forLoop.includes(childNodes[i].getAttribute('data-kat-for'))){
+        //           const elmCount = this.directiveFor(childNodes[i].getAttribute('data-kat-for'), childNodes[i], name);
+        //           if(elmCount > 0){
 
-                    let objName = childNodes[i].getAttribute('data-kat-for').split(' ')[2]
-                    // for(let x=0;x<childNodes.length;x++){
-                    //   childNodes[x].setAttribute('data-index', `${objName}-${x}`)
-                    // }
+        //             let objName = childNodes[i].getAttribute('data-kat-for').split(' ')[2]
+        //             // for(let x=0;x<childNodes.length;x++){
+        //             //   childNodes[x].setAttribute('data-index', `${objName}-${x}`)
+        //             // }
 
-                    this.forLoop.push(childNodes[i].getAttribute('data-kat-for'))
-                    this.forCount.push({
-                      name: childNodes[i].getAttribute('data-kat-for'),
-                      count: elmCount + i
-                    })
-                  }
-                  childCount = childCount + (elmCount - 1);
-                }else{
-                  this.forCount.forEach((item, index) => {
-                    if(item.name === childNodes[i].getAttribute('data-kat-for')){
-                      if((item.count - 1) === i){
-                        this.forCount.splice(index,1);
-                        this.forLoop = this.forLoop.filter(item => item.name !== this.forLoop.name);
-                      }
-                    }
-                  })
-                }
-              }
-            }
-          }
-        }
+        //             this.forLoop.push(childNodes[i].getAttribute('data-kat-for'))
+        //             this.forCount.push({
+        //               name: childNodes[i].getAttribute('data-kat-for'),
+        //               count: elmCount + i
+        //             })
+        //           }
+        //           childCount = childCount + (elmCount - 1);
+        //         }else{
+        //           this.forCount.forEach((item, index) => {
+        //             if(item.name === childNodes[i].getAttribute('data-kat-for')){
+        //               if((item.count - 1) === i){
+        //                 this.forCount.splice(index,1);
+        //                 this.forLoop = this.forLoop.filter(item => item.name !== this.forLoop.name);
+        //               }
+        //             }
+        //           })
+        //         }
+        //       }
+        //     }
+        //   }
+        // }
 
         if(node.nodeName !== '#text'){
           // if(node.getAttribute('data-index')){
@@ -1154,212 +1117,241 @@ export default class Katsu{
           // }
         }
 
-        // Check for katsu-if attribute. If it is then set directive.
-        if(node.attributes){
 
-            //Check for If directive
+        if(node.attributes){
+          //Check for If directive
+          node.childNodes.forEach((childNode) => {
+            if (childNode.nodeType !== 3) {
+              const isKatsuIf = childNode.getAttribute(`data-kat-if`);
+
+              if (isKatsuIf) {
+                const regex = /(?<=\()(.*?)(?=\s*\))/g;
+                const arg = isKatsuIf.match(regex)[0];
+                let data = null;
+    
+                if (arg.includes('.')) {
+                  let baseData = this.component[name].data;
+                  arg.split('.').forEach((argData) => {
+                    baseData = baseData[argData]
+                  });
+                  data = baseData;
+                } else {
+                  data = this.component[name].data[arg];
+                }
+
+                if (!Boolean(data)) {
+                  node.removeChild(childNode);
+                }
+    
+                childNode.removeAttribute(`data-kat-if`);
+              }
+            }
+          });
+
+          // Check for For attribute. If it is then set directive.
+          if (node.children) {
             node.childNodes.forEach((childNode) => {
               if (childNode.nodeType !== 3) {
-                const isKatsuIf = childNode.getAttribute(`data-kat-if`);
+                if (childNode.getAttribute(`data-kat-for`)) {
+                  const args = childNode.getAttribute(`data-kat-for`).split('of');
+                  const forDataSelector = args[1].trim();
+                  const forItemSelector = args[0].trim();
   
-                if (isKatsuIf) {
-                  const regex = /(?<=\()(.*?)(?=\s*\))/g;
-                  const arg = isKatsuIf.match(regex)[0];
-                  let data = null;
-      
-                  if (arg.includes('.')) {
-                    let baseData = this.component[name].data;
-                    arg.split('.').forEach((argData) => {
-                      baseData = baseData[argData]
-                    });
-                    data = baseData;
-                  } else {
-                    data = this.component[name].data[arg];
+                  const data = this.component[name].data[forDataSelector];
+                  const dataCount = data.length;
+                  const cloneElm = childNode.cloneNode(true)
+
+                  let newHTML = '';
+  
+                  for (let i = 0;i < dataCount;i++) {
+                    let forHtml = cloneElm.outerHTML;
+                    forHtml = forHtml.replace(`data-kat-for="${childNode.getAttribute(`data-kat-for`)}"`, '')
+                    forHtml = forHtml.replace(`{{${forItemSelector}}}`, `{{${forDataSelector}[${i}]}}`)
+                    newHTML += forHtml;
                   }
 
-                  if (!Boolean(data)) {
-                    node.removeChild(childNode);
-                  }
-      
-                  childNode.removeAttribute(`data-kat-if`);
+                  childNode.parentNode.replaceChild(document.createRange().createContextualFragment(newHTML), childNode);
+
                 }
               }
             });
-
-            // const isComponent = node.getAttribute(`data-kat-component`);
-            const isClickable = node.getAttribute(`data-kat-click`);
-            const isKeyable = node.getAttribute(`data-kat-key`);
-            const isBindable = node.getAttribute(`data-kat-bind`);
-            const isKatsuClass = node.getAttribute(`data-kat-class`);
-            const isKatsuSwitch = node.getAttribute(`data-kat-switch`);
-            const isKatsuCase = node.getAttribute(`data-kat-case`);
-            const isKatsuSrc = node.getAttribute(`data-kat-src`);
-            const isChangeable = node.getAttribute(`data-kat-change`);
-            const isEditable = node.getAttribute(`data-kat-editable`);
-
-
-            // if (isComponent) {
-              // console.log(node);
-              // node.removeAttribute('data-kat-component');
-            // }
-
-            if (isClickable) {
-              const regex = /(?<=\()(.*?)(?=\s*\))/g;
-              const args = isClickable.match(regex);
-              options.clickable = { 
-                event: isClickable.split('(')[0],
-                args
-              }
-
-              node.removeAttribute('data-kat-click');
-            }
-
-            if (isChangeable) {
-              const regex = /(?<=\()(.*?)(?=\s*\))/g;
-              const args = isChangeable.match(regex);
-              options.changeable = { 
-                event: isChangeable.split('(')[0],
-                args
-              }
-
-              node.removeAttribute('data-kat-change');
-            }
-
-            if (isKeyable) {
-              const regex = /(?<=\()(.*?)(?=\s*\))/g;
-              const args = isKeyable.match(regex);
-              options.clickable = { 
-                event: isKeyable.split('(')[0],
-                args
-              }
-
-              node.removeAttribute('data-kat-key');
-            }
-
-            if (isEditable) {
-              const regex = /(?<=\()(.*?)(?=\s*\))/g;
-              const args = isEditable.match(regex);
-
-              options.editable = {
-                event: isEditable.split('(')[0],
-                args
-              }
-
-              node.setAttribute('contentEditable', true);
-              node.removeAttribute('data-kat-editable');
-            }
-
-            if (isBindable) {}
-
-            if (isKatsuClass) {
-              const dataSelector = node.getAttribute(`data-kat-class`);
-              const isForElement = this.component[name].isFor;
-
-              const data = isForElement ? this.component[name].data[isForElement.forDataSelector][dataSelector] : this.component[name].data[dataSelector];
-              const dataType = typeof data;
-
-              switch (dataType) {
-                case 'string':
-                  node.classList.add(data)
-                  break;
-                case 'object':
-                  if (Array.isArray(data)) {
-                    node.classList.add(...data);
-                  } else {
-                    let activeClasses = [];
-                    Object.keys(data).map((katsuClass) => {
-                      if (Boolean(data[katsuClass])) {
-                        activeClasses.push(katsuClass)
-                      }
-                    });
-
-                    node.classList.add(...activeClasses);
-                  }
-                  
-                  break;
-              }
-
-              node.removeAttribute(`data-kat-class`);
-            }
-
-            if (isKatsuSwitch) {
-              const regex = /(?<=\()(.*?)(?=\s*\))/g;
-              const arg = isKatsuSwitch.match(regex)[0];
-
-              const removeNode = (node, target) => {
-                const traverseTree = (node, target) => {
-                  if (node.getAttribute('data-kat-case')) {
-                    if (node.getAttribute('data-kat-case') !== target) {
-                      node.setAttribute('remove-element', true);
-                    }
-                  }
-
-                  if (node.children) {
-                    for(let child of node.children) {
-                      traverseTree(child, target);
-                    }
-                  }
-                }
-                traverseTree(node, target);
-              }
-
-              let data = null;
-
-              if (arg.includes('.')) {
-                let baseData = this.component[name].data;
-                arg.split('.').forEach((argData) => {
-                  baseData = baseData[argData]
-                });
-                data = baseData;
-              } else {
-                data = this.component[name].data[arg];
-              }
-
-              removeNode(node, data);
-
-              node.querySelectorAll('[remove-element]').forEach((removeElm) => {
-                removeElm.parentNode.removeChild(removeElm);
-              });
-
-              node.removeAttribute(`data-kat-switch`);
-            }
-
-            if (isKatsuCase) {
-              node.removeAttribute(`data-kat-case`);
-            }
-
-
-            if (isKatsuSrc) {
-              const regex = /(?<=\()(.*?)(?=\s*\))/g;
-              const arg = isKatsuSwitch.match(regex)[0];
-              let data = null;
-
-              if (arg.includes('.')) {
-                let baseData = this.component[name].data;
-                arg.split('.').forEach((argData) => {
-                  baseData = baseData[argData]
-                });
-                data = baseData;
-              } else {
-                data = this.component[name].data[arg];
-              }
-
-              if(this.component[name].isFor){
-                elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`)[index];
-                elms.setAttribute('src', data);
-              }else{
-                elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`);
-                for(let elm of elms){
-                  elm.setAttribute('src', data);
-                }
-              }
-
-            }
-
-            if (this.component[name].isFor) {
-              options.isFor = this.component[name].isFor;
-            }
           }
+
+          // const isComponent = node.getAttribute(`data-kat-component`);
+          const isClickable = node.getAttribute(`data-kat-click`);
+          const isKeyable = node.getAttribute(`data-kat-key`);
+          const isBindable = node.getAttribute(`data-kat-bind`);
+          const isKatsuClass = node.getAttribute(`data-kat-class`);
+          const isKatsuSwitch = node.getAttribute(`data-kat-switch`);
+          const isKatsuCase = node.getAttribute(`data-kat-case`);
+          const isKatsuSrc = node.getAttribute(`data-kat-src`);
+          const isChangeable = node.getAttribute(`data-kat-change`);
+          const isEditable = node.getAttribute(`data-kat-editable`);
+          const isKatsuFor = node.getAttribute('data-kat-for');
+
+
+          // if (isComponent) {
+            // console.log(node);
+            // node.removeAttribute('data-kat-component');
+          // }
+
+          if (isClickable) {
+            const regex = /(?<=\()(.*?)(?=\s*\))/g;
+            const args = isClickable.match(regex);
+            options.clickable = { 
+              event: isClickable.split('(')[0],
+              args
+            }
+
+            node.removeAttribute('data-kat-click');
+          }
+
+          if (isChangeable) {
+            const regex = /(?<=\()(.*?)(?=\s*\))/g;
+            const args = isChangeable.match(regex);
+            options.changeable = { 
+              event: isChangeable.split('(')[0],
+              args
+            }
+
+            node.removeAttribute('data-kat-change');
+          }
+
+          if (isKeyable) {
+            const regex = /(?<=\()(.*?)(?=\s*\))/g;
+            const args = isKeyable.match(regex);
+            options.clickable = { 
+              event: isKeyable.split('(')[0],
+              args
+            }
+
+            node.removeAttribute('data-kat-key');
+          }
+
+          if (isEditable) {
+            const regex = /(?<=\()(.*?)(?=\s*\))/g;
+            const args = isEditable.match(regex);
+
+            options.editable = {
+              event: isEditable.split('(')[0],
+              args
+            }
+
+            node.setAttribute('contentEditable', true);
+            node.removeAttribute('data-kat-editable');
+          }
+
+          if (isBindable) {}
+
+          if (isKatsuClass) {
+            const dataSelector = node.getAttribute(`data-kat-class`);
+            const isForElement = this.component[name].isFor;
+
+            const data = isForElement ? this.component[name].data[isForElement.forDataSelector][dataSelector] : this.component[name].data[dataSelector];
+            const dataType = typeof data;
+
+            switch (dataType) {
+              case 'string':
+                node.classList.add(data)
+                break;
+              case 'object':
+                if (Array.isArray(data)) {
+                  node.classList.add(...data);
+                } else {
+                  let activeClasses = [];
+                  Object.keys(data).map((katsuClass) => {
+                    if (Boolean(data[katsuClass])) {
+                      activeClasses.push(katsuClass)
+                    }
+                  });
+
+                  node.classList.add(...activeClasses);
+                }
+                
+                break;
+            }
+
+            node.removeAttribute(`data-kat-class`);
+          }
+
+          if (isKatsuSwitch) {
+            const regex = /(?<=\()(.*?)(?=\s*\))/g;
+            const arg = isKatsuSwitch.match(regex)[0];
+
+            const removeNode = (node, target) => {
+              const traverseTree = (node, target) => {
+                if (node.getAttribute('data-kat-case')) {
+                  if (node.getAttribute('data-kat-case') !== target) {
+                    node.setAttribute('remove-element', true);
+                  }
+                }
+
+                if (node.children) {
+                  for(let child of node.children) {
+                    traverseTree(child, target);
+                  }
+                }
+              }
+              traverseTree(node, target);
+            }
+
+            let data = null;
+
+            if (arg.includes('.')) {
+              let baseData = this.component[name].data;
+              arg.split('.').forEach((argData) => {
+                baseData = baseData[argData]
+              });
+              data = baseData;
+            } else {
+              data = this.component[name].data[arg];
+            }
+
+            removeNode(node, data);
+
+            node.querySelectorAll('[remove-element]').forEach((removeElm) => {
+              removeElm.parentNode.removeChild(removeElm);
+            });
+
+            node.removeAttribute(`data-kat-switch`);
+          }
+
+          if (isKatsuCase) {
+            node.removeAttribute(`data-kat-case`);
+          }
+
+          //needs to be tested
+          if (isKatsuSrc) {
+            const regex = /(?<=\()(.*?)(?=\s*\))/g;
+            const arg = isKatsuSwitch.match(regex)[0];
+            let data = null;
+
+            if (arg.includes('.')) {
+              let baseData = this.component[name].data;
+              arg.split('.').forEach((argData) => {
+                baseData = baseData[argData]
+              });
+              data = baseData;
+            } else {
+              data = this.component[name].data[arg];
+            }
+
+            if(this.component[name].isFor){
+              elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`)[index];
+              elms.setAttribute('src', data);
+            }else{
+              elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`);
+              for(let elm of elms){
+                elm.setAttribute('src', data);
+              }
+            }
+
+          }
+
+          if (this.component[name].isFor) {
+            options.isFor = this.component[name].isFor;
+          }
+        }
 
         // Run through the node's attributes and set directives.
         // this.directives is no longer required and needs removing, after all functions inside is moved out to their apporite stages

@@ -3,7 +3,7 @@ class TodoItem {
 
     view() {
       return `
-      <div>
+      <div class="todo-item">
         <span>{{title}}</span> -
         <span data-kat-click="changeText()">Hello, {{name}}</span>
       </div>

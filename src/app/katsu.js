@@ -16,6 +16,7 @@ export default class Katsu{
     this.state = {};
     this.root;
     this.eventMap = {};
+    this.prevComponent = {};
   }
 
 
@@ -66,26 +67,6 @@ export default class Katsu{
       }
     })
   }
-
-  /**
-  * Check if element as a listener
-  */
-  checkListener(target, ev){
-    if(!target.getAttribute('data-kat-listening')){
-      target.setAttribute('data-kat-listening', ev);
-      return false
-    }else{
-      let events = target.getAttribute('data-kat-listening');
-      if(events.indexOf(ev) > -1){
-        return true;
-      }else{
-        events += `,${ev}`
-        target.setAttribute('data-kat-listening', events)
-        return false
-      }
-    }
-  }
-
 
   /**
   * Expression interpolation
@@ -150,70 +131,72 @@ export default class Katsu{
     return this.expressStr;
   }
 
-  getEventValues(target, viewName, topObj, arg){
+  getEventValues(target, viewName, isFor = null, arg){
     let foundIndex;
     let newArgs = {};
 
-    const findIndex = (parentNode) => {
-      console.log(parentNode);
-      console.log(this.component[viewName].data[topObj]);
+    if (isFor) {
+      const parent = this.component[viewName].parent
+      const {dataSelector, itteration} = isFor;
+      const thisParentComponentData = this.component[parent].data[dataSelector][itteration]
+    }
 
-      const nodes = parentNode.parentNode.children;
-      const thisNode = parentNode;
-      let forCount = 0;
-      const array = Array.prototype.slice.call(document.querySelectorAll(`[data-kat-for="${thisNode.getAttribute('data-kat-for')}"]`));
+    // const findIndex = (parentNode) => {
+    //   const thisNode = parentNode;
+    //   let forCount = 0;
+    //   const array = dataSelector;
       
-      let dataCount = 0;
+    //   let dataCount = 0;
 
-      if (!this.component[viewName].data[topObj]) {
-        const parent = this.component[viewName].parent;
-        dataCount = this.component[parent].data[topObj].length;
-      } else {
-        dataCount = this.component[viewName].data[topObj].length;
-      }
+    //   if (thisParentComponentData) {
+    //     const parent = this.component[viewName].parent;
+    //     dataCount = thisParentComponentData.length;
+    //   } else {
+    //     dataCount = this.component[viewName].data[dataSelector].length;
+    //   }
 
-      console.log(dataCount);
+    //   console.log(dataCount);
 
-      const elmCount = array.length / dataCount;
+    //   const elmCount = array.length / dataCount;
 
-      for(let i=0;i<elmCount;i++){
-        for(let x=0;x<dataCount;x++){
-          if(array[((dataCount * i) + x)].getAttribute('key-active')){
-            array[((dataCount * i) + x)].removeAttribute('key-active')
-            let index = ((dataCount * i) + x) - (dataCount * i)
-            return index;
-          }
-        }
-      }
-    }
+    //   for(let i=0;i<elmCount;i++){
+    //     for(let x=0;x<dataCount;x++){
+    //       if(array[((dataCount * i) + x)].getAttribute('key-active')){
+    //         array[((dataCount * i) + x)].removeAttribute('key-active')
+    //         let index = ((dataCount * i) + x) - (dataCount * i)
+    //         return index;
+    //       }
+    //     }
+    //   }
+    // }
 
-    const findParent = (elm) => {
-      var parentNode, childNode;
+    // const findParent = (elm) => {
+    //   var parentNode, childNode;
 
-      if(elm.parentNode.getAttribute('data-kat-for')){
-        parentNode = elm.parentNode;
-        childNode = elm;
-        parentNode.setAttribute('key-active', true)
-        foundIndex = findIndex(parentNode);
-      }else if(elm.getAttribute('data-kat-for')){
-        elm.setAttribute('key-active', true)
-        foundIndex = findIndex(elm);
-      }else{
-        if(elm.tagName !== 'BODY'){
-          findParent(elm.parentNode);
-        }
-      }
+    //   if(elm.parentNode.getAttribute('data-kat-for')){
+    //     parentNode = elm.parentNode;
+    //     childNode = elm;
+    //     parentNode.setAttribute('key-active', true)
+    //     foundIndex = findIndex(parentNode);
+    //   }else if(elm.getAttribute('data-kat-for')){
+    //     elm.setAttribute('key-active', true)
+    //     foundIndex = findIndex(elm);
+    //   }else{
+    //     if(elm.tagName !== 'BODY'){
+    //       findParent(elm.parentNode);
+    //     }
+    //   }
 
-    }
+    // }
 
-    findParent(target);
+    // findParent(target);
 
     if(arg.trim() === 'index'){
-      newArgs['index'] = foundIndex
+      newArgs['index'] = itteration
     }else{
       let selector = arg.trim();
       if(selector.indexOf('.') > -1){
-        let data = this.component[viewName].data[topObj][foundIndex];
+        let data = this.component[viewName].data[topObj][itteration];
         newArgs['data'] = data[selector.split('.')[1]];
       }else{
         newArgs['data'] = this.component[viewName].data[selector];
@@ -362,6 +345,7 @@ export default class Katsu{
   * Set directives of node
   */
 
+  // Needs to be removed and moved into "Clean up" phase
   directives(node, child = null, viewName, type = 'default', index = null, topObj = null, domRoot){
     const virtualDom = this.virtualDom.bind(this);
     const updateDom = this.updateDom.bind(this);
@@ -398,214 +382,214 @@ export default class Katsu{
 
       [...node.attributes].forEach((attr) => {
 
-        switch(attr.name){
+        switch(attr.name){ 
 
           case 'data-kat-switch':
-            var switchCase = attr.value
-            let iou = document.createComment('element-removed');
-            let elms = node.childNodes;
+            // var switchCase = attr.value
+            // let iou = document.createComment('element-removed');
+            // let elms = node.childNodes;
 
-            const hasCaseAttribute = (attrs, data) => {
-              if(data){
-                for(let nodeAttr of attrs){
-                  if(nodeAttr.name === 'data-kat-case' && nodeAttr.value !== data){
-                    return true;
-                  }
-                }
-              }else{
-                for(let nodeAttr of attrs){
-                  if(nodeAttr.name === 'data-kat-default'){
-                    return true;
-                  }
-                }
-              }
-              return false;
-            }
+            // const hasCaseAttribute = (attrs, data) => {
+            //   if(data){
+            //     for(let nodeAttr of attrs){
+            //       if(nodeAttr.name === 'data-kat-case' && nodeAttr.value !== data){
+            //         return true;
+            //       }
+            //     }
+            //   }else{
+            //     for(let nodeAttr of attrs){
+            //       if(nodeAttr.name === 'data-kat-default'){
+            //         return true;
+            //       }
+            //     }
+            //   }
+            //   return false;
+            // }
 
-            const setCaseDirective = (node) => {
-              let data = getData(switchCase)
-              for(let i=0;i<elms.length;i++){
-                if(elms[i].nodeType === 1){
-                  if(hasCaseAttribute(elms[i].attributes, data, 'case')){
-                    node.childNodes[i].replaceWith(iou)
-                  }else{
-                    // console.log(node.childNodes[i])
-                    if(!node.childNodes[i].getAttribute('data-kat-default')) this.switchCase = true;
-                  };
-                }
-              }
-            }
+            // const setCaseDirective = (node) => {
+            //   let data = getData(switchCase)
+            //   for(let i=0;i<elms.length;i++){
+            //     if(elms[i].nodeType === 1){
+            //       if(hasCaseAttribute(elms[i].attributes, data, 'case')){
+            //         node.childNodes[i].replaceWith(iou)
+            //       }else{
+            //         // console.log(node.childNodes[i])
+            //         if(!node.childNodes[i].getAttribute('data-kat-default')) this.switchCase = true;
+            //       };
+            //     }
+            //   }
+            // }
 
-            const setDefaultDirective = (node) => {
-              node.replaceWith(iou)
-            }
+            // const setDefaultDirective = (node) => {
+            //   node.replaceWith(iou)
+            // }
 
-            setCaseDirective(node);
+            // setCaseDirective(node);
 
-            if(this.switchCase){
-              var defaultNode;
-              for(let i=0;i<elms.length;i++){
-                if(elms[i].nodeType === 1){
-                  if(hasCaseAttribute(elms[i].attributes, null)){
-                    node.childNodes[i].replaceWith(iou)
-                  }
-                }
-              }
-            }
+            // if(this.switchCase){
+            //   var defaultNode;
+            //   for(let i=0;i<elms.length;i++){
+            //     if(elms[i].nodeType === 1){
+            //       if(hasCaseAttribute(elms[i].attributes, null)){
+            //         node.childNodes[i].replaceWith(iou)
+            //       }
+            //     }
+            //   }
+            // }
 
           break;
 
           case 'data-kat-click':
 
-          var temp, selectorAttr, tempVal, count, currentElm;
+          // var temp, selectorAttr, tempVal, count, currentElm;
 
-          var _this = this.component;
+          // var _this = this.component;
 
-            setTimeout(() => {
+          //   setTimeout(() => {
 
-              const setClickEvent = (target, viewName) => {
-                const hasEvent = this.checkListener(target, 'click');
+          //     const setClickEvent = (target, viewName) => {
+          //       const hasEvent = this.checkListener(target, 'click');
 
-                // console.log('********************');
-                // console.log('hasEvent', target);
-                // console.log(viewName, attr.value.split('(')[0]);
+          //       // console.log('********************');
+          //       // console.log('hasEvent', target);
+          //       // console.log(viewName, attr.value.split('(')[0]);
 
-                const eventKey = this.component[viewName].events[attr.value.split('(')[0]].key;
-                const eventFunc = this.component[viewName].events[attr.value.split('(')[0]].func;
+          //       const eventKey = this.component[viewName].events[attr.value.split('(')[0]].key;
+          //       const eventFunc = this.component[viewName].events[attr.value.split('(')[0]].func;
 
-                this.eventMap[eventKey] = {
-                  component: viewName,
-                  target,
-                  func: eventFunc
-                };
+          //       this.eventMap[eventKey] = {
+          //         component: viewName,
+          //         target,
+          //         func: eventFunc
+          //       };
 
-                target.key = eventKey;
+          //       target.key = eventKey;
 
-                // console.log('KEY: ', target.key);
+          //       // console.log('KEY: ', target.key);
 
-                if(!hasEvent){
-                  target.addEventListener('click', (e) => {
-                    // console.log(e.target);
+          //       if(!hasEvent){
+          //         target.addEventListener('click', (e) => {
+          //           // console.log(e.target);
 
-                    setTimeout(() => {
-                      const regex = /(?<=\()(.*?)(?=\s*\))/g;
-                      const arg = attr.value.match(regex);
-                      // const func = this.component[viewName].events[attr.value.split('(')[0]].func;
-                      // console.log(this.component[viewName].events);
+          //           setTimeout(() => {
+          //             const regex = /(?<=\()(.*?)(?=\s*\))/g;
+          //             const arg = attr.value.match(regex);
+          //             // const func = this.component[viewName].events[attr.value.split('(')[0]].func;
+          //             // console.log(this.component[viewName].events);
 
-                      // console.log(target.key);
-                      // console.log(this.eventMap)
+          //             // console.log(target.key);
+          //             // console.log(this.eventMap)
 
-                      const { func, component } = this.eventMap[target.key];
+          //             const { func, component } = this.eventMap[target.key];
 
-                      let newArgs = {};
-                      const args = arg[0].split(',');
+          //             let newArgs = {};
+          //             const args = arg[0].split(',');
 
-                      for(let i = 0;i<args.length;i++){
-                        if(/\'(.*?)\'/g.test(args[i])){
-                          const val = args[i].trim();
-                          const trimed = val.substr(1, val.length-2);
+          //             for(let i = 0;i<args.length;i++){
+          //               if(/\'(.*?)\'/g.test(args[i])){
+          //                 const val = args[i].trim();
+          //                 const trimed = val.substr(1, val.length-2);
 
-                          newArgs['args'] = trimed;
-                        } else {
-                          if(getData(args[i])){
-                            newArgs.args = getData(args[i]);
-                          } else {
+          //                 newArgs['args'] = trimed;
+          //               } else {
+          //                 if(getData(args[i])){
+          //                   newArgs.args = getData(args[i]);
+          //                 } else {
                             
-                            // console.log(`######### ${component} ########`);
-                            // console.log(target);
-                            // console.log(topObj);
-                            // console.log(args);
-                            // console.log('##############################');
-                            newArgs = this.getEventValues(target, component, topObj, args[i]);
-                          }
-                        }
-                      }
+          //                   // console.log(`######### ${component} ########`);
+          //                   // console.log(target);
+          //                   // console.log(topObj);
+          //                   // console.log(args);
+          //                   // console.log('##############################');
+          //                   newArgs = this.getEventValues(target, component, topObj, args[i]);
+          //                 }
+          //               }
+          //             }
 
-                      try{
-                        if(func){
-                          if(Object.keys(newArgs)[0] === 'args'){
-                            func(newArgs.args);
-                          }else{
-                            func(newArgs);
-                          }
-                        }else{
-                          throw(`Cannot find event "${attr.value.split('(')[0]}"`)
-                        }
-                      }
-                      catch(e){
-                        console.error(e)
-                      }
+          //             try{
+          //               if(func){
+          //                 if(Object.keys(newArgs)[0] === 'args'){
+          //                   func(newArgs.args);
+          //                 }else{
+          //                   func(newArgs);
+          //                 }
+          //               }else{
+          //                 throw(`Cannot find event "${attr.value.split('(')[0]}"`)
+          //               }
+          //             }
+          //             catch(e){
+          //               console.error(e)
+          //             }
 
-                    },1);
-                  })
-                }
+          //           },1);
+          //         })
+          //       }
 
-              }
+          //     }
 
 
-              if(node.getAttribute("data-kat-click") === attr.value){
-                var elms;
-                if(type === 'for'){
-                  elms = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index];
-                  if(elms){
-                    var attrs = elms.getAttribute('data-kat-listening');
-                    const findNextValidElm = (attrs, elms, count) => {
-                      if(Array.isArray(attrs)){
-                        for(let attr of attrs){
-                          if(attr === 'click'){
-                            let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
-                            // let attrs = elms.getAttribute('data-kat-listening');
-                            if(elm){
-                              if(!elm.getAttribute('data-kat-listening')){
-                                currentElm = elm;
-                              }else{
-                                count += count;
-                                findNextValidElm(attrs, elm, count)
-                              }
-                            }
-                          }
-                        }
-                      }else{
-                        if(attrs === 'click'){
-                          let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
-                          let attrs = elms.getAttribute('data-kat-listening');
-                          if(elm){
-                            if(!elm.getAttribute('data-kat-listening')){
-                              currentElm = elm;
-                            }else{
-                              count += count;
-                              findNextValidElm(attrs, elm, count)
-                            }
-                          }
-                        }
-                      }
-                    }
+          //     if(node.getAttribute("data-kat-click") === attr.value){
+          //       var elms;
+          //       if(type === 'for'){
+          //         elms = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index];
+          //         if(elms){
+          //           var attrs = elms.getAttribute('data-kat-listening');
+          //           const findNextValidElm = (attrs, elms, count) => {
+          //             if(Array.isArray(attrs)){
+          //               for(let attr of attrs){
+          //                 if(attr === 'click'){
+          //                   let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
+          //                   // let attrs = elms.getAttribute('data-kat-listening');
+          //                   if(elm){
+          //                     if(!elm.getAttribute('data-kat-listening')){
+          //                       currentElm = elm;
+          //                     }else{
+          //                       count += count;
+          //                       findNextValidElm(attrs, elm, count)
+          //                     }
+          //                   }
+          //                 }
+          //               }
+          //             }else{
+          //               if(attrs === 'click'){
+          //                 let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
+          //                 let attrs = elms.getAttribute('data-kat-listening');
+          //                 if(elm){
+          //                   if(!elm.getAttribute('data-kat-listening')){
+          //                     currentElm = elm;
+          //                   }else{
+          //                     count += count;
+          //                     findNextValidElm(attrs, elm, count)
+          //                   }
+          //                 }
+          //               }
+          //             }
+          //           }
 
-                    if(attrs){
-                      const count = _this[viewName].localStore.store[topObj].length;
-                      findNextValidElm(attrs, elms, count);
-                      elms = currentElm
-                    }
-                    if(elms){
-                      setClickEvent(elms)
-                    }
+          //           if(attrs){
+          //             const count = _this[viewName].localStore.store[topObj].length;
+          //             findNextValidElm(attrs, elms, count);
+          //             elms = currentElm
+          //           }
+          //           if(elms){
+          //             setClickEvent(elms)
+          //           }
 
-                  }
+          //         }
 
-                }else{
-                  // const componentHTML = document.createRange().createContextualFragment(this.component[viewName].template);
+          //       }else{
+          //         // const componentHTML = document.createRange().createContextualFragment(this.component[viewName].template);
 
-                  elms = document.querySelectorAll(`[data-kat-click="${attr.value}"]`);
+          //         elms = document.querySelectorAll(`[data-kat-click="${attr.value}"]`);
 
-                  for(let elm of elms){
-                    // console.log(elm);
-                    setClickEvent(elm, viewName)
-                  }
-                }
-              }
+          //         for(let elm of elms){
+          //           // console.log(elm);
+          //           setClickEvent(elm, viewName)
+          //         }
+          //       }
+          //     }
 
-            },1)
+          //   },1)
 
           break;
 
@@ -614,231 +598,231 @@ export default class Katsu{
           var temp, selectorAttr, tempVal, count, currentElm;
           var _this = this.component;
 
-            setTimeout(() => {
-              const setKeyEvent = (target) => {
-                var hasEvent = this.checkListener(target, 'key');
-                if(!hasEvent){
+            // setTimeout(() => {
+            //   const setKeyEvent = (target) => {
+            //     var hasEvent = this.checkListener(target, 'key');
+            //     if(!hasEvent){
 
-                  target.addEventListener('keydown', (e) => {
-                    setTimeout(() => {
-                      let regex = /(?<=\()(.*?)(?=\s*\))/g;
-                      let arg = attr.value.match(regex);
-                      let func = this.component[viewName].events[attr.value.split('(')[0]].func;
-                      var newArgs = {};
-                      let args = arg[0].split(',');
+            //       target.addEventListener('keydown', (e) => {
+            //         setTimeout(() => {
+            //           let regex = /(?<=\()(.*?)(?=\s*\))/g;
+            //           let arg = attr.value.match(regex);
+            //           let func = this.component[viewName].events[attr.value.split('(')[0]].func;
+            //           var newArgs = {};
+            //           let args = arg[0].split(',');
 
-                      for(let i = 0;i<args.length;i++){
-                        if(/\'(.*?)\'/g.test(args[i])){
-                          let val = args[i].trim();
-                          let trimed = val.substr(1, val.length-2);
-                          newArgs['args'] = trimed;
-                        }else{
-                          newArgs = this.getEventValues(target, viewName, topObj, args, i)
-                        }
-                      }
+            //           for(let i = 0;i<args.length;i++){
+            //             if(/\'(.*?)\'/g.test(args[i])){
+            //               let val = args[i].trim();
+            //               let trimed = val.substr(1, val.length-2);
+            //               newArgs['args'] = trimed;
+            //             }else{
+            //               newArgs = this.getEventValues(target, viewName, topObj, args, i)
+            //             }
+            //           }
 
-                      try{
-                        if(func){
-                          func(newArgs);
-                        }else{
-                          throw(`Cannot find event ${attr.value.split('(')[0]}`)
-                        }
-                      }
-                      catch(e){
-                        console.error(e);
-                      }
+            //           try{
+            //             if(func){
+            //               func(newArgs);
+            //             }else{
+            //               throw(`Cannot find event ${attr.value.split('(')[0]}`)
+            //             }
+            //           }
+            //           catch(e){
+            //             console.error(e);
+            //           }
 
-                    },1)
-                  })
-                }
-              }
+            //         },1)
+            //       })
+            //     }
+            //   }
 
 
-              if(node.getAttribute("data-kat-key") === attr.value){
-                var elms;
-                if(type === 'for'){
-                  elms = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index];
-                  var attrs = elms.getAttribute('data-kat-listening');
-                  const findNextValidElm = (attrs, elms, count) => {
-                    if(Array.isArray(attrs)){
-                      for(let attr of attrs){
-                        if(attr === 'key'){
-                          let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
-                          if(elm){
-                            if(!elm.getAttribute('data-kat-listening')){
-                              currentElm = elm;
-                            }else{
-                              count += count;
-                              findNextValidElm(attrs, elm, count)
-                            }
-                          }
-                        }
-                      }
-                    }else{
-                      if(attrs === 'key'){
-                        let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
-                        let attrs = elms.getAttribute('data-kat-listening');
-                        if(elm){
-                          if(!elm.getAttribute('data-kat-listening')){
-                            currentElm = elm;
-                          }else{
-                            count += count;
-                            findNextValidElm(attrs, elm, count)
-                          }
-                        }
-                      }
-                    }
-                  }
+            //   if(node.getAttribute("data-kat-key") === attr.value){
+            //     var elms;
+            //     if(type === 'for'){
+            //       elms = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index];
+            //       var attrs = elms.getAttribute('data-kat-listening');
+            //       const findNextValidElm = (attrs, elms, count) => {
+            //         if(Array.isArray(attrs)){
+            //           for(let attr of attrs){
+            //             if(attr === 'key'){
+            //               let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
+            //               if(elm){
+            //                 if(!elm.getAttribute('data-kat-listening')){
+            //                   currentElm = elm;
+            //                 }else{
+            //                   count += count;
+            //                   findNextValidElm(attrs, elm, count)
+            //                 }
+            //               }
+            //             }
+            //           }
+            //         }else{
+            //           if(attrs === 'key'){
+            //             let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
+            //             let attrs = elms.getAttribute('data-kat-listening');
+            //             if(elm){
+            //               if(!elm.getAttribute('data-kat-listening')){
+            //                 currentElm = elm;
+            //               }else{
+            //                 count += count;
+            //                 findNextValidElm(attrs, elm, count)
+            //               }
+            //             }
+            //           }
+            //         }
+            //       }
 
-                  if(attrs){
-                    var count = _this[viewName].localStore.store[topObj].length;
-                    findNextValidElm(attrs, elms, count);
-                    elms = currentElm
-                  }
-                  if(elms){
-                    setKeyEvent(elms)
-                  }
+            //       if(attrs){
+            //         var count = _this[viewName].localStore.store[topObj].length;
+            //         findNextValidElm(attrs, elms, count);
+            //         elms = currentElm
+            //       }
+            //       if(elms){
+            //         setKeyEvent(elms)
+            //       }
 
-                }else{
-                  elms = document.querySelectorAll(`[data-kat-key="${attr.value}"]`);
-                  for(let elm of elms){
-                    setKeyEvent(elm)
-                  }
-                }
-              }
+            //     }else{
+            //       elms = document.querySelectorAll(`[data-kat-key="${attr.value}"]`);
+            //       for(let elm of elms){
+            //         setKeyEvent(elm)
+            //       }
+            //     }
+            //   }
 
-            },1)
+            // },1)
 
           break;
 
           // ##### Bind Directive #####
           case 'data-kat-bind':
 
-          var temp, selectorAttr, tempVal;
-          var checkListener = this.checkListener;
-          var _this = this.component;
+          // var temp, selectorAttr, tempVal;
+          // var checkListener = this.checkListener;
+          // var _this = this.component;
 
-            function setBindEvent(target, type){
+          //   function setBindEvent(target, type){
 
-                var hasEvent = checkListener(target, 'bind');
-                if(!hasEvent){
-                  var eventType;
-                  if(target.getAttribute('type') === 'text'){
-                    eventType = 'keydown';
-                  }else if(target.getAttribute('type') === 'checkbox'){
-                    eventType = 'click';
-                  }else{
-                    eventType = 'keydown';
-                  }
+          //       var hasEvent = checkListener(target, 'bind');
+          //       if(!hasEvent){
+          //         var eventType;
+          //         if(target.getAttribute('type') === 'text'){
+          //           eventType = 'keydown';
+          //         }else if(target.getAttribute('type') === 'checkbox'){
+          //           eventType = 'click';
+          //         }else{
+          //           eventType = 'keydown';
+          //         }
 
-                  target.addEventListener(eventType, function(e){
-                    var data;
-                      setTimeout(() => {
-                        var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
-                        let data = {};
+          //         target.addEventListener(eventType, function(e){
+          //           var data;
+          //             setTimeout(() => {
+          //               var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
+          //               let data = {};
 
-                        if(type !== 'for'){
-                          data[attr.value] = eventValue;
-                          _this[viewName].localStore.store[attr.value] = eventValue;
-                        }else{
-                          var dataArray = attr.value.split('.');
-                          var targetParent;
-                          var bladeData = _this[viewName].data
-                          var bladeDataPath;
-                          var obj;
-                          function getParent(elm){
-                            if(elm.parentNode.getAttribute('data-kat-for')){
-                              targetParent = elm.parentNode
-                            }else{
-                              getParent(elm.parentNode)
-                            }
-                          }
+          //               if(type !== 'for'){
+          //                 data[attr.value] = eventValue;
+          //                 _this[viewName].localStore.store[attr.value] = eventValue;
+          //               }else{
+          //                 var dataArray = attr.value.split('.');
+          //                 var targetParent;
+          //                 var bladeData = _this[viewName].data
+          //                 var bladeDataPath;
+          //                 var obj;
+          //                 function getParent(elm){
+          //                   if(elm.parentNode.getAttribute('data-kat-for')){
+          //                     targetParent = elm.parentNode
+          //                   }else{
+          //                     getParent(elm.parentNode)
+          //                   }
+          //                 }
 
-                          for(let i=0;i<dataArray.length;i++){
-                            if(i === 0){
-                              getParent(target);
-                              var baseProp = targetParent.getAttribute('data-kat-for').split(' ').pop();
-                              obj = bladeData[baseProp];
-                            }else{
-                              obj[index][dataArray[i]] = eventValue;
-                            }
-                          }
-                          data[topObj] = obj;
-                          _this[viewName].localStore.store[topObj] = data[topObj]
-                        }
-                      },1)
-                    })
+          //                 for(let i=0;i<dataArray.length;i++){
+          //                   if(i === 0){
+          //                     getParent(target);
+          //                     var baseProp = targetParent.getAttribute('data-kat-for').split(' ').pop();
+          //                     obj = bladeData[baseProp];
+          //                   }else{
+          //                     obj[index][dataArray[i]] = eventValue;
+          //                   }
+          //                 }
+          //                 data[topObj] = obj;
+          //                 _this[viewName].localStore.store[topObj] = data[topObj]
+          //               }
+          //             },1)
+          //           })
 
-                }
+          //       }
 
-            }
+          //   }
 
-            if(node.getAttribute("data-kat-bind") === attr.value){
+          //   if(node.getAttribute("data-kat-bind") === attr.value){
 
-              this.poller(`[data-kat-bind="${attr.value}"]`).then(res => {
-                var elms, count, currentElm;
+          //     this.poller(`[data-kat-bind="${attr.value}"]`).then(res => {
+          //       var elms, count, currentElm;
 
-                if(type === 'for'){
-                  elms = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index];
-                  if(elms){
-                    var attrs = elms.getAttribute('data-kat-listening');
-                    const findNextValidElm = (attrs, elms, count) => {
-                      if(Array.isArray(attrs)){
-                        for(let attr of attrs){
-                          if(attr === 'bind'){
-                            let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
-                            let attrs = elms.getAttribute('data-kat-listening');
-                            if(elm){
-                              if(!elm.getAttribute('data-kat-listening')){
-                                currentElm = elm;
-                              }else{
-                                count += count;
-                                findNextValidElm(attrs, elm, count)
-                              }
-                            }
-                          }
-                        }
-                      }else{
-                        if(attrs === 'bind'){
-                          let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
-                          let attrs = elms.getAttribute('data-kat-listening');
-                          if(elm){
-                            if(!elm.getAttribute('data-kat-listening')){
-                              currentElm = elm;
-                            }else{
-                              count += count;
-                              findNextValidElm(attrs, elm, count)
-                            }
-                          }
-                        }
-                      }
-                    }
+          //       if(type === 'for'){
+          //         elms = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index];
+          //         if(elms){
+          //           var attrs = elms.getAttribute('data-kat-listening');
+          //           const findNextValidElm = (attrs, elms, count) => {
+          //             if(Array.isArray(attrs)){
+          //               for(let attr of attrs){
+          //                 if(attr === 'bind'){
+          //                   let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
+          //                   let attrs = elms.getAttribute('data-kat-listening');
+          //                   if(elm){
+          //                     if(!elm.getAttribute('data-kat-listening')){
+          //                       currentElm = elm;
+          //                     }else{
+          //                       count += count;
+          //                       findNextValidElm(attrs, elm, count)
+          //                     }
+          //                   }
+          //                 }
+          //               }
+          //             }else{
+          //               if(attrs === 'bind'){
+          //                 let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
+          //                 let attrs = elms.getAttribute('data-kat-listening');
+          //                 if(elm){
+          //                   if(!elm.getAttribute('data-kat-listening')){
+          //                     currentElm = elm;
+          //                   }else{
+          //                     count += count;
+          //                     findNextValidElm(attrs, elm, count)
+          //                   }
+          //                 }
+          //               }
+          //             }
+          //           }
 
-                  }
+          //         }
 
-                  if(attrs){
-                    var count = _this[viewName].localStore.store[topObj].length;
-                    findNextValidElm(attrs, elms, count);
-                    elms = currentElm
-                  }
-                  if(elms){
-                    setBindEvent(elms, type)
-                  }
+          //         if(attrs){
+          //           var count = _this[viewName].localStore.store[topObj].length;
+          //           findNextValidElm(attrs, elms, count);
+          //           elms = currentElm
+          //         }
+          //         if(elms){
+          //           setBindEvent(elms, type)
+          //         }
 
-                }else{
-                  elms = document.querySelectorAll(`[data-kat-bind="${attr.value}"]`);
-                  for(let elm of elms){
+          //       }else{
+          //         elms = document.querySelectorAll(`[data-kat-bind="${attr.value}"]`);
+          //         for(let elm of elms){
 
-                    elm.value = _this[viewName].localStore.store[attr.value] || '';
+          //           elm.value = _this[viewName].localStore.store[attr.value] || '';
 
-                    setBindEvent(elm, type)
-                  }
-                }
+          //           setBindEvent(elm, type)
+          //         }
+          //       }
 
-            });
+          //   });
 
 
-          }
+          // }
 
           break;
 
@@ -847,256 +831,256 @@ export default class Katsu{
 
             var temp, selectorAttr, tempVal;
 
-            setTimeout(() => {
+            // setTimeout(() => {
 
-                const classBuilder = (target, data, type = 'default', index = null) => {
+            //     const classBuilder = (target, data, type = 'default', index = null) => {
 
-                  if(attr.value.indexOf('{') > -1){
-                    var stringObj = attr.value;
-                    stringObj = stringObj.substr(1, attr.value.length);
-                    stringObj = stringObj.substr(0, attr.value.length - 2);
-                    var classNameArray = [];
-                    var newClassNameArray = [];
-                    var bladeClasses = [];
-                    let objArray = stringObj.split(',');
+            //       if(attr.value.indexOf('{') > -1){
+            //         let stringObj = attr.value;
+            //         stringObj = stringObj.substring(1, attr.value.length);
+            //         stringObj = stringObj.substring(0, attr.value.length - 2);
+            //         let classNameArray = [];
+            //         let newClassNameArray = [];
+            //         let katsuClasses = [];
+            //         let objArray = stringObj.split(',');
 
-                    for(let items of objArray){
-                      let array = items.split(':')
-                      classNameArray.push(array);
-                    }
+            //         for(let items of objArray){
+            //           let array = items.split(':')
+            //           classNameArray.push(array);
+            //         }
 
-                    for(let item of classNameArray){
-                      let a, b;
-                      for(let i=0;i<item.length;i++){
-                        if(i === 0){
-                          a = item[i].trim()
-                        }else{
-                          b = item[i].trim()
-                        }
-                      }
+            //         for(let item of classNameArray){
+            //           let a, b;
+            //           for(let i=0;i<item.length;i++){
+            //             if(i === 0){
+            //               a = item[i].trim()
+            //             }else{
+            //               b = item[i].trim()
+            //             }
+            //           }
 
-                      bladeClasses.push(a)
-                      newClassNameArray.push(JSON.parse(`{"${a}": "${b}"}`));
-                    }
-
-
-                    target.classList.add(node.classList.value);
-                    var nameArray = [];
-                    for(let className of newClassNameArray){
-                      let key = Object.keys(className);
-                      let value = Object.values(className);
-                      let nodeClass = node.classList.value.split(' ');
-                      let targetClass = target.classList.value.split(' ');
-
-                      if(this.component[viewName].data[value]){
-                        nameArray.push(key[0])
-                      }
-
-                    }
-
-                    let nodeClass = node.classList.value.split(' ');
-                    let targetClass = target.classList.value.split(' ');
-                    let newClasses = nameArray.filter(item => {
-                      var classArray = [];
-                      for(let thisClass of bladeClasses){
-                        classArray.push(item !== thisClass);
-                      }
-                      return classArray;
-                    })
-
-                    let currentClasses = targetClass.filter(item => {
-                      for(let thisClass of nodeClass){
-                        return item !== thisClass;
-                      }
-                    })
-
-                    if(JSON.stringify(newClasses) !== JSON.stringify(currentClasses)){
-
-                      var removedClasses;
-
-                      if(newClasses.length > 0){
-                        removedClasses = currentClasses.filter(item => {
-                          for(let thisClass of newClasses){
-                            return item !== thisClass;
-                          }
-                        })
-                      }else{
-                        removedClasses = currentClasses
-                      }
-
-                      for(let item of removedClasses){
-                        target.classList.remove(item);
-                      }
-
-                      let targetClassArr = node.classList.value.split(', ');
-                      let classArray = targetClassArr.concat(newClasses);
-                      for(let className of classArray){
-                        target.classList.add(className);
-                      }
-
-                    }
-
-                  }else{
-
-                    let nodeClass = node.classList.value.split(' ');
-                    let targetClass = target.classList.value.split(' ');
-                    let newClasses = targetClass.filter(item => {
-                      for(let thisClass of nodeClass){
-                        return item !== thisClass;
-                      }
-                    })
-
-                    if(type === 'boolean'){
-
-                      for(let item of newClasses){
-                        target.classList.remove(item);
-                      }
-
-                      var stringObj = JSON.stringify(data);
-                      stringObj = stringObj.substr(1, stringObj.length);
-                      stringObj = stringObj.substr(0, stringObj.length - 1);
-                      var classNameArray = [];
-                      var newClassNameArray = [];
-                      let objArray = stringObj.split(',');
-                      var bladeClasses = [];
-
-                      for(let items of objArray){
-                        let array = items.split(':')
-
-                        classNameArray.push(array);
-                      }
-
-                      for(let item of classNameArray){
-                        let a, b;
-                        for(let i=0;i<item.length;i++){
-                          if(i === 0){
-                            a = item[i].trim()
-                          }else{
-                            b = item[i].trim()
-                          }
-                        }
-                        bladeClasses.push(a)
-                        newClassNameArray.push(JSON.parse(`{${a}: ${b}}`));
-                      }
-
-                      target.classList.add(node.classList.value);
-
-                      var nameArray = [];
-                      for(let className of newClassNameArray){
-                        let key = Object.keys(className);
-                        let value = Object.values(className);
-                        if(value[0]) nameArray.push(key[0])
-                      }
-
-                      let nodeClass = node.classList.value.split(' ');
-                      let targetClass = target.classList.value.split(' ');
-
-                      if(nameArray.length > 0){
-                        nameArray.forEach(item => {
-                          target.classList.add(item);
-                        })
-                      }
-
-                    }else if(JSON.stringify(newClasses) !== JSON.stringify([data])){
-
-                      for(let item of newClasses){
-                        target.classList.remove(item);
-                      }
-
-                      let classArray = [node.classList.value, data];
-                      for(let className of classArray){
-                        target.classList.add(className);
-                      }
-                    }
-
-                  }
-
-                }
+            //           katsuClasses.push(a)
+            //           newClassNameArray.push(JSON.parse(`{"${a}": "${b}"}`));
+            //         }
 
 
-                if(node.getAttribute("data-kat-class") === attr.value){
+            //         target.classList.add(node.classList.value);
+            //         var nameArray = [];
+            //         for(let className of newClassNameArray){
+            //           let key = Object.keys(className);
+            //           let value = Object.values(className);
+            //           let nodeClass = node.classList.value.split(' ');
+            //           let targetClass = target.classList.value.split(' ');
 
-                  var elms, data;
-                  data  = attr.value;
+            //           if(this.component[viewName].data[value]){
+            //             nameArray.push(key[0])
+            //           }
 
-                  if(type === 'for'){
-                    elms = document.querySelectorAll(`[data-kat-class="${attr.value}"]`)[index];
+            //         }
 
-                    let classSelector = data.split('.').pop();
-                    var bladeDataClass = data;
+            //         let nodeClass = node.classList.value.split(' ');
+            //         let targetClass = target.classList.value.split(' ');
+            //         let newClasses = nameArray.filter(item => {
+            //           var classArray = [];
+            //           for(let thisClass of bladeClasses){
+            //             classArray.push(item !== thisClass);
+            //           }
+            //           return classArray;
+            //         })
 
-                    // find value
-                    var bladeData = this.component[viewName].data;
-                    var dataArray = data.split('.')
-                    var path;
-                    var targetParent;
+            //         let currentClasses = targetClass.filter(item => {
+            //           for(let thisClass of nodeClass){
+            //             return item !== thisClass;
+            //           }
+            //         })
 
-                    function getParent(elm){
-                      if(elm.parentNode.getAttribute('data-kat-for')){
-                        targetParent = elm.parentNode
-                      }else{
-                        getParent(elm.parentNode)
-                      }
-                    }
+            //         if(JSON.stringify(newClasses) !== JSON.stringify(currentClasses)){
 
-                    var bladeDataClass;
+            //           var removedClasses;
 
-                    for(let i=0;i<dataArray.length;i++){
-                      if(i === 0){
-                        getParent(elms);
-                        var baseProp = targetParent.getAttribute('data-kat-for').split(' ').pop();
-                        let targetObj = bladeData[baseProp];
-                        bladeDataClass = targetObj[index];
-                      }else{
-                        bladeDataClass = bladeDataClass[dataArray[i]]
-                      }
-                    }
+            //           if(newClasses.length > 0){
+            //             removedClasses = currentClasses.filter(item => {
+            //               for(let thisClass of newClasses){
+            //                 return item !== thisClass;
+            //               }
+            //             })
+            //           }else{
+            //             removedClasses = currentClasses
+            //           }
 
-                    if(typeof bladeDataClass === 'boolean'){
-                      let thisSelector = attr.value.split('.').pop();
-                      let obj = {};
-                      obj[thisSelector] = bladeDataClass;
-                      classBuilder(elms, obj, 'boolean', index);
-                    }else{
-                      for(let elm of elms){
-                        if(!elm.classList.contains(data) && data) classBuilder(elm, data);
-                      }
-                    }
+            //           for(let item of removedClasses){
+            //             target.classList.remove(item);
+            //           }
 
-                  }else{
-                    elms = document.querySelectorAll(`[data-kat-class="${attr.value}"]`);
-                    for(let elm of elms){
-                      let obj = {};
-                      let data = getData(attr.value)
-                      obj[attr.value] = data;
+            //           let targetClassArr = node.classList.value.split(', ');
+            //           let classArray = targetClassArr.concat(newClasses);
+            //           for(let className of classArray){
+            //             target.classList.add(className);
+            //           }
 
-                      classBuilder(elm, data);
-                    }
-                  }
-                }
+            //         }
 
-            }, 1)
+            //       }else{
+
+            //         let nodeClass = node.classList.value.split(' ');
+            //         let targetClass = target.classList.value.split(' ');
+            //         let newClasses = targetClass.filter(item => {
+            //           for(let thisClass of nodeClass){
+            //             return item !== thisClass;
+            //           }
+            //         })
+
+            //         if(type === 'boolean'){
+
+            //           for(let item of newClasses){
+            //             target.classList.remove(item);
+            //           }
+
+            //           let stringObj = JSON.stringify(data);
+            //           stringObj = stringObj.substring(1, stringObj.length);
+            //           stringObj = stringObj.substring(0, stringObj.length - 1);
+            //           let classNameArray = [];
+            //           let newClassNameArray = [];
+            //           let objArray = stringObj.split(',');
+            //           let katsuClasses = [];
+
+            //           for(let items of objArray){
+            //             let array = items.split(':')
+
+            //             classNameArray.push(array);
+            //           }
+
+            //           for(let item of classNameArray){
+            //             let a, b;
+            //             for(let i=0;i<item.length;i++){
+            //               if(i === 0){
+            //                 a = item[i].trim()
+            //               }else{
+            //                 b = item[i].trim()
+            //               }
+            //             }
+            //             katsuClasses.push(a)
+            //             newClassNameArray.push(JSON.parse(`{${a}: ${b}}`));
+            //           }
+
+            //           target.classList.add(node.classList.value);
+
+            //           var nameArray = [];
+            //           for(let className of newClassNameArray){
+            //             let key = Object.keys(className);
+            //             let value = Object.values(className);
+            //             if(value[0]) nameArray.push(key[0])
+            //           }
+
+            //           const nodeClass = node.classList.value.split(' ');
+            //           const targetClass = target.classList.value.split(' ');
+
+            //           if(nameArray.length > 0){
+            //             nameArray.forEach(item => {
+            //               target.classList.add(item);
+            //             })
+            //           }
+
+            //         }else if(JSON.stringify(newClasses) !== JSON.stringify([data])){
+
+            //           for(let item of newClasses){
+            //             target.classList.remove(item);
+            //           }
+
+            //           let classArray = [node.classList.value, data];
+            //           for(let className of classArray){
+            //             target.classList.add(className);
+            //           }
+            //         }
+
+            //       }
+
+            //     }
+
+
+            //     if(node.getAttribute("data-kat-class") === attr.value){
+
+            //       var elms, data;
+            //       data  = attr.value;
+
+            //       if(type === 'for'){
+            //         elms = document.querySelectorAll(`[data-kat-class="${attr.value}"]`)[index];
+
+            //         let classSelector = data.split('.').pop();
+            //         var bladeDataClass = data;
+
+            //         // find value
+            //         var bladeData = this.component[viewName].data;
+            //         var dataArray = data.split('.')
+            //         var path;
+            //         var targetParent;
+
+            //         function getParent(elm){
+            //           if(elm.parentNode.getAttribute('data-kat-for')){
+            //             targetParent = elm.parentNode
+            //           }else{
+            //             getParent(elm.parentNode)
+            //           }
+            //         }
+
+            //         var bladeDataClass;
+
+            //         for(let i=0;i<dataArray.length;i++){
+            //           if(i === 0){
+            //             getParent(elms);
+            //             var baseProp = targetParent.getAttribute('data-kat-for').split(' ').pop();
+            //             let targetObj = bladeData[baseProp];
+            //             bladeDataClass = targetObj[index];
+            //           }else{
+            //             bladeDataClass = bladeDataClass[dataArray[i]]
+            //           }
+            //         }
+
+            //         if(typeof bladeDataClass === 'boolean'){
+            //           let thisSelector = attr.value.split('.').pop();
+            //           let obj = {};
+            //           obj[thisSelector] = bladeDataClass;
+            //           classBuilder(elms, obj, 'boolean', index);
+            //         }else{
+            //           for(let elm of elms){
+            //             if(!elm.classList.contains(data) && data) classBuilder(elm, data);
+            //           }
+            //         }
+
+            //       }else{
+            //         elms = document.querySelectorAll(`[data-kat-class="${attr.value}"]`);
+            //         for(let elm of elms){
+            //           let obj = {};
+            //           let data = getData(attr.value)
+            //           obj[attr.value] = data;
+
+            //           classBuilder(elm, data);
+            //         }
+            //       }
+            //     }
+
+            // }, 1)
 
 
           break;
           case 'data-kat-src':
-            var temp, selectorAttr, tempVal;
-            this.poller(`[data-kat-src="${attr.value}"]`).then(res => {
-              if(node.getAttribute("data-kat-src") === attr.value){
+            // var temp, selectorAttr, tempVal;
+            // this.poller(`[data-kat-src="${attr.value}"]`).then(res => {
+            //   if(node.getAttribute("data-kat-src") === attr.value){
 
-                var elms;
-                let data = getData(attr.value)
-                if(type === 'for'){
-                  elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`)[index];
-                  elms.setAttribute('src', data);
-                }else{
-                  elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`);
-                  for(let elm of elms){
-                    elm.setAttribute('src', data);
-                  }
-                }
-              }
-            })
+            //     var elms;
+            //     let data = getData(attr.value)
+            //     if(type === 'for'){
+            //       elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`)[index];
+            //       elms.setAttribute('src', data);
+            //     }else{
+            //       elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`);
+            //       for(let elm of elms){
+            //         elm.setAttribute('src', data);
+            //       }
+            //     }
+            //   }
+            // })
 
           break;
 
@@ -1107,18 +1091,20 @@ export default class Katsu{
   }
 
 
-// DOM Building
-
-  buildDom(dom, name, child, domRoot, root = "body", type = "default", index = null, topObj = null){
+// Virtual DOM Building
+  buildVDom(dom, name, child, domRoot, root = "body", type = "default", index = null, topObj = null){
 
     let domparser = new DOMParser();
     var htmlobject = index !== null ? domparser.parseFromString(dom, 'text/html').querySelectorAll(root)[0] : domparser.parseFromString(dom, 'text/html').querySelector(root);
 
-    const buildNodes = (thisnode) => {
+    const buildVNodes = (thisnode) => {
       // console.log('============///////////=============');
       // console.log(thisnode);
 
+
       return Array.prototype.map.call(thisnode.childNodes, (node => {
+        // console.log('==== NODE ====');
+        let options = {}; 
 
         // Check child elements for kat-for attributes. If there are, set them up,
         if(node.children){
@@ -1132,9 +1118,9 @@ export default class Katsu{
                   if(elmCount > 0){
 
                     let objName = childNodes[i].getAttribute('data-kat-for').split(' ')[2]
-                    for(let x=0;x<childNodes.length;x++){
-                      childNodes[x].setAttribute('data-index', `${objName}-${x}`)
-                    }
+                    // for(let x=0;x<childNodes.length;x++){
+                    //   childNodes[x].setAttribute('data-index', `${objName}-${x}`)
+                    // }
 
                     this.forLoop.push(childNodes[i].getAttribute('data-kat-for'))
                     this.forCount.push({
@@ -1159,113 +1145,225 @@ export default class Katsu{
         }
 
         if(node.nodeName !== '#text'){
-          if(node.getAttribute('data-index')){
-            index = parseInt(node.getAttribute('data-index').split('-')[1]);
-            type = 'for'
-            this.currentIteration = node.getAttribute('data-index').split('-')[0];
-          }else{
-            type = null
-          }
+          // if(node.getAttribute('data-index')){
+          //   index = parseInt(node.getAttribute('data-index').split('-')[1]);
+          //   type = 'for'
+          //   this.currentIteration = node.getAttribute('data-index').split('-')[0];
+          // }else{
+          //   type = null
+          // }
         }
 
         // Check for katsu-if attribute. If it is then set directive.
         if(node.attributes){
-          let selector = node.getAttribute(`data-kat-if`);
-            if(selector){
-              const getData = (data) => {
-                var dataPath;
-                let dataArray = data.split('.')
-                const findRoot = () => {}
 
-                // console.log(data)
-
-                if(data.indexOf('.') > -1){
-                  for(let i = 0;i<dataArray.length;i++){
-                    if(i === 0){
-                      if(this.component[name].data[this.currentIteration]){
-                        dataPath = this.component[name].data[this.currentIteration][index];
-                      }else{
-                        // For aternative solution
-                      }
-                    }else{
-                      dataPath = dataPath[dataArray[i]];
-                    }
+            //Check for If directive
+            node.childNodes.forEach((childNode) => {
+              if (childNode.nodeType !== 3) {
+                const isKatsuIf = childNode.getAttribute(`data-kat-if`);
+  
+                if (isKatsuIf) {
+                  const regex = /(?<=\()(.*?)(?=\s*\))/g;
+                  const arg = isKatsuIf.match(regex)[0];
+                  let data = null;
+      
+                  if (arg.includes('.')) {
+                    let baseData = this.component[name].data;
+                    arg.split('.').forEach((argData) => {
+                      baseData = baseData[argData]
+                    });
+                    data = baseData;
+                  } else {
+                    data = this.component[name].data[arg];
                   }
-                }else{
-                  dataPath = this.component[name].data[data];
-                }
 
-                return dataPath;
+                  if (!Boolean(data)) {
+                    node.removeChild(childNode);
+                  }
+      
+                  childNode.removeAttribute(`data-kat-if`);
+                }
+              }
+            });
+
+            // const isComponent = node.getAttribute(`data-kat-component`);
+            const isClickable = node.getAttribute(`data-kat-click`);
+            const isKeyable = node.getAttribute(`data-kat-key`);
+            const isBindable = node.getAttribute(`data-kat-bind`);
+            const isKatsuClass = node.getAttribute(`data-kat-class`);
+            const isKatsuSwitch = node.getAttribute(`data-kat-switch`);
+            const isKatsuCase = node.getAttribute(`data-kat-case`);
+            const isKatsuSrc = node.getAttribute(`data-kat-src`);
+            const isChangeable = node.getAttribute(`data-kat-change`);
+            const isEditable = node.getAttribute(`data-kat-editable`);
+
+
+            // if (isComponent) {
+              // console.log(node);
+              // node.removeAttribute('data-kat-component');
+            // }
+
+            if (isClickable) {
+              const regex = /(?<=\()(.*?)(?=\s*\))/g;
+              const args = isClickable.match(regex);
+              options.clickable = { 
+                event: isClickable.split('(')[0],
+                args
               }
 
-
-              const hasIfAttribute = (attrs, data) => {
-                for(let nodeAttr of attrs){
-                  if(nodeAttr.name === 'data-kat-if'){
-                    let data = getData(nodeAttr.value);
-
-                    if(typeof data === 'boolean'){
-                      if(!data){
-                        return true;
-                      }
-                    }else{
-
-                      let dataArray = nodeAttr.value.split(' ');
-                      let string;
-
-                      dataArray.forEach((val, i) => {
-
-                        if(getData(val)){
-                          dataArray.splice(i,1,getData(val));
-                        };
-                        
-                      });
-
-                      if(!eval(dataArray.join(' '))){
-                          return true;
-                        }
-
-                    }
-
-                  }
-                }
-                return false;
-              }
-              if(hasIfAttribute(node.attributes)){
-                let iou = document.createComment('element-hidden');
-                node = iou;
-              }else{
-                this.switchCase = true;
-              };
+              node.removeAttribute('data-kat-click');
             }
 
-            // Add Data key to component elements
-            let isComponent = node.getAttribute(`data-kat-component`);
+            if (isChangeable) {
+              const regex = /(?<=\()(.*?)(?=\s*\))/g;
+              const args = isChangeable.match(regex);
+              options.changeable = { 
+                event: isChangeable.split('(')[0],
+                args
+              }
 
-            if (isComponent) {
-              // console.log(this.prevComponent);
-              if (!this.prevComponent.hasOwnProperty(isComponent)) {
-                node.setAttribute(`data-component-name`, `${isComponent}-0`);
-                // node.setAttribute('id', `${isComponent}-0`);
-                // node.componentName = `${isComponent}-0`;
-                this.prevComponent[isComponent] = {
-                  name: isComponent,
-                  index: 0
+              node.removeAttribute('data-kat-change');
+            }
+
+            if (isKeyable) {
+              const regex = /(?<=\()(.*?)(?=\s*\))/g;
+              const args = isKeyable.match(regex);
+              options.clickable = { 
+                event: isKeyable.split('(')[0],
+                args
+              }
+
+              node.removeAttribute('data-kat-key');
+            }
+
+            if (isEditable) {
+              const regex = /(?<=\()(.*?)(?=\s*\))/g;
+              const args = isEditable.match(regex);
+
+              options.editable = {
+                event: isEditable.split('(')[0],
+                args
+              }
+
+              node.setAttribute('contentEditable', true);
+              node.removeAttribute('data-kat-editable');
+            }
+
+            if (isBindable) {}
+
+            if (isKatsuClass) {
+              const dataSelector = node.getAttribute(`data-kat-class`);
+              const isForElement = this.component[name].isFor;
+
+              const data = isForElement ? this.component[name].data[isForElement.forDataSelector][dataSelector] : this.component[name].data[dataSelector];
+              const dataType = typeof data;
+
+              switch (dataType) {
+                case 'string':
+                  node.classList.add(data)
+                  break;
+                case 'object':
+                  if (Array.isArray(data)) {
+                    node.classList.add(...data);
+                  } else {
+                    let activeClasses = [];
+                    Object.keys(data).map((katsuClass) => {
+                      if (Boolean(data[katsuClass])) {
+                        activeClasses.push(katsuClass)
+                      }
+                    });
+
+                    node.classList.add(...activeClasses);
+                  }
+                  
+                  break;
+              }
+
+              node.removeAttribute(`data-kat-class`);
+            }
+
+            if (isKatsuSwitch) {
+              const regex = /(?<=\()(.*?)(?=\s*\))/g;
+              const arg = isKatsuSwitch.match(regex)[0];
+
+              const removeNode = (node, target) => {
+                const traverseTree = (node, target) => {
+                  if (node.getAttribute('data-kat-case')) {
+                    if (node.getAttribute('data-kat-case') !== target) {
+                      node.setAttribute('remove-element', true);
+                    }
+                  }
+
+                  if (node.children) {
+                    for(let child of node.children) {
+                      traverseTree(child, target);
+                    }
+                  }
                 }
+                traverseTree(node, target);
+              }
+
+              let data = null;
+
+              if (arg.includes('.')) {
+                let baseData = this.component[name].data;
+                arg.split('.').forEach((argData) => {
+                  baseData = baseData[argData]
+                });
+                data = baseData;
               } else {
-                const index = this.prevComponent[isComponent].index + 1
-                node.setAttribute(`data-component-name`, `${isComponent}-${index}`);
-                // node.setAttribute('id', `${isComponent}-${index}`);
-                // node.componentName = `${isComponent}-${index}`;
-                this.prevComponent[isComponent].index = index;
+                data = this.component[name].data[arg];
               }
+
+              removeNode(node, data);
+
+              node.querySelectorAll('[remove-element]').forEach((removeElm) => {
+                removeElm.parentNode.removeChild(removeElm);
+              });
+
+              node.removeAttribute(`data-kat-switch`);
             }
 
-            // console.log(node.attributes, isComponent);
+            if (isKatsuCase) {
+              node.removeAttribute(`data-kat-case`);
+            }
+
+
+            if (isKatsuSrc) {
+              const regex = /(?<=\()(.*?)(?=\s*\))/g;
+              const arg = isKatsuSwitch.match(regex)[0];
+              let data = null;
+
+              if (arg.includes('.')) {
+                let baseData = this.component[name].data;
+                arg.split('.').forEach((argData) => {
+                  baseData = baseData[argData]
+                });
+                data = baseData;
+              } else {
+                data = this.component[name].data[arg];
+              }
+
+              if(this.component[name].isFor){
+                elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`)[index];
+                elms.setAttribute('src', data);
+              }else{
+                elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`);
+                for(let elm of elms){
+                  elm.setAttribute('src', data);
+                }
+              }
+
+            }
+
+            if (this.component[name].isFor) {
+              options.isFor = this.component[name].isFor;
+            }
           }
 
         // Run through the node's attributes and set directives.
-        this.directives(node, null, name, type, index, this.currentIteration, domRoot)
+        // this.directives is no longer required and needs removing, after all functions inside is moved out to their apporite stages
+        // this.directives(node, null, name, type, index, this.currentIteration, domRoot)
         let map, thisNode = node.textContent.trim(), emptyArray = [];
 
         map = {
@@ -1273,7 +1371,8 @@ export default class Katsu{
           content: node.childNodes && node.childNodes.length > 0 ? null : (/{{(.*?)}}/g.test(node.textContent) ? this.expressions(node.textContent, name) : node.textContent),
           attr: node.attributes ? this.buildAttributes(node.attributes) : (node.nodeType === 8 ? emptyArray : null),
           node: node,
-          children: buildNodes(node)
+          children: buildVNodes(node),
+          options,
         }
 
         return map
@@ -1282,17 +1381,13 @@ export default class Katsu{
 
     }
 
-    return buildNodes(htmlobject);
+    return buildVNodes(htmlobject);
 
   };
 
   virtualDom(dom, name, child = null, root){
-    // console.log('virtualDom');
-    // console.log(child)
-    this.prevComponent = {};
-    let builtDom = this.buildDom(dom, name, null, root);
+    let builtDom = this.buildVDom(dom, name, null, root);
     this.forLoop = [];
-    //this.prevComponent = {};
     return builtDom;
   }
 
@@ -1361,8 +1456,45 @@ export default class Katsu{
     });
   }
 
-  createElm(node){
+  removeOp($target, name){
+    $target.removeAttribute(name);
+  }
 
+  setOp($target, name, value){
+    $target.options[name] = value;
+  }
+
+  setOps(root, props){
+    Object.keys(props).forEach(name => {
+      let attr = name
+      let value = props[name];
+
+      this.setOp(root, attr, value)
+    })
+  }
+
+  updateOption(root, name, newVal, oldVal){
+    if (!newVal) {
+      this.removeAttr(root, name);
+    } else if (!oldVal || newVal !== oldVal) {
+      this.setOp(root, name, newVal);
+    }
+  }
+
+  updateOptions(root, newOps, oldOps){
+    let newProps = newOps ? newOps : {};
+    let oldProps = oldOps ? oldOps : {};
+    const props = Object.assign({}, newAttrs, oldAttrs);
+
+    Object.values(props).forEach((name, i) => {
+      let valName = Object.keys(name)[0];
+      let newVal = newProps[i] ? Object.values(newProps[i])[0] : null;
+      let oldVal = oldProps[i] ? Object.values(oldProps[i])[0] : null;
+      this.updateOption(root, valName, newVal, oldVal);
+    });
+  }
+
+  createElm(node){
     if(node){
       if(node.type === 'text'){
         return document.createTextNode(node.content);
@@ -1382,6 +1514,13 @@ export default class Katsu{
     if(node.attr){
       this.setAttrs($el, node.attr);
     }
+
+    if(node.options){
+      $el.options = {};
+      this.setOps($el, node.options);
+    }
+
+    // node.testAttr = 'xxxxxxxxxxxxxxxxxxxx';
 
     node.children.map(this.createElm.bind(this)).forEach($el.appendChild.bind($el));
     return $el;
@@ -1414,6 +1553,13 @@ export default class Katsu{
           }
 
         }
+
+        if (newNode.options !== null) {
+          if(newNode.options.length > 0){
+            this.updateOptions(root.childNodes[index], newNode.attr, oldNode.attr);
+          }
+        }
+        
       }
 
       const newLength = newNode.children.length;
@@ -1431,24 +1577,310 @@ export default class Katsu{
     }
   }
 
-  cleanDom(root){
-    const traverseTree = (node) => {
-      console.log('~~~~~~~ Tree Traversal ONE ~~~~~~~~');
-  
-      Object.values(node.attributes).map((attribute) => {
-        // console.log(attribute.name);
-        if (attribute.name === 'data-component-name') {
-          console.log('Is component', attribute.value);
-          node.componentName = attribute.value;
-          node.removeAttribute('data-component-name');
-          node.removeAttribute('data-kat-component');
+  setDomListeners(root){
+    const component = this.component;
+
+    const getData = (data, viewName, isFor) => {
+      var dataPath;
+      let dataArray = data.split('.')
+
+      // This is possible required
+      const findRoot = () => {}
+
+      let thisParentComponentData;
+
+      if (isFor) {
+        const parent = component[viewName].parent
+        const {dataSelector, itteration} = isFor;
+        thisParentComponentData = component[parent].data[dataSelector][itteration]
+      }
+
+      if(data.indexOf('.') > -1){
+        for(let i = 0;i<dataArray.length;i++){
+          if(i === 0){
+            if(component[viewName].data[topObj]){
+              dataPath = component[viewName].data[topObj][index];
+            }else{
+
+            }
+          }else{
+            dataPath = dataPath[dataArray[i]];
+          }
+
         }
-      });
-      
+      }else{
+        dataPath = thisParentComponentData ?? component[viewName].data[data];
+      }
+
+      return dataPath;
+    }
+
+    const setClickEvent = (target, event, arg, viewName, isFor = null) => {
+      const hasEvent = target.options.clickable.hasListener;
+
+      if(!hasEvent){
+        target.addEventListener('click', (e) => {
+          const func = component[viewName].events[event];
+          let newArgs = [];
+          const args = arg[0].split(',');
+
+          console.log(args);
+
+          for(let i = 0;i<args.length;i++){
+            if(/\'(.*?)\'/g.test(args[i])){
+              const val = args[i].trim();
+              const trimed = val.substr(1, val.length-2);
+
+              newArgs.push(trimed);
+            } else {
+              if(getData(args[i], viewName)){
+                newArgs.push(getData(args[i], viewName, isFor));
+              } else {
+                newArgs.push(this.getEventValues(target, viewName, isFor, args[i]));
+              }
+            }
+          }
+
+          console.log(newArgs);
+
+          let eventArgs = [];
+
+          eventArgs.push(e);
+
+          if (newArgs) {
+            eventArgs = [eventArgs[0], ...newArgs]
+          }
+          
+          try{
+            if(func){
+              func(...eventArgs);
+            }else{
+              throw(`Cannot find event ${event}`)
+            }
+          }
+          catch(e){
+            console.error(e)
+          }
+        });
+
+        target.options.clickable.hasListener = true;
+      }
+
+    }
+
+
+
+    const setKeyEvent = (target, event, arg, viewName, isFor = null) => {
+      const hasEvent = target.options.keyable.hasListener;
+      if(!hasEvent){
+        target.addEventListener('keydown', (e) => {
+            const func = component[viewName].events[event];
+            var newArgs = {};
+            let args = arg[0].split(',');
+
+            for(let i = 0;i<args.length;i++){
+              if(/\'(.*?)\'/g.test(args[i])){
+                let val = args[i].trim();
+                let trimed = val.substr(1, val.length-2);
+                newArgs['args'] = trimed;
+              }else{
+                newArgs = this.getEventValues(target, viewName, isFor, args[i]);
+              }
+            }
+
+            let eventArgs = [];
+
+            eventArgs.push(e);
   
-      if (node.children) {
-        for(let child of node.children) {
-          if (child.children) {
+            if (newArgs) {
+              eventArgs = [eventArgs[0], newArgs]
+            }
+            
+            try{
+              if(func){
+                func(...eventArgs);
+              }else{
+                throw(`Cannot find event ${event}`)
+              }
+            }
+            catch(e){
+              console.error(e);
+            }
+
+
+        })
+
+        target.options.keyable.hasListener = true;
+      }
+    }
+
+    const setBindEvent = (target, isfor) => {
+      const hasEvent = target.options.bindable.hasListener;
+      if(!hasEvent){
+        var eventType;
+        if(target.getAttribute('type') === 'text'){
+          eventType = 'keydown';
+        }else if(target.getAttribute('type') === 'checkbox'){
+          eventType = 'click';
+        }else{
+          eventType = 'keydown';
+        }
+
+        if (isFor) {
+          const parent = component[viewName].parent
+          const {dataSelector, itteration} = isFor;
+          thisParentComponentData = component[parent].data[dataSelector][itteration]
+        }
+
+        target.addEventListener(eventType, function(e){
+          const eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
+          let data = {};
+
+          if(!isfor){
+            data[attr.value] = eventValue;
+            _this[viewName].localStore.store[attr.value] = eventValue;
+          }else{
+            const dataArray = attr.value.split('.');
+            const katsuData = _this[viewName].data
+            let obj;
+            function getParent(elm){
+              if(isfor){
+                targetParent = elm.parentNode
+              }else{
+                getParent(elm.parentNode)
+              }
+            }
+
+            for(let i=0;i<dataArray.length;i++){
+              if(i === 0){
+                getParent(target);
+                obj = katsuData[dataSelector];
+              }else{
+                obj[index][dataArray[i]] = eventValue;
+              }
+            }
+            data[topObj] = obj;
+            _this[viewName].localStore.store[topObj] = data[topObj]
+          }
+
+        })
+        target.options.bindable.hasListener = true;
+      }
+
+    }
+
+    const setEditiableEvent = (target, event, arg, viewName, isFor = null) => {
+      const hasEvent = target.options.editable.hasListener;
+      if (!hasEvent) {
+        target.addEventListener('input', (e) => {
+          const func = component[viewName].events[event];
+          let newArgs = {};
+          const args = arg[0].split(',');
+
+          for(let i = 0;i<args.length;i++){
+            if(/\'(.*?)\'/g.test(args[i])){
+              let val = args[i].trim();
+              let trimed = val.substr(1, val.length-2);
+              newArgs['args'] = trimed;
+            }else{
+              newArgs = this.getEventValues(target, viewName, isFor, args[i]);
+            }
+          }
+
+          let eventArgs = [];
+
+          eventArgs.push(e);
+
+          if (newArgs) {
+            eventArgs = [eventArgs[0], newArgs]
+          }
+          
+          try{
+            if(func){
+              func(...eventArgs);
+            }else{
+              throw(`Cannot find event ${event}`)
+            }
+          }
+          catch(e){
+            console.error(e);
+          }
+        });
+      }
+
+      target.options.editable.hasListener = true;
+    }
+
+    const findParentComponent = (node) => {
+      let foundComponent = null;
+
+       const traverseUpTree = (node) => {
+        if (!foundComponent) {
+          if (node.options.component) {
+            foundComponent = node.options.component;
+          } else {
+            traverseUpTree(node.parentNode);
+          }
+        }
+       }
+
+      traverseUpTree(node)
+
+      return foundComponent;
+    };
+
+    const traverseTree = (node) => {
+      if (node.options) {
+        Object.keys(node.options).map((option) => {
+          let component = null;
+          let isFor = null;
+  
+          switch (option) {
+            case ('component'):
+              console.log('@@ component @@');
+              // node.componentName = option.value;
+              // console.log('Testing ', node.options.component);
+  
+              break;
+            case ('clickable'):
+              console.log('@@ clickable @@');
+              component = findParentComponent(node);
+              const clickable = node.options.clickable;
+              isFor = node.options.isFor;
+              setClickEvent(node, clickable.event, clickable.args, component, isFor);
+              break;
+            case ('keyable'):
+              console.log('@@ keyable @@');
+              component = findParentComponent(node);
+              const keyable = node.options.keyable;
+              isFor = node.options.isFor;
+              setKeyEvent(node, keyable.event, keyable.args, component, isFor);
+              break;
+            case ('bindable'):
+              console.log('@@ keyable @@');
+              component = findParentComponent(node);
+              const bindable = node.options.bindable;
+              isFor = node.options.isFor;
+              setBindEvent(node, isFor);
+              break;
+            case ('editable'):
+              console.log('@@ editable @@');
+              component = findParentComponent(node);
+              const editable = node.options.editable;
+              isFor = node.options.isFor;
+              setEditiableEvent(node, editable.event, editable.args, component, isFor);
+              break;
+          }
+        });
+      }
+
+      if (node.removeNode) {
+        node.parentNode.removeChild(node);
+      }
+
+      if (node.childNodes) {
+        for(let child of node.childNodes) {
+          if (child.childNodes) {
             traverseTree(child);
           }
         }
@@ -1477,6 +1909,8 @@ export default class Katsu{
 
     function wrap(o, type, fn, scope = []) {
 
+      console.log(o, type, fn);
+
       // Force update Proxy
 
         const handler = {
@@ -1491,7 +1925,6 @@ export default class Katsu{
           },
           set(target, prop, value, receiver) {
             //  fn('set value in scope: ', scope.concat(prop))
-
             var obj = {};
             let pathArray = scope.concat(prop);
 
@@ -1512,11 +1945,15 @@ export default class Katsu{
               obj[pathArray[0]] = value
             }
 
-            target[prop] = value
-            
-            // Update component's Data
-            updateData(obj, name, childComponent, type);
+            target[prop] = value;
 
+            if (typeof obj[pathArray[0]] === 'object') {
+              obj[pathArray[0]] = target
+              updateData(obj, name, childComponent, type);
+            } else {
+              // Update component's Data
+              updateData(obj, name, childComponent, type);
+            }
 
             return true
           }
@@ -1591,32 +2028,47 @@ export default class Katsu{
     }
   }
 
-  findNode(node, target){
+  findNode(node, name, target){
     let foundNode = null;
 
-    const traverseTree = (node, target) => {
-      if (node.componentName === target) {
-        foundNode = node;
-      }
-
-      if (!foundNode) {
-        if (node.children) {
-          for(let child of node.children) {
-            if (child.children && !foundNode) {
-              traverseTree(child, target);
+    const traverseTree = (node, name, target) => {
+      if (node.options) {
+        if (node.options[name] === target) {
+          foundNode = node;
+        }
+  
+        if (!foundNode) {
+          if (node.children) {
+            for(let child of node.children) {
+              if (child.children && !foundNode) {
+                traverseTree(child, name, target);
+              }
+            }
+          }
+        }
+      } else {
+        if (!foundNode) {
+          if (node.children) {
+            for(let child of node.children) {
+              if (child.children && !foundNode) {
+                traverseTree(child, name, target);
+              }
             }
           }
         }
       }
     }
 
-    traverseTree(node, target);
+
+    traverseTree(node, name, target);
 
     return foundNode;
   }
 
   updateData (data, target, child = null, type = 'data') {
     // // Set Data
+    this.prevComponent = {};
+
     if(type === 'data'){
       this.component[target].data = Object.assign({}, this.component[target].data, data);
     }else{
@@ -1635,11 +2087,10 @@ export default class Katsu{
       let targetElm;
 
       if (this.component[target].parent) {
-        targetElm = this.findNode(document.querySelector('#root'), target)
+        targetElm = this.findNode(document.querySelector('#root'), 'component', target)
       } else {
         targetElm = document.querySelector(this.component[target].root);
       }
-
   
       let domparser = new DOMParser();
   
@@ -1647,7 +2098,7 @@ export default class Katsu{
       // const htmlObject = domparser.parseFromString(root, 'text/html').querySelector('body').innerHTML;
 
       // const targetElm = this.component[target].parent ? document.querySelectorAll(`[data-kat-component="${targetName}"]`)[targetIndex] : document.querySelector(this.component[target].root);
-      
+
       const htmlContent = this.virtualDom(this.component[target].template, target, null, targetElm);
   
       this.component[target].vDomNew = htmlContent;
@@ -1656,6 +2107,9 @@ export default class Katsu{
   
       this.component[target].vDomPure = this.component[target].vDomNew;
     }
+
+    // Reestablish Dom Listeners
+    this.setDomListeners(document.querySelector('#root'));
   }
 
   createAdditionalModules() {
@@ -1666,18 +2120,15 @@ export default class Katsu{
       const forHtml = document.createRange().createContextualFragment(template);
       const existingForDirective = forHtml.querySelectorAll('[data-kat-for]');
 
-      existingForDirective.forEach((forDirective) => {
+      existingForDirective.forEach(forDirective => {
         const forInnerHtml = document.createRange().createContextualFragment(forDirective.innerHTML);
-        // console.log(forInnerHtml.querySelectorAll('[data-kat-component]'));
         const forDataSelector = forDirective.dataset.katFor.split(' of ')[1];
+        const forItemSelector = forDirective.dataset.katFor.split(' of ')[0];
         const arrayCount = this.component[name].data[forDataSelector].length;
 
 
        forInnerHtml.querySelectorAll('[data-kat-component]').forEach(comp => {
-        console.log(comp);
         for(let i = 0;i < arrayCount;i++) {
-          // console.log(i);
-          // console.log(comp.dataset.katComponent);
           const compName = comp.dataset.katComponent;
           let tempCompName = '';
   
@@ -1686,13 +2137,17 @@ export default class Katsu{
           }
   
           this.component[`${compName}-${i}`] = Object.assign({}, this.component[tempCompName]);
+          this.component[`${compName}-${i}`].isFor = {
+            itteration: i,
+            dataSelector: forDataSelector,
+            itemSelector: forItemSelector
+          }
+
           newComponents[`${compName}-${i}`] = Object.assign({}, this.component[tempCompName]);
 
           // Set Props, if any
           const propsRegex = /(?<=data\-kat\-props\:)(.*)(?=\=)/gm;
           const propsDataKeys = comp.outerHTML.match(propsRegex);
-          // console.log('@@@@@@@@@@@@');
-          // console.log(propsDataKeys);
   
           if (propsDataKeys) {
             propsDataKeys.forEach((key) => {
@@ -1728,11 +2183,7 @@ export default class Katsu{
         return{
           on: (name, func) => {
             const key = btoa(((Math.random() * 1234) * (Math.random() * 34)).toFixed());
-            this.eventMap[key] = {};
-            this.component[selector].events[name] = {};
-
-            this.component[selector].events[name].key = key
-            this.component[selector].events[name].func = func;
+            this.component[selector].events[name] = func;
           },
           receive: (name, func) => {
             this.component[selector].emit[name] = func;
@@ -1905,11 +2356,8 @@ export default class Katsu{
       const $event = (selector) => {
         return{
           on: (name, func) => {
-            const key = btoa(((Math.random() * 1234) * (Math.random() * 34)).toFixed());
-            this.eventMap[key] = {};
-            this.component[selector].events[name] = {};
-            this.component[selector].events[name].key = key
-            this.component[selector].events[name].func = func;
+            // const key = btoa(((Math.random() * 1234) * (Math.random() * 34)).toFixed());
+            this.component[selector].events[name] = func;
           },
           receive: (name, func) => {
             this.component[selector].emit[name] = func;
@@ -2010,8 +2458,6 @@ export default class Katsu{
     // Duplicate or create any additional component modules
     this.createAdditionalModules();
 
-    console.log(this.component);
-      
     // Generate View
     Object.keys(this.component).forEach(component => {
       const viewName = component;
@@ -2019,15 +2465,16 @@ export default class Katsu{
       let targetElm = null;
 
       if (!this.component[viewName].parent) {
-        targetElm = document.querySelector(target)
+        targetElm = document.querySelector(target);
+        targetElm.options = {};
+        targetElm.options.component = viewName;
       } else {
-        targetElm = document.querySelectorAll(`[data-kat-component="${viewName.split('-')[0]}"]`)[viewName.split('-')[1]];
+        targetElm = document.querySelector(`[data-kat-component="${viewName.split('-')[0]}"]`);
+        targetElm.removeAttribute('data-kat-component');
+        targetElm.options.component = viewName; 
       }
 
       const htmlContent = this.virtualDom(template, viewName, null, targetElm);
-
-      console.log('===== htmlContent =====');
-      console.log(htmlContent);
 
       this.component[viewName].vDomPure = htmlContent;
   
@@ -2040,8 +2487,6 @@ export default class Katsu{
 
     // Snapshot DOM and clean up
     this.dom = document.querySelector(target).outerHTML;
-
-    console.log('=== DOM ===')
 
     // Object.keys(this.component).forEach(component => {
     //   const viewName = component;
@@ -2057,7 +2502,7 @@ export default class Katsu{
     //   console.log(targetElm);
     //   console.log(this.component[viewName].vDomPure[0])
 
-    this.cleanDom(document.querySelector('#root'));
+    this.setDomListeners(document.querySelector('#root'));
     // });
     
   }

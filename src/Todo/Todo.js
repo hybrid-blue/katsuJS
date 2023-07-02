@@ -11,14 +11,41 @@ class Todo {
           "Make Dinner",
           "Finish KatsuJS alpha build",
           "Draw Things"
-        ]
+        ],
+        buttonStyle: [
+          'button--style-a',
+          'button--style-b',
+          'button--style-c',
+        ],
+        switch: 'one',
+        display: true
       }
     }
     controller($data, $event) {
       setTimeout(() => {
         $data.parent = 'I`m the Parent';
       }, 1000);
-      console.log($data);
+
+      $event.on('changeText', () => {
+        alert('Hello World!');
+      });
+
+      $event.on('changeStyle', (e, text, text2) => {
+        console.log(text, text2)
+        $data.buttonStyle[1] = 'button--style-d';
+      });
+
+      $event.on('changeCase', () => {
+        $data.switch = 'two';
+      });
+
+      $event.on('removeElm', () => {
+        $data.display = !$data.display;
+      });
+
+      $event.on('editElm', (e) => {
+        console.log(e);
+      });
     }
   }
 

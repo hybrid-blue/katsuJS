@@ -6,10 +6,35 @@
     <hr />
 
     <div data-kat-for="item of items">
-        {{item}}
+        <div data-kat-click="changeText()">{{item}}</div>
     </div>
 
     <hr />
 
-    Hi there, {{parent}}
+    <div data-kat-class="buttonStyle">Hi there, {{parent}}</div>
+    <button data-kat-click="changeStyle(switch, 'sadasdsa')">Change Style</button>
+
+    <br />
+
+    <div class="switch-element" data-kat-switch=(switch)>
+        <div class="switch-element-one" data-kat-case="one">ONE</div>
+        <div class="switch-element-two" data-kat-case="two">TWO</div>
+        <div class="switch-element-three" data-kat-case="three">THREE</div>
+    </div>
+
+    <button data-kat-click="changeCase()">Switch from ONE to TWO</button>
+
+
+        <div data-kat-if=(display)>
+            <p>Hello World!</p>
+        </div>
+
+        <button data-kat-click="removeElm()">Remove the Above</button>
+
+
+        <div data-kat-editable="editElm()">
+            <h1>Title</h1>
+            <p>sadsadsadsadasdads</p>
+        </div>
+
 </div>

@@ -1,12 +1,14 @@
 <div class="content-wrapper">
     <div class="component-wrapper" data-kat-for="item of items">
-        <div data-kat-component="TodoItem" data-kat-props:title=(item)></div>
+        <TodoItem data-kat-props:title=(item)></TodoItem>
+        <span>xxxxxx</span>
     </div>
 
     <hr />
 
     <li data-kat-for="item of items">
         <div style="display:inline-block;" data-kat-click="changeText()">{{item}}</div>
+        <span>x</span>
     </li>
 
     <hr />
@@ -25,16 +27,24 @@
     <button data-kat-click="changeCase()">Switch from ONE to TWO</button>
 
 
-        <div data-kat-if=(display)>
-            <p>Hello World!</p>
-        </div>
+    <div data-kat-if=(display)>
+        <p>Hello World!</p>
+    </div>
 
-        <button data-kat-click="removeElm()">Remove the Above</button>
+    <button data-kat-click="removeElm()">Remove the Above</button>
 
+    <hr />
 
-        <div data-kat-editable="editElm()">
-            <h1>Title</h1>
-            <p>sadsadsadsadasdads</p>
-        </div>
+    <select data-kat-change="editChange()" name="fruits">
+        <option value="apple-1">Apple</option>
+        <option value="lemon-2">Lemon</option>
+        <option value="cherry-3">Cherry</option>
+    </select>
 
+    <hr />
+
+    <div data-kat-editable="editElm()">
+        <h1>Title</h1>
+        <p>sadsadsadsadasdads</p>
+    </div>
 </div>

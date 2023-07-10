@@ -26,8 +26,8 @@ class Todo {
         $data.parent = 'I`m the Parent';
       }, 1000);
 
-      $event.on('changeText', () => {
-        alert('Hello World!');
+      $event.on('changeText', (e, index) => {
+        alert(`Hello World - ${index}`);
       });
 
       $event.on('changeStyle', (e, text, text2) => {
@@ -46,6 +46,15 @@ class Todo {
       $event.on('editElm', (e) => {
         console.log(e);
       });
+
+      $event.on('editChange', (e) => {
+        console.log(e.target.value);
+      });
+    }
+    components() {
+      return [
+        'TodoItem'
+      ]
     }
   }
 

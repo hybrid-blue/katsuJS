@@ -5,8 +5,8 @@ import { default as TodoItem }  from './TodoItem/TodoItem';
 
 const app = new Katsu();
 
-// app.init(() => {
-
-// });
+//Future plans
+// app.init(() => { });
+// app.createStore('pokedex', {});
 
 app.render([Todo, TodoItem], "#root");

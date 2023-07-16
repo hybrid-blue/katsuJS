@@ -21,10 +21,15 @@ class Todo {
         display: true
       }
     }
-    controller($data, $event) {
+    controller($data, $event, $watch) {
       setTimeout(() => {
         $data.parent = 'I`m the Parent';
       }, 1000);
+
+      $watch('display', (oldVal, newVal) => {
+        console.log('Display has been updated');
+        $data.switch = 'three';
+      })
 
       $event.on('changeText', (e, index) => {
         alert(`Hello World - ${index}`);
@@ -32,7 +37,7 @@ class Todo {
 
       $event.on('changeStyle', (e, text, text2) => {
         console.log(text, text2)
-        $data.buttonStyle[1] = 'button--style-d';
+        $data.buttonStyle[0] = 'button--style-d';
       });
 
       $event.on('changeCase', () => {

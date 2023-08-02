@@ -15,8 +15,6 @@ class TodoItem {
       }
     }
     controller($data, $props, $event) {
-      // console.log($props);
-      // console.log($data);
       $event.on('changeText', () => {
         $data.name = `${$props.title} David`;
       });

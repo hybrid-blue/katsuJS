@@ -6,6 +6,7 @@ class Todo {
     }
     data() {
       return {
+        pokemon: [],
         items: [
           "Do washing up",
           "Make Dinner",
@@ -18,10 +19,32 @@ class Todo {
           'button--style-c',
         ],
         switch: 'one',
-        display: true
+        display: true,
+        currentPokemon: null,
+        movies: [
+          {name: 'Fellowship fo the Ring', isFav: false},
+          {name: 'Two Towers', isFav: false},
+          {name: 'Return of the King', isFav: false},
+        ],
+        formInput: 'Hello'
       }
     }
-    controller($data, $event, $watch) {
+    controller($data, $event, $watch, $state, $global) {
+      // List rendering with Functional Data
+      $data.filteredMovies = () => $data.movies.filter((movie) => movie.isFav);
+
+      $event.on('changeFilteredData', (e, data) => {
+        $data.movies[data.index].isFav = e.target.checked;
+      });
+
+      $event.on('forceChange', () => {
+        $data.formInput = 'GoodBye';
+      });
+
+      $global.pinged(() => {
+        $data.pokemon = $state.getPokedex();
+      })
+
       setTimeout(() => {
         $data.parent = 'I`m the Parent';
       }, 1000);
@@ -31,13 +54,20 @@ class Todo {
         $data.switch = 'three';
       })
 
+      $event.on('getPokemon', (e) => {
+        console.log('Get Pokemon');
+        fetch(`https://pokeapi.co/api/v2/pokemon/${e.target.value}/`).then((res) => res.json()).then((json) => {
+          $data.currentPokemon = json;
+        })
+      });
+
       $event.on('changeText', (e, index) => {
+        console.log(index);
         alert(`Hello World - ${index}`);
       });
 
       $event.on('changeStyle', (e, text, text2) => {
-        console.log(text, text2)
-        $data.buttonStyle[0] = 'button--style-d';
+        $data.buttonStyle[1] = 'button--style-d';
       });
 
       $event.on('changeCase', () => {

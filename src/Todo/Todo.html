@@ -1,0 +1,91 @@
+<div class="content-wrapper">
+    <h2>Rendering components with For directive</h2>
+    <h3>Each Component has it's own event and data</h3>
+    <div class="component-wrapper" data-kat-for="item of items">
+        <TodoItem data-kat-props:title=(item)></TodoItem>
+    </div>
+
+    <hr />
+
+    <h2>List rendering with Functional Data</h2>
+
+    <div data-kat-for="movie of movies">
+        <input type="checkbox" name="movies" data-kat-bind:id="movie.name" data-kat-bind:value="movie.name" data-kat-click="changeFilteredData(index)" />
+        <label data-kat-bind:for="movie.name">{{movie.name}}</label>
+    </div>
+
+    <ul>
+        <li data-kat-for="movie of filteredMovies">
+            <div>{{movie.name}}</div>
+        </li>
+    </ul>
+
+    <hr />
+    <h2>Two-way data binding with Sync</h2>
+
+    <input type="text" data-kat-sync="formInput" value=""/>
+
+    <div>{{formInput}}</div>
+
+    <button data-kat-click="forceChange()">Force Change formInput</button>
+
+    <hr />
+
+    <h2>List rendering with Data</h2>
+
+    <ul>
+        <li data-kat-for="item of items">
+            <div style="display:inline-block;" data-kat-click="changeText()">{{item}}</div>
+        </li>
+    </ul>
+
+
+    <hr />
+
+    <h2>Changing class names with click directive</h2>
+
+    <div data-kat-class="buttonStyle">Hi there, {{parent}}</div>
+    <button data-kat-click="changeStyle(switch, 'sadasdsa')">Change Style</button>
+
+    <hr />
+
+    <h2>Dynamic rendering with Switch / Case directive</h2>
+
+    <div class="switch-element" data-kat-switch=(switch)>
+        <div class="switch-element-one" data-kat-case="one">ONE</div>
+        <div class="switch-element-two" data-kat-case="two">TWO</div>
+        <div class="switch-element-three" data-kat-case="three">THREE</div>
+    </div>
+
+    <button data-kat-click="changeCase()">Switch from ONE to TWO</button>
+
+    <hr />
+
+    <h2>Dynamic rendering with If / Else and For directives</h2>
+
+    <select data-kat-change="getPokemon()">
+        <option value="0">Choose a Pokemon</option>
+        <option style="text-transform: capitalize;" data-kat-for="poke of pokemon" data-kat-bind:value="poke.entry_number">{{poke.pokemon_species.name}}</option>
+    </select>
+
+    <div data-kat-if=(currentPokemon)>
+        <h3 style="text-transform: capitalize;">{{currentPokemon.name}}</h3>
+        <img data-kat-bind:src="currentPokemon.sprites.front_default" />
+        <div>
+            <h4>Type(s)</h4>
+            <div data-kat-for="pokeType of currentPokemon.types">{{pokeType.type.name}}</div>
+        </div>
+    </div>
+
+    <h3 data-kat-else="true">No Pokemon here...</h3>
+
+    <hr />
+
+    <!-- For Editable -->
+    <div data-kat-editable="editElm()">
+        <h1>Title</h1>
+        <p>sadsadsadsadasdads</p>
+    </div>
+
+
+</div>

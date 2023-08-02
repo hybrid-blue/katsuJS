@@ -1,7 +1,8 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
+const path = require('path');
 
 module.exports = {
+  mode: 'production',
   entry: './src/index.js',
   plugins: [
     new HtmlWebpackPlugin({
@@ -19,8 +20,10 @@ module.exports = {
     libraryTarget: 'umd',
   },
   devServer: {
-    contentBase: './dist',
-    historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
+    port: 8000,
   },
   externals: {
     lodash: {
@@ -42,6 +45,10 @@ module.exports = {
         use: {
           loader: "babel-loader"
         }
+      },
+      {
+        test: /\.html$/,
+        loader: "html-loader"
       }
     ],
   }

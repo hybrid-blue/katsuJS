@@ -6,6 +6,9 @@ KatsuJS is the go-to solution for front-end development using an minimal coding 
 
 This library is currently in InDev/Development stage and may contain errors and missing core features that are currently being address
 
+A wiki has been made to detail the current progress of this library.
+https://github.com/hybrid-blue/katsuJS/wiki
+
 ```javascript
 const app = new Katsu();
 ```

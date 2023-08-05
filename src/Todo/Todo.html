@@ -23,9 +23,9 @@
     <hr />
     <h2>Two-way data binding with Sync</h2>
 
-    <input type="text" data-kat-sync="formInput" value=""/>
+    <input type="text" data-kat-sync="formInput.name" value=""/>
 
-    <div>{{formInput}}</div>
+    <div>{{formInput.name}}</div>
 
     <button data-kat-click="forceChange()">Force Change formInput</button>
 
@@ -78,14 +78,5 @@
     </div>
 
     <h3 data-kat-else="true">No Pokemon here...</h3>
-
-    <hr />
-
-    <!-- For Editable -->
-    <div data-kat-editable="editElm()">
-        <h1>Title</h1>
-        <p>sadsadsadsadasdads</p>
-    </div>
-
 
 </div>

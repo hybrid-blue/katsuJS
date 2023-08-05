@@ -13,6 +13,7 @@ class Todo {
           "Finish KatsuJS alpha build",
           "Draw Things"
         ],
+        parent: 'Im the parent',
         buttonStyle: [
           'button--style-a',
           'button--style-b',
@@ -26,10 +27,32 @@ class Todo {
           {name: 'Two Towers', isFav: false},
           {name: 'Return of the King', isFav: false},
         ],
-        formInput: 'Hello'
+        formInput: { name: 'Hello' }
       }
     }
-    controller($data, $event, $watch, $state, $global) {
+    controller($data, $event, $watch, $state, $global, $preCreated, $created, $preUpdate, $updated) {
+      // $preCreated((name) => {
+      //   console.log('Component Before Created: ',name);
+      // });
+
+      // $created((name) => {
+      //   console.log('Component After Created: ', name);
+      // });
+
+      // $preUpdate(() => {
+      //   console.log('$preUpdate');
+      // });
+
+      $updated((obj) => {
+        console.log('$updated');
+        if (obj.currentPokemon) {
+          if (obj.currentPokemon.name === 'vaporeon') {
+            console.log('This is a Vaporeon!');
+            console.log(obj);
+          }
+        }
+      });
+
       // List rendering with Functional Data
       $data.filteredMovies = () => $data.movies.filter((movie) => movie.isFav);
 
@@ -38,16 +61,12 @@ class Todo {
       });
 
       $event.on('forceChange', () => {
-        $data.formInput = 'GoodBye';
+        $data.formInput.name = 'GoodBye';
       });
 
       $global.pinged(() => {
         $data.pokemon = $state.getPokedex();
       })
-
-      setTimeout(() => {
-        $data.parent = 'I`m the Parent';
-      }, 1000);
 
       $watch('display', (oldVal, newVal) => {
         console.log('Display has been updated');
@@ -62,7 +81,6 @@ class Todo {
       });
 
       $event.on('changeText', (e, index) => {
-        console.log(index);
         alert(`Hello World - ${index}`);
       });
 
@@ -72,18 +90,6 @@ class Todo {
 
       $event.on('changeCase', () => {
         $data.switch = 'two';
-      });
-
-      $event.on('removeElm', () => {
-        $data.display = !$data.display;
-      });
-
-      $event.on('editElm', (e) => {
-        console.log(e);
-      });
-
-      $event.on('editChange', (e) => {
-        console.log(e.target.value);
       });
     }
     components() {

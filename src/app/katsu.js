@@ -1207,11 +1207,6 @@ export default class Katsu{
               const isKatsuIf = thisNode.getAttribute(`data-kat-if`);
               const isKatsuElse = thisNode.getAttribute(`data-kat-else`);
 
-              if (isKatsuElse) {
-                console.log('####### isKatsuElse #######')
-                console.log(isKatsuElse);
-              }
-
               if (isKatsuIf) {
                 const regex = /(?<=\()(.*?)(?=\s*\))/g;
                 const arg = isKatsuIf.match(regex)[0];
@@ -1233,7 +1228,7 @@ export default class Katsu{
               }
 
               if (isKatsuElse) {
-                console.log('####### previousSibling #######');
+                // console.log('####### previousSibling #######');
                 if (thisNode.previousElementSibling.getAttribute(`data-kat-if`)) {
                   node.removeChild(thisNode);
                 }
@@ -1266,12 +1261,12 @@ export default class Katsu{
                   }
               
 
-                  console.log(forData);
+                  // console.log(forData);
                   // const data = this.component[name].dataProxy.store[forDataSelector];
 
 
                   if (forData || typeof forData === 'function') {
-                    console.log(`Is function: ${typeof forData === 'function'}`)
+                    // console.log(`Is function: ${typeof forData === 'function'}`)
                     let dataCount = forData.length;
                     const cloneElm = node.cloneNode(true);
   
@@ -1589,7 +1584,7 @@ export default class Katsu{
                 let bindValue;
 
                 if (katsuMeta.isFor) {
-                  console.log(`${katsuMeta.isFor.dataSelector}[${katsuMeta.isFor.itteration}].${propsDataValue.split('.').slice(1).join('.')}`);
+                  // console.log(`${katsuMeta.isFor.dataSelector}[${katsuMeta.isFor.itteration}].${propsDataValue.split('.').slice(1).join('.')}`);
                   bindValue = this.bindExpressions(`${katsuMeta.isFor.dataSelector}[${katsuMeta.isFor.itteration}].${propsDataValue.split('.').slice(1).join('.')}`, name);
                 } else {
                   bindValue = this.bindExpressions(propsDataValue, name);
@@ -1624,9 +1619,6 @@ export default class Katsu{
                     value: syncValue
                   }
                 }
-
-                console.log('@@@@@@@@@ isSyncable @@@@@@@@@@');
-                console.log(syncValue);
 
                 node.setAttribute('value', syncValue);
                 node.removeAttribute('data-kat-sync')
@@ -1742,17 +1734,7 @@ export default class Katsu{
   }
 
   setOp($target, name, value){
-    console.log(name);
     $target.katsuMeta[name] = value;
-
-    // Possibly remove
-    // if (name === 'syncable') {
-    //   console.log($target);
-    //   $target.value = value.value;
-
-    //   Object.assign($target, { value: 'xxxxxxxx' });
-    //   console.log($target.value);
-    // }
   }
 
   setOps(root, props){
@@ -2028,11 +2010,11 @@ export default class Katsu{
       const hasEvent = target.katsuMeta.syncable.hasListener;
 
       const {selector, component} = target.katsuMeta.syncable;
-      console.log('setSyncEvent')
+      // console.log('setSyncEvent')
 
       if(!hasEvent){
         target.addEventListener('input', (e) => {
-          console.log(e.target.value, component, ...selector.split('.'));
+          // console.log(e.target.value, component, ...selector.split('.'));
 
           // Deep nesting solution
           if (selector.indexOf('.') > -1) {
@@ -2185,7 +2167,7 @@ export default class Katsu{
   
           switch (option) {
             case ('component'):
-              console.log('@@ component @@');
+              // console.log('@@ component @@');
               // node.componentName = option.value;
               // console.log('Testing ', node.katsuMeta.component);
   
@@ -2320,18 +2302,26 @@ export default class Katsu{
 
             target[prop] = value;
 
-            console.log(pathArray);
+            // console.log(obj, value, target, prop);
 
-            if (typeof obj[pathArray[0]] === 'object') {
-              obj[pathArray[0]] = target;
+            // Data update is firing twice when using updating with sync directive
 
-              console.log('===== Update Data =====');
-              updateData(obj, name, childComponent, type);
+            if (typeof obj[pathArray] === 'object') {
+
+              // console.log('===== Update Data =====');
+              // console.log(target);
+
+              // obj[pathArray] = target;
+              // console.log(obj, pathArray, target)
+
+              // updateData(obj, name, null, type);
             } else {
               // Update component's Data
-              console.log('===== Update Data 2 =====');
-              updateData(obj, name, null, type);
+              // console.log('===== Update Data 2 =====');
+              // updateData(obj, name, null, type);
             }
+
+            updateData(obj, name, null, type);
 
             if (name) {
               if (oldVal !== newVal) {
@@ -2469,13 +2459,16 @@ export default class Katsu{
     this.prevComponent = {};
 
     if(type === 'data'){
-      this.component[target].data = Object.assign({}, this.component[target].data, data);
+      this.component[target].data = Object.assign({}, this.component[target].data, this.component[target].dataProxy.store);
     }else{
       this.state = Object.assign({}, this.state, data);
     }
 
     // if (this.component[target].initialized) {
     if (this.initialized) {
+      if (this.component[target].lifecycle.preUpdate) {
+        this.component[target].lifecycle.preUpdate(target);
+      }
       // let targetName;
       // let targetIndex;
   
@@ -2530,6 +2523,10 @@ export default class Katsu{
       this.updateDom(this.root, templateDom, this.currentDom);
       this.currentDom = templateDom;
       this.setDomListeners(this.root);
+
+      if (this.component[target].lifecycle.updated) {
+        this.component[target].lifecycle.updated(data)
+      }
     }
   }
 
@@ -2595,19 +2592,19 @@ export default class Katsu{
       const template = this.component[name].template;
       const components = this.component[name].components;
 
-      console.log(components);
+      // console.log(components);
 
       const forHtml = document.createRange().createContextualFragment(template);
-      console.log(this.component[name]);
+      // console.log(this.component[name]);
       const existingForDirective = forHtml.querySelectorAll('[data-kat-for]');
 
       existingForDirective.forEach(forDirective => {
-        console.log(forDirective);
+        // console.log(forDirective);
         const forInnerHtml = document.createRange().createContextualFragment(forDirective.innerHTML);
         const forDataSelector = forDirective.dataset.katFor.split(' of ')[1];
         const forItemSelector = forDirective.dataset.katFor.split(' of ')[0];
 
-        console.log(forDataSelector);
+        // console.log(forDataSelector);
 
         const forArray = this.bindExpressions(forDataSelector, name);
 
@@ -2663,7 +2660,9 @@ export default class Katsu{
       });
     });
 
-    Object.keys(this.component).forEach(component => {
+    const duplicatedComponents = Object.keys(this.component).filter((name) => this.component[name].isFor);
+
+    duplicatedComponents.forEach(component => {
       const viewName = component;
 
       this.component[viewName].initialized = false;
@@ -2736,6 +2735,30 @@ export default class Katsu{
           }
         }
       }
+
+      const $created = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.created = func;
+        }
+      }
+  
+      const $preUpdate = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.preUpdate = func;
+        }
+      }
+
+      const $updated = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.updated = func;
+        }
+      }
+
+      const $destroyed = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.destoryed = func;
+        }
+      }
   
       // const updateData = this.updateData.bind(this)
   
@@ -2744,8 +2767,9 @@ export default class Katsu{
       this.component[viewName].emit = {};
       this.component[viewName].watch = {};
       this.component[viewName].service = {};
-      this.component[viewName].dataProxy = {}
-      this.component[viewName].propsProxy = {}
+      this.component[viewName].dataProxy = {};
+      this.component[viewName].propsProxy = {};
+      this.component[viewName].lifecycle = {};
 
       // Set Component Data proxy
       this.setDataProxy('data', viewName);
@@ -2759,7 +2783,11 @@ export default class Katsu{
         $emit: $emit(viewName),
         $service: $service(viewName),
         $watch: $watch(viewName),
-        $global: $global(viewName)
+        $global: $global(viewName),
+        $created: $created(viewName),
+        $preUpdate: $preUpdate(viewName),
+        $updated: $updated(viewName),
+        $destroyed: $destroyed(viewName)
       }
 
       // Apply Controller
@@ -2785,7 +2813,9 @@ export default class Katsu{
 
       this.component[viewName].initialized = true;
 
-
+      if (this.component[viewName].lifecycle.preCreated) {
+        this.component[viewName].lifecycle.preCreated(viewName);
+      }
     });
   }
 
@@ -2820,7 +2850,7 @@ export default class Katsu{
 
           Object.keys(getters).forEach((getter) => {
             const func = getters[getter];
-            console.log('Getter', getter);
+            // console.log('Getter', getter);
             const augs = func.toString().match(regex)[0];
             const attr = [];
             const argsArray = augs.substr(1, augs.length - 2).split(',');
@@ -2841,12 +2871,12 @@ export default class Katsu{
 
           Object.keys(setters).forEach((setter) => {
             const func = setters[setter];
-            console.log('Setter', setter);
+            // console.log('Setter', setter);
             const augs = func.toString().match(regex)[0];
             const attr = [];
             const argsArray = augs.substr(1, augs.length - 2).split(',');
 
-            console.log(argsArray);
+            // console.log(argsArray);
 
             argsArray.forEach((item, i) => {
               if (paramsInit[item.trim()]) {
@@ -2895,8 +2925,6 @@ export default class Katsu{
       $global: globalMethods()
     }
 
-    console.log('==== FuncARGS ====')
-
     const regex = /(?<=\()(.*?)(?=\s*\))/g;
     const args = func.toString().match(regex);
 
@@ -2906,7 +2934,7 @@ export default class Katsu{
       }
     });
 
-    console.log(...funcArgs);
+    // console.log(...funcArgs);
 
 
     const extScript = () => {eval(func(...funcArgs))};
@@ -3069,7 +3097,38 @@ export default class Katsu{
           }
         }
       }
+
+      const $preCreated = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.preCreated = func;
+        }
+      }
+
+      const $created = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.created = func;
+        }
+      }
   
+      const $preUpdate = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.preUpdate = func;
+        }
+      }
+
+      const $updated = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.updated = func;
+        }
+      }
+
+      const $destroyed = (selector) => {
+        return (func) => {
+          this.component[selector].lifecycle.destoryed = func;
+        }
+      }
+
+
       // const updateData = this.updateData.bind(this)
   
       this.component[viewName].targetData = {};
@@ -3077,8 +3136,9 @@ export default class Katsu{
       this.component[viewName].watch = {};
       this.component[viewName].emit = {};
       this.component[viewName].service = {};
-      this.component[viewName].dataProxy = {}
-      this.component[viewName].propsProxy = {}
+      this.component[viewName].dataProxy = {};
+      this.component[viewName].propsProxy = {};
+      this.component[viewName].lifecycle = {};
 
       // Set Component Data proxy
       this.setDataProxy('data', viewName);
@@ -3093,12 +3153,17 @@ export default class Katsu{
         $service: $service(viewName),
         $watch: $watch(viewName),
         $global: $global(viewName),
+        $preCreated: $preCreated(viewName),
+        $created: $created(viewName),
+        $preUpdate: $preUpdate(viewName),
+        $updated: $updated(viewName),
+        $destroyed: $destroyed(viewName)
       }
 
       // Apply Controller
       const controller = this.component[viewName].controller || null;
 
-      if(controller){
+      if (controller) {
         const regex = /\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/g
         const augs = controller.toString().match(regex)[0];
         const attr = [];
@@ -3117,6 +3182,10 @@ export default class Katsu{
       }
 
       this.component[viewName].initialized = true;
+
+      if (this.component[viewName].lifecycle.preCreated) {
+        this.component[viewName].lifecycle.preCreated(viewName);
+      }
     });
 
     // Duplicate or create any additional component modules
@@ -3156,5 +3225,11 @@ export default class Katsu{
     this.setDomListeners(this.root);
 
     this.initialized = true;
+
+    Object.keys(this.component).forEach((component) => {
+      if (this.component[component].lifecycle.created) {
+        this.component[component].lifecycle.created(component);
+      }
+    });
   }
 }

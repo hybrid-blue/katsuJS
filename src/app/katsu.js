@@ -2495,6 +2495,10 @@ export default class Katsu{
 
       // console.log(this.component[target].template, target, null, targetElm);
 
+      // Does Component exist before update
+      const prevCurrentDom = domparser.parseFromString(this.currentDom, 'text/html').querySelector('body').innerHTML;
+      const prevExistingComponent = this.findNode(prevCurrentDom, 'component', target);
+
       Object.keys(this.component).forEach((component, index) => {
         const viewName = component;
         const template = this.component[viewName].template;
@@ -2522,10 +2526,33 @@ export default class Katsu{
 
       this.updateDom(this.root, templateDom, this.currentDom);
       this.currentDom = templateDom;
+
+
+      // Does Component exist after update
+      const currentDom = domparser.parseFromString(this.currentDom, 'text/html').querySelector('body').innerHTML;
+      const existingComponent = this.findNode(currentDom, 'component', target);
+
+      // If new component found after updateDom then fire Created lifecycle event
+      if (!prevExistingComponent && existingComponent) {
+        if (this.component[target].lifecycle.created) {
+          this.component[target].lifecycle.created();
+        }
+      }
+
+      // If component no longer exists after updateDom then fire Destoryed lifecycle event
+      if (prevExistingComponent && !existingComponent) {
+        if (this.component[target].lifecycle.destroyed) {
+          this.component[target].lifecycle.destroyed();
+        }
+      }
+
       this.setDomListeners(this.root);
 
-      if (this.component[target].lifecycle.updated) {
-        this.component[target].lifecycle.updated(data)
+      // If component exists before and after updateDom the fire Update lifecycle event
+      if (prevExistingComponent && existingComponent) {
+        if (this.component[target].lifecycle.updated) {
+          this.component[target].lifecycle.updated(data);
+        }
       }
     }
   }
@@ -2955,6 +2982,7 @@ export default class Katsu{
   /**
   * Render the component(s)
   */
+ // Refactor code to make it reusable
   render(modules, target) {
     let module = [];
     this.root = document.querySelector(target);
@@ -3189,6 +3217,7 @@ export default class Katsu{
     });
 
     // Duplicate or create any additional component modules
+    // This is to be moved in the Vitrual Dom Building stage of rendering
     this.createAdditionalModules();
     const domparser = new DOMParser();
 
@@ -3206,6 +3235,7 @@ export default class Katsu{
         const htmlObject = domparser.parseFromString(this.component[this.component[viewName].parent].vDomNew , 'text/html');
         targetElm = htmlObject.querySelectorAll(viewName.split('-')[0])[index - 1];
         this.component[viewName].target = viewName.split('-')[0];
+        console.log(viewName);
       }
 
       //Build Template
@@ -3231,5 +3261,7 @@ export default class Katsu{
         this.component[component].lifecycle.created(component);
       }
     });
+
+    console.log(this.component);
   }
 }

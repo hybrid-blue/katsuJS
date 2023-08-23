@@ -68,9 +68,8 @@ class Todo {
         $data.pokemon = $state.getPokedex();
       })
 
-      $watch('display', (oldVal, newVal) => {
-        console.log('Display has been updated');
-        $data.switch = 'three';
+      $event.on('toggleComponent', () => {
+        $data.display = !$data.display;
       })
 
       $event.on('getPokemon', (e) => {

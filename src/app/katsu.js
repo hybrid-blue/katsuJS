@@ -377,751 +377,6 @@ export default class Katsu{
 
   }
 
-  /**
-  * Set directives of node
-  */
-
-  // Needs to be removed and moved into "Clean up" phase
-  directives(node, child = null, viewName, type = 'default', index = null, topObj = null, domRoot){
-    const getData = (data) => {
-      var dataPath;
-      let dataArray = data.split('.')
-
-      // This is possible required
-      const findRoot = () => {}
-
-      if(data.indexOf('.') > -1){
-        for(let i = 0;i<dataArray.length;i++){
-          if(i === 0){
-            if(this.component[viewName].data[topObj]){
-              dataPath = this.component[viewName].data[topObj][index];
-            }else{
-
-            }
-          }else{
-            dataPath = dataPath[dataArray[i]];
-          }
-
-        }
-      }else{
-        dataPath = this.component[viewName].data[data];
-      }
-
-      return dataPath;
-    }
-
-    if(node.attributes){
-
-      [...node.attributes].forEach((attr) => {
-
-        switch(attr.name){ 
-
-          case 'data-kat-switch':
-            // var switchCase = attr.value
-            // let iou = document.createComment('element-removed');
-            // let elms = node.childNodes;
-
-            // const hasCaseAttribute = (attrs, data) => {
-            //   if(data){
-            //     for(let nodeAttr of attrs){
-            //       if(nodeAttr.name === 'data-kat-case' && nodeAttr.value !== data){
-            //         return true;
-            //       }
-            //     }
-            //   }else{
-            //     for(let nodeAttr of attrs){
-            //       if(nodeAttr.name === 'data-kat-default'){
-            //         return true;
-            //       }
-            //     }
-            //   }
-            //   return false;
-            // }
-
-            // const setCaseDirective = (node) => {
-            //   let data = getData(switchCase)
-            //   for(let i=0;i<elms.length;i++){
-            //     if(elms[i].nodeType === 1){
-            //       if(hasCaseAttribute(elms[i].attributes, data, 'case')){
-            //         node.childNodes[i].replaceWith(iou)
-            //       }else{
-            //         // console.log(node.childNodes[i])
-            //         if(!node.childNodes[i].getAttribute('data-kat-default')) this.switchCase = true;
-            //       };
-            //     }
-            //   }
-            // }
-
-            // const setDefaultDirective = (node) => {
-            //   node.replaceWith(iou)
-            // }
-
-            // setCaseDirective(node);
-
-            // if(this.switchCase){
-            //   var defaultNode;
-            //   for(let i=0;i<elms.length;i++){
-            //     if(elms[i].nodeType === 1){
-            //       if(hasCaseAttribute(elms[i].attributes, null)){
-            //         node.childNodes[i].replaceWith(iou)
-            //       }
-            //     }
-            //   }
-            // }
-
-          break;
-
-          case 'data-kat-click':
-
-          // var temp, selectorAttr, tempVal, count, currentElm;
-
-          // var _this = this.component;
-
-          //   setTimeout(() => {
-
-          //     const setClickEvent = (target, viewName) => {
-          //       const hasEvent = this.checkListener(target, 'click');
-
-          //       // console.log('********************');
-          //       // console.log('hasEvent', target);
-          //       // console.log(viewName, attr.value.split('(')[0]);
-
-          //       const eventKey = this.component[viewName].events[attr.value.split('(')[0]].key;
-          //       const eventFunc = this.component[viewName].events[attr.value.split('(')[0]].func;
-
-          //       this.eventMap[eventKey] = {
-          //         component: viewName,
-          //         target,
-          //         func: eventFunc
-          //       };
-
-          //       target.key = eventKey;
-
-          //       // console.log('KEY: ', target.key);
-
-          //       if(!hasEvent){
-          //         target.addEventListener('click', (e) => {
-          //           // console.log(e.target);
-
-          //           setTimeout(() => {
-          //             const regex = /(?<=\()(.*?)(?=\s*\))/g;
-          //             const arg = attr.value.match(regex);
-          //             // const func = this.component[viewName].events[attr.value.split('(')[0]].func;
-          //             // console.log(this.component[viewName].events);
-
-          //             // console.log(target.key);
-          //             // console.log(this.eventMap)
-
-          //             const { func, component } = this.eventMap[target.key];
-
-          //             let newArgs = {};
-          //             const args = arg[0].split(',');
-
-          //             for(let i = 0;i<args.length;i++){
-          //               if(/\'(.*?)\'/g.test(args[i])){
-          //                 const val = args[i].trim();
-          //                 const trimed = val.substr(1, val.length-2);
-
-          //                 newArgs['args'] = trimed;
-          //               } else {
-          //                 if(getData(args[i])){
-          //                   newArgs.args = getData(args[i]);
-          //                 } else {
-                            
-          //                   // console.log(`######### ${component} ########`);
-          //                   // console.log(target);
-          //                   // console.log(topObj);
-          //                   // console.log(args);
-          //                   // console.log('##############################');
-          //                   newArgs = this.getEventValues(target, component, topObj, args[i]);
-          //                 }
-          //               }
-          //             }
-
-          //             try{
-          //               if(func){
-          //                 if(Object.keys(newArgs)[0] === 'args'){
-          //                   func(newArgs.args);
-          //                 }else{
-          //                   func(newArgs);
-          //                 }
-          //               }else{
-          //                 throw(`Cannot find event "${attr.value.split('(')[0]}"`)
-          //               }
-          //             }
-          //             catch(e){
-          //               console.error(e)
-          //             }
-
-          //           },1);
-          //         })
-          //       }
-
-          //     }
-
-
-          //     if(node.getAttribute("data-kat-click") === attr.value){
-          //       var elms;
-          //       if(type === 'for'){
-          //         elms = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index];
-          //         if(elms){
-          //           var attrs = elms.getAttribute('data-kat-listening');
-          //           const findNextValidElm = (attrs, elms, count) => {
-          //             if(Array.isArray(attrs)){
-          //               for(let attr of attrs){
-          //                 if(attr === 'click'){
-          //                   let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
-          //                   // let attrs = elms.getAttribute('data-kat-listening');
-          //                   if(elm){
-          //                     if(!elm.getAttribute('data-kat-listening')){
-          //                       currentElm = elm;
-          //                     }else{
-          //                       count += count;
-          //                       findNextValidElm(attrs, elm, count)
-          //                     }
-          //                   }
-          //                 }
-          //               }
-          //             }else{
-          //               if(attrs === 'click'){
-          //                 let elm = domRoot.querySelectorAll(`[data-kat-click="${attr.value}"]`)[index + count];
-          //                 let attrs = elms.getAttribute('data-kat-listening');
-          //                 if(elm){
-          //                   if(!elm.getAttribute('data-kat-listening')){
-          //                     currentElm = elm;
-          //                   }else{
-          //                     count += count;
-          //                     findNextValidElm(attrs, elm, count)
-          //                   }
-          //                 }
-          //               }
-          //             }
-          //           }
-
-          //           if(attrs){
-          //             const count = _this[viewName].localStore.store[topObj].length;
-          //             findNextValidElm(attrs, elms, count);
-          //             elms = currentElm
-          //           }
-          //           if(elms){
-          //             setClickEvent(elms)
-          //           }
-
-          //         }
-
-          //       }else{
-          //         // const componentHTML = document.createRange().createContextualFragment(this.component[viewName].template);
-
-          //         elms = document.querySelectorAll(`[data-kat-click="${attr.value}"]`);
-
-          //         for(let elm of elms){
-          //           // console.log(elm);
-          //           setClickEvent(elm, viewName)
-          //         }
-          //       }
-          //     }
-
-          //   },1)
-
-          break;
-
-          case 'data-kat-key':
-
-          var temp, selectorAttr, tempVal, count, currentElm;
-          var _this = this.component;
-
-            // setTimeout(() => {
-            //   const setKeyEvent = (target) => {
-            //     var hasEvent = this.checkListener(target, 'key');
-            //     if(!hasEvent){
-
-            //       target.addEventListener('keydown', (e) => {
-            //         setTimeout(() => {
-            //           let regex = /(?<=\()(.*?)(?=\s*\))/g;
-            //           let arg = attr.value.match(regex);
-            //           let func = this.component[viewName].events[attr.value.split('(')[0]].func;
-            //           var newArgs = {};
-            //           let args = arg[0].split(',');
-
-            //           for(let i = 0;i<args.length;i++){
-            //             if(/\'(.*?)\'/g.test(args[i])){
-            //               let val = args[i].trim();
-            //               let trimed = val.substr(1, val.length-2);
-            //               newArgs['args'] = trimed;
-            //             }else{
-            //               newArgs = this.getEventValues(target, viewName, topObj, args, i)
-            //             }
-            //           }
-
-            //           try{
-            //             if(func){
-            //               func(newArgs);
-            //             }else{
-            //               throw(`Cannot find event ${attr.value.split('(')[0]}`)
-            //             }
-            //           }
-            //           catch(e){
-            //             console.error(e);
-            //           }
-
-            //         },1)
-            //       })
-            //     }
-            //   }
-
-
-            //   if(node.getAttribute("data-kat-key") === attr.value){
-            //     var elms;
-            //     if(type === 'for'){
-            //       elms = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index];
-            //       var attrs = elms.getAttribute('data-kat-listening');
-            //       const findNextValidElm = (attrs, elms, count) => {
-            //         if(Array.isArray(attrs)){
-            //           for(let attr of attrs){
-            //             if(attr === 'key'){
-            //               let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
-            //               if(elm){
-            //                 if(!elm.getAttribute('data-kat-listening')){
-            //                   currentElm = elm;
-            //                 }else{
-            //                   count += count;
-            //                   findNextValidElm(attrs, elm, count)
-            //                 }
-            //               }
-            //             }
-            //           }
-            //         }else{
-            //           if(attrs === 'key'){
-            //             let elm = domRoot.querySelectorAll(`[data-kat-key="${attr.value}"]`)[index + count];
-            //             let attrs = elms.getAttribute('data-kat-listening');
-            //             if(elm){
-            //               if(!elm.getAttribute('data-kat-listening')){
-            //                 currentElm = elm;
-            //               }else{
-            //                 count += count;
-            //                 findNextValidElm(attrs, elm, count)
-            //               }
-            //             }
-            //           }
-            //         }
-            //       }
-
-            //       if(attrs){
-            //         var count = _this[viewName].localStore.store[topObj].length;
-            //         findNextValidElm(attrs, elms, count);
-            //         elms = currentElm
-            //       }
-            //       if(elms){
-            //         setKeyEvent(elms)
-            //       }
-
-            //     }else{
-            //       elms = document.querySelectorAll(`[data-kat-key="${attr.value}"]`);
-            //       for(let elm of elms){
-            //         setKeyEvent(elm)
-            //       }
-            //     }
-            //   }
-
-            // },1)
-
-          break;
-
-          // ##### Bind Directive #####
-          case 'data-kat-bind':
-
-          // var temp, selectorAttr, tempVal;
-          // var checkListener = this.checkListener;
-          // var _this = this.component;
-
-          //   function setBindEvent(target, type){
-
-          //       var hasEvent = checkListener(target, 'bind');
-          //       if(!hasEvent){
-          //         var eventType;
-          //         if(target.getAttribute('type') === 'text'){
-          //           eventType = 'keydown';
-          //         }else if(target.getAttribute('type') === 'checkbox'){
-          //           eventType = 'click';
-          //         }else{
-          //           eventType = 'keydown';
-          //         }
-
-          //         target.addEventListener(eventType, function(e){
-          //           var data;
-          //             setTimeout(() => {
-          //               var eventValue = eventType === 'keydown' ? e.target.value : e.target.checked;
-          //               let data = {};
-
-          //               if(type !== 'for'){
-          //                 data[attr.value] = eventValue;
-          //                 _this[viewName].localStore.store[attr.value] = eventValue;
-          //               }else{
-          //                 var dataArray = attr.value.split('.');
-          //                 var targetParent;
-          //                 var bladeData = _this[viewName].data
-          //                 var bladeDataPath;
-          //                 var obj;
-          //                 function getParent(elm){
-          //                   if(elm.parentNode.getAttribute('data-kat-for')){
-          //                     targetParent = elm.parentNode
-          //                   }else{
-          //                     getParent(elm.parentNode)
-          //                   }
-          //                 }
-
-          //                 for(let i=0;i<dataArray.length;i++){
-          //                   if(i === 0){
-          //                     getParent(target);
-          //                     var baseProp = targetParent.getAttribute('data-kat-for').split(' ').pop();
-          //                     obj = bladeData[baseProp];
-          //                   }else{
-          //                     obj[index][dataArray[i]] = eventValue;
-          //                   }
-          //                 }
-          //                 data[topObj] = obj;
-          //                 _this[viewName].localStore.store[topObj] = data[topObj]
-          //               }
-          //             },1)
-          //           })
-
-          //       }
-
-          //   }
-
-          //   if(node.getAttribute("data-kat-bind") === attr.value){
-
-          //     this.poller(`[data-kat-bind="${attr.value}"]`).then(res => {
-          //       var elms, count, currentElm;
-
-          //       if(type === 'for'){
-          //         elms = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index];
-          //         if(elms){
-          //           var attrs = elms.getAttribute('data-kat-listening');
-          //           const findNextValidElm = (attrs, elms, count) => {
-          //             if(Array.isArray(attrs)){
-          //               for(let attr of attrs){
-          //                 if(attr === 'bind'){
-          //                   let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
-          //                   let attrs = elms.getAttribute('data-kat-listening');
-          //                   if(elm){
-          //                     if(!elm.getAttribute('data-kat-listening')){
-          //                       currentElm = elm;
-          //                     }else{
-          //                       count += count;
-          //                       findNextValidElm(attrs, elm, count)
-          //                     }
-          //                   }
-          //                 }
-          //               }
-          //             }else{
-          //               if(attrs === 'bind'){
-          //                 let elm = domRoot.querySelectorAll(`[data-kat-bind="${attr.value}"]`)[index + count];
-          //                 let attrs = elms.getAttribute('data-kat-listening');
-          //                 if(elm){
-          //                   if(!elm.getAttribute('data-kat-listening')){
-          //                     currentElm = elm;
-          //                   }else{
-          //                     count += count;
-          //                     findNextValidElm(attrs, elm, count)
-          //                   }
-          //                 }
-          //               }
-          //             }
-          //           }
-
-          //         }
-
-          //         if(attrs){
-          //           var count = _this[viewName].localStore.store[topObj].length;
-          //           findNextValidElm(attrs, elms, count);
-          //           elms = currentElm
-          //         }
-          //         if(elms){
-          //           setBindEvent(elms, type)
-          //         }
-
-          //       }else{
-          //         elms = document.querySelectorAll(`[data-kat-bind="${attr.value}"]`);
-          //         for(let elm of elms){
-
-          //           elm.value = _this[viewName].localStore.store[attr.value] || '';
-
-          //           setBindEvent(elm, type)
-          //         }
-          //       }
-
-          //   });
-
-
-          // }
-
-          break;
-
-          // ##### Class Directive #####
-          case 'data-kat-class':
-
-            var temp, selectorAttr, tempVal;
-
-            // setTimeout(() => {
-
-            //     const classBuilder = (target, data, type = 'default', index = null) => {
-
-            //       if(attr.value.indexOf('{') > -1){
-            //         let stringObj = attr.value;
-            //         stringObj = stringObj.substring(1, attr.value.length);
-            //         stringObj = stringObj.substring(0, attr.value.length - 2);
-            //         let classNameArray = [];
-            //         let newClassNameArray = [];
-            //         let katsuClasses = [];
-            //         let objArray = stringObj.split(',');
-
-            //         for(let items of objArray){
-            //           let array = items.split(':')
-            //           classNameArray.push(array);
-            //         }
-
-            //         for(let item of classNameArray){
-            //           let a, b;
-            //           for(let i=0;i<item.length;i++){
-            //             if(i === 0){
-            //               a = item[i].trim()
-            //             }else{
-            //               b = item[i].trim()
-            //             }
-            //           }
-
-            //           katsuClasses.push(a)
-            //           newClassNameArray.push(JSON.parse(`{"${a}": "${b}"}`));
-            //         }
-
-
-            //         target.classList.add(node.classList.value);
-            //         var nameArray = [];
-            //         for(let className of newClassNameArray){
-            //           let key = Object.keys(className);
-            //           let value = Object.values(className);
-            //           let nodeClass = node.classList.value.split(' ');
-            //           let targetClass = target.classList.value.split(' ');
-
-            //           if(this.component[viewName].data[value]){
-            //             nameArray.push(key[0])
-            //           }
-
-            //         }
-
-            //         let nodeClass = node.classList.value.split(' ');
-            //         let targetClass = target.classList.value.split(' ');
-            //         let newClasses = nameArray.filter(item => {
-            //           var classArray = [];
-            //           for(let thisClass of bladeClasses){
-            //             classArray.push(item !== thisClass);
-            //           }
-            //           return classArray;
-            //         })
-
-            //         let currentClasses = targetClass.filter(item => {
-            //           for(let thisClass of nodeClass){
-            //             return item !== thisClass;
-            //           }
-            //         })
-
-            //         if(JSON.stringify(newClasses) !== JSON.stringify(currentClasses)){
-
-            //           var removedClasses;
-
-            //           if(newClasses.length > 0){
-            //             removedClasses = currentClasses.filter(item => {
-            //               for(let thisClass of newClasses){
-            //                 return item !== thisClass;
-            //               }
-            //             })
-            //           }else{
-            //             removedClasses = currentClasses
-            //           }
-
-            //           for(let item of removedClasses){
-            //             target.classList.remove(item);
-            //           }
-
-            //           let targetClassArr = node.classList.value.split(', ');
-            //           let classArray = targetClassArr.concat(newClasses);
-            //           for(let className of classArray){
-            //             target.classList.add(className);
-            //           }
-
-            //         }
-
-            //       }else{
-
-            //         let nodeClass = node.classList.value.split(' ');
-            //         let targetClass = target.classList.value.split(' ');
-            //         let newClasses = targetClass.filter(item => {
-            //           for(let thisClass of nodeClass){
-            //             return item !== thisClass;
-            //           }
-            //         })
-
-            //         if(type === 'boolean'){
-
-            //           for(let item of newClasses){
-            //             target.classList.remove(item);
-            //           }
-
-            //           let stringObj = JSON.stringify(data);
-            //           stringObj = stringObj.substring(1, stringObj.length);
-            //           stringObj = stringObj.substring(0, stringObj.length - 1);
-            //           let classNameArray = [];
-            //           let newClassNameArray = [];
-            //           let objArray = stringObj.split(',');
-            //           let katsuClasses = [];
-
-            //           for(let items of objArray){
-            //             let array = items.split(':')
-
-            //             classNameArray.push(array);
-            //           }
-
-            //           for(let item of classNameArray){
-            //             let a, b;
-            //             for(let i=0;i<item.length;i++){
-            //               if(i === 0){
-            //                 a = item[i].trim()
-            //               }else{
-            //                 b = item[i].trim()
-            //               }
-            //             }
-            //             katsuClasses.push(a)
-            //             newClassNameArray.push(JSON.parse(`{${a}: ${b}}`));
-            //           }
-
-            //           target.classList.add(node.classList.value);
-
-            //           var nameArray = [];
-            //           for(let className of newClassNameArray){
-            //             let key = Object.keys(className);
-            //             let value = Object.values(className);
-            //             if(value[0]) nameArray.push(key[0])
-            //           }
-
-            //           const nodeClass = node.classList.value.split(' ');
-            //           const targetClass = target.classList.value.split(' ');
-
-            //           if(nameArray.length > 0){
-            //             nameArray.forEach(item => {
-            //               target.classList.add(item);
-            //             })
-            //           }
-
-            //         }else if(JSON.stringify(newClasses) !== JSON.stringify([data])){
-
-            //           for(let item of newClasses){
-            //             target.classList.remove(item);
-            //           }
-
-            //           let classArray = [node.classList.value, data];
-            //           for(let className of classArray){
-            //             target.classList.add(className);
-            //           }
-            //         }
-
-            //       }
-
-            //     }
-
-
-            //     if(node.getAttribute("data-kat-class") === attr.value){
-
-            //       var elms, data;
-            //       data  = attr.value;
-
-            //       if(type === 'for'){
-            //         elms = document.querySelectorAll(`[data-kat-class="${attr.value}"]`)[index];
-
-            //         let classSelector = data.split('.').pop();
-            //         var bladeDataClass = data;
-
-            //         // find value
-            //         var bladeData = this.component[viewName].data;
-            //         var dataArray = data.split('.')
-            //         var path;
-            //         var targetParent;
-
-            //         function getParent(elm){
-            //           if(elm.parentNode.getAttribute('data-kat-for')){
-            //             targetParent = elm.parentNode
-            //           }else{
-            //             getParent(elm.parentNode)
-            //           }
-            //         }
-
-            //         var bladeDataClass;
-
-            //         for(let i=0;i<dataArray.length;i++){
-            //           if(i === 0){
-            //             getParent(elms);
-            //             var baseProp = targetParent.getAttribute('data-kat-for').split(' ').pop();
-            //             let targetObj = bladeData[baseProp];
-            //             bladeDataClass = targetObj[index];
-            //           }else{
-            //             bladeDataClass = bladeDataClass[dataArray[i]]
-            //           }
-            //         }
-
-            //         if(typeof bladeDataClass === 'boolean'){
-            //           let thisSelector = attr.value.split('.').pop();
-            //           let obj = {};
-            //           obj[thisSelector] = bladeDataClass;
-            //           classBuilder(elms, obj, 'boolean', index);
-            //         }else{
-            //           for(let elm of elms){
-            //             if(!elm.classList.contains(data) && data) classBuilder(elm, data);
-            //           }
-            //         }
-
-            //       }else{
-            //         elms = document.querySelectorAll(`[data-kat-class="${attr.value}"]`);
-            //         for(let elm of elms){
-            //           let obj = {};
-            //           let data = getData(attr.value)
-            //           obj[attr.value] = data;
-
-            //           classBuilder(elm, data);
-            //         }
-            //       }
-            //     }
-
-            // }, 1)
-
-
-          break;
-          case 'data-kat-src':
-            // var temp, selectorAttr, tempVal;
-            // this.poller(`[data-kat-src="${attr.value}"]`).then(res => {
-            //   if(node.getAttribute("data-kat-src") === attr.value){
-
-            //     var elms;
-            //     let data = getData(attr.value)
-            //     if(type === 'for'){
-            //       elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`)[index];
-            //       elms.setAttribute('src', data);
-            //     }else{
-            //       elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`);
-            //       for(let elm of elms){
-            //         elm.setAttribute('src', data);
-            //       }
-            //     }
-            //   }
-            // })
-
-          break;
-
-        }
-
-      });
-    }
-  }
-
 
 // Virtual DOM Building
   buildVDom(dom, name, update, domRoot, root = "body", type = "default", index = null, topObj = null) {
@@ -1196,46 +451,6 @@ export default class Katsu{
 
 
         if(node.attributes){
-          //Check for If directive
-          node.childNodes.forEach((thisNode) => {
-            let dontUseElm = false;
-            if (thisNode.nodeType === 3 || thisNode.nodeType === 8) {
-              dontUseElm = true
-            }
-
-            if (!dontUseElm) {
-              const isKatsuIf = thisNode.getAttribute(`data-kat-if`);
-              const isKatsuElse = thisNode.getAttribute(`data-kat-else`);
-
-              if (isKatsuIf) {
-                const regex = /(?<=\()(.*?)(?=\s*\))/g;
-                const arg = isKatsuIf.match(regex)[0];
-                let data = null;
-    
-                if (arg.includes('.')) {
-                  let baseData = this.component[name].data;
-                  arg.split('.').forEach((argData) => {
-                    baseData = baseData[argData]
-                  });
-                  data = baseData;
-                } else {
-                  data = this.component[name].data[arg];
-                }
-
-                if (!Boolean(data)) {
-                  node.removeChild(thisNode);
-                }
-              }
-
-              if (isKatsuElse) {
-                // console.log('####### previousSibling #######');
-                if (thisNode.previousElementSibling.getAttribute(`data-kat-if`)) {
-                  node.removeChild(thisNode);
-                }
-              }
-            }
-          });
-
           // Check for For attribute. If it is then set directive.
           if (node.children) {
             node.childNodes.forEach((node, nodeIndex) => {
@@ -1358,7 +573,8 @@ export default class Katsu{
           const isKatsuFor = node.getAttribute('itteration');
           const isKatsuIf = node.getAttribute('data-kat-if');
           const isKatsuElse = node.getAttribute('data-kat-else');
-
+          const removeElm = node.getAttribute('remove-elm');
+          
           // If node is a component
           Object.keys(this.modules).forEach((module) => {
             const moduleName = module.toLowerCase();
@@ -1714,6 +930,67 @@ export default class Katsu{
           // if (this.modules[name].isFor) {
           //   katsuMeta.isFor = this.modules[name].isFor;
           // }
+
+          //Check for If directive
+          node.childNodes.forEach((thisNode) => {
+            let dontUseElm = false;
+            if (thisNode.nodeType === 3 || thisNode.nodeType === 8) {
+              dontUseElm = true
+            }
+
+            if (!dontUseElm) {
+              const isKatsuIf = thisNode.getAttribute(`data-kat-if`);
+              const isKatsuElse = thisNode.getAttribute(`data-kat-else`);
+
+              if (isKatsuIf) {
+                const regex = /(?<=\()(.*?)(?=\s*\))/g;
+                const arg = isKatsuIf.match(regex)[0];
+                let data = null;
+    
+                if (arg.includes('.')) {
+                  let baseData = this.component[name].data;
+                  arg.split('.').forEach((argData) => {
+                    baseData = baseData[argData]
+                  });
+                  data = baseData;
+                } else {
+                  data = this.component[name].data[arg];
+                }
+
+                if (!Boolean(data)) {
+                  // node.removeChild(thisNode);
+                  thisNode.setAttribute('remove-elm', true);
+                }
+              }
+
+              if (isKatsuElse) {
+                const prevSibling = thisNode.previousElementSibling;
+                if (prevSibling.getAttribute(`data-kat-if`) && !prevSibling.getAttribute(`remove-elm`) ) {
+                  // node.removeChild(thisNode);
+                  thisNode.setAttribute('remove-elm', true);
+                }
+              }
+            }
+          });
+
+          if (removeElm) {
+            katsuMeta.removed = true;
+            node.removeAttribute('remove-elm');
+
+            node.childNodes.forEach((thisNode) => {
+              let dontUseElm = false;
+              if (thisNode.nodeType === 3 || thisNode.nodeType === 8) {
+                dontUseElm = true
+              }
+  
+              if (!dontUseElm) {
+                console.log(thisNode);
+                if (thisNode) {
+                  thisNode.setAttribute('remove-elm', true);
+                }
+              }
+            });
+          }
         }
 
         // Run through the node's attributes and set directives.
@@ -2626,11 +1903,6 @@ export default class Katsu{
     let htmlDOM = {};
 
     const findandReplaceComponent = (dom, target, component, componentName) => {
-      // console.log(dom);
-      // console.log(target);
-      // console.log(component);
-      // console.log(componentName);
-
       let foundDom = false;
       let updatedDom = {}
 
@@ -2641,11 +1913,11 @@ export default class Katsu{
           newDom.children.forEach((child, i) => {
             // console.log(child, componentName);
             if (child.katsuMeta.component === componentName) {
-              // console.log('==== Component Found ====');
-              newDom.children[i] = component;
-              newDom.children[i].katsuMeta.component = componentName;
-              // console.log(component);
-              // console.log(newDom.children[i]);
+              if (!child.katsuMeta.removed) {
+                newDom.children[i] = component;
+                newDom.children[i].katsuMeta.component = componentName;
+              }
+
               foundDom = true;
             }
 
@@ -2653,6 +1925,43 @@ export default class Katsu{
               if (child.children.length > 0) {
                 newDom.children[i] = traverseTree(child);
                }
+            }
+          });
+
+          return newDom;
+        }
+       }
+
+       if (dom.children) {
+        updatedDom = traverseTree(dom)
+       }
+
+      return updatedDom;
+    };
+
+    const removeElms = (dom) => {
+      let updatedDom = {}
+
+       const traverseTree = (dom) => {
+        let newDom = dom;
+
+        if (newDom) {
+          console.log(newDom, newDom.katsuMeta);
+          if (newDom.katsuMeta.removed) {
+            // console.log(newDom.children[i], newDom.children[i].katsuMeta);
+            newDom = {
+              attr: [],
+              children: [],
+              content: null,
+              katsuMeta: {},
+              node: null,
+              type: null
+            };
+          }
+
+          newDom.children.forEach((child, i) => {
+            if (child.children.length > 0) {
+              newDom.children[i] = traverseTree(child);
             }
           });
 
@@ -2666,8 +1975,7 @@ export default class Katsu{
        }
 
       return updatedDom;
-    };
-
+    }
 
     Object.keys(this.component).forEach((component, index) => {
       const componentTemplate = this.component[component].vDomNew[0];
@@ -2682,6 +1990,11 @@ export default class Katsu{
 
       this.component[component].vDomOld = this.component[component].vDomNew;
     });
+
+    htmlDOM = removeElms(htmlDOM)
+
+    console.log('####### After Elements #######');
+    console.log(htmlDOM);
 
     return htmlDOM;
   }

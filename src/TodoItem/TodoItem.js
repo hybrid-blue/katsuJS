@@ -1,6 +1,4 @@
 class TodoItem {
-    parent = 'Todo'
-
     view() {
       return `
       <div class="todo-item">
@@ -16,7 +14,7 @@ class TodoItem {
     }
     controller($data, $props, $event) {
       $event.on('changeText', () => {
-        console.log($props);
+        console.log($props.title);
         $data.name = `${$props.title} David`;
       });
     }

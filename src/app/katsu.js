@@ -1952,10 +1952,10 @@ export default class Katsu{
             newDom = {
               attr: [],
               children: [],
-              content: null,
+              content: 'removed',
               katsuMeta: {},
               node: null,
-              type: null
+              type: 'comment'
             };
           }
 

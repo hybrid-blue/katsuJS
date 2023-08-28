@@ -125,12 +125,12 @@ export default class Katsu{
         }
       }
     }else{
-      console.log('bindExpressions', exp, target);
+      // console.log('bindExpressions', exp, target);
 
       const componentData = {...this.component[target].dataProxy.store, ...this.component[target].propsProxy.store};
       const indexRegex = /(?<=\[)(.*?)(?=\s*\])/g;
 
-      console.log(componentData);
+      // console.log(componentData);
 
       if (exp.match(indexRegex)) {
         let forExp = exp.split('[')[0];
@@ -401,57 +401,10 @@ export default class Katsu{
           katsuMeta = {}; 
         }
 
-        // Check child elements for kat-for attributes. If there are, set them up,
-        // if(node.children){
-        //   let childNodes = node.children;
-        //   let childCount = childNodes.length;
-        //   for(let i = 0;i<childCount;i++){
-        //     if(childNodes[i].attributes){
-        //       if(childNodes[i].getAttribute('data-kat-for')){
-        //         if(!this.forLoop.includes(childNodes[i].getAttribute('data-kat-for'))){
-        //           const elmCount = this.directiveFor(childNodes[i].getAttribute('data-kat-for'), childNodes[i], name);
-        //           if(elmCount > 0){
-
-        //             let objName = childNodes[i].getAttribute('data-kat-for').split(' ')[2]
-        //             // for(let x=0;x<childNodes.length;x++){
-        //             //   childNodes[x].setAttribute('data-index', `${objName}-${x}`)
-        //             // }
-
-        //             this.forLoop.push(childNodes[i].getAttribute('data-kat-for'))
-        //             this.forCount.push({
-        //               name: childNodes[i].getAttribute('data-kat-for'),
-        //               count: elmCount + i
-        //             })
-        //           }
-        //           childCount = childCount + (elmCount - 1);
-        //         }else{
-        //           this.forCount.forEach((item, index) => {
-        //             if(item.name === childNodes[i].getAttribute('data-kat-for')){
-        //               if((item.count - 1) === i){
-        //                 this.forCount.splice(index,1);
-        //                 this.forLoop = this.forLoop.filter(item => item.name !== this.forLoop.name);
-        //               }
-        //             }
-        //           })
-        //         }
-        //       }
-        //     }
-        //   }
-        // }
-
-        if(node.nodeName !== '#text'){
-          // if(node.getAttribute('data-index')){
-          //   index = parseInt(node.getAttribute('data-index').split('-')[1]);
-          //   type = 'for'
-          //   this.currentIteration = node.getAttribute('data-index').split('-')[0];
-          // }else{
-          //   type = null
-          // }
-        }
-
-
         if(node.attributes){
           // Check for For attribute. If it is then set directive.
+
+          // Move to prepareDom anything related to dulicating nodes and leave anything that would set any katsuMeta properties
           if (node.children) {
             node.childNodes.forEach((node, nodeIndex) => {
               let dontUseElm = false;
@@ -461,8 +414,6 @@ export default class Katsu{
 
               if (!dontUseElm) {
                 if (node.getAttribute(`data-kat-for`)) {
-                  console.log('#### data-kat-for ####');
-                  console.log(node);
                   const args = node.getAttribute(`data-kat-for`).split('of');
                   const forDataSelector = args[1].trim();
                   const forItemSelector = args[0].trim();
@@ -470,6 +421,7 @@ export default class Katsu{
                   const forData = this.bindExpressions(forDataSelector, name);
                   let funcData;
 
+                  // Handle functionl data
                   if (typeof forData === 'function') {
                     const componentData = {...this.component[name].dataProxy.store, ...this.component[name].propsProxy.store};
                     const func = forData.toString().substring(13, forData.toString().length - 1);
@@ -579,37 +531,38 @@ export default class Katsu{
           Object.keys(this.modules).forEach((module) => {
             const moduleName = module.toLowerCase();
             if (node.tagName.toLowerCase() === moduleName) {
-              console.log('@@@@@@@@@@ Component @@@@@@@@@@', node.tagName.toLowerCase(), moduleName);
+              // console.log('@@@@@@@@@@ Component @@@@@@@@@@', node.tagName.toLowerCase(), moduleName);
               if (!update) {
                 // If component does not exist, set component properties
-                katsuMeta.component = this.setComponent(module, name, update);
+                katsuMeta.component = this.setComponent(module, name);
               } else {
                 for (let i = 0;i < this.component[name].componentElms.length;i++) {
                   const compName = this.component[name].componentElms[i];
-                  if (!this.component[compName].updated) {
-                    katsuMeta.component = compName;
-                    this.component[compName].updated = true;
-                    break;
+                  // console.log(compName, this.component[compName]);
+                  if (this.component[compName]) {
+                    if (!this.component[compName].updated) {
+                      katsuMeta.component = compName;
+                      this.component[compName].updated = true;
+                      break;
+                    }
                   }
+
 
                   this.component[compName].updated = true;
                 }
                   // katsuMeta.component = component;
               }
-              console.log(katsuMeta.component);
+              // console.log(katsuMeta.component);
 
+
+              // Move to prepareDom
               if (katsuMeta.component) {
+                console.log(katsuMeta.component);
+
                 // Set Props, if any
-                console.log(node, node.katsuMeta, name);
                 const parent = this.component[katsuMeta.component].parentComponent;
 
-                console.log(node.katsuMeta, this.component[katsuMeta.component]);
-
-
                 Object.values(node.attributes).forEach((attr) => {
-                  console.log(attr);
-                  console.log(katsuMetaIsFor);
-            
                   if (attr.name.includes('data-kat-props')) {
                     let propsData = {};
                     const key = attr.name.split(':').pop();
@@ -625,7 +578,7 @@ export default class Katsu{
                         const expValue = attr.value.match(forExpRegex)[0];
                         const {itemSelector, dataSelector, itteration} = katsuMetaIsFor;
                         if (expValue === itemSelector) {
-                          console.log(this.component, parent);
+                          // console.log(this.component, parent);
                           propsData[key] = this.component[parent].data[dataSelector][itteration]
                         }
                       }
@@ -640,8 +593,9 @@ export default class Katsu{
                   // }
                 }); 
 
-                if (!update) {
+                if (!this.component[katsuMeta.component].controllerSet) {
                   this.setController(katsuMeta.component);
+                  this.component[katsuMeta.component].controllerSet = true;
                 }
               }
             }
@@ -761,6 +715,7 @@ export default class Katsu{
             node.removeAttribute(`data-kat-class`);
           }
 
+          // Move to prepareDom
           if (isKatsuSwitch) {
             const regex = /(?<=\()(.*?)(?=\s*\))/g;
             const arg = isKatsuSwitch.match(regex)[0];
@@ -834,6 +789,7 @@ export default class Katsu{
 
           // }
 
+          // Move to prepareDom
           if (isKatsuFor) {
             katsuMeta.isFor = {
               itteration: node.getAttribute('itteration'),
@@ -924,13 +880,6 @@ export default class Katsu{
             // });
           }
 
-          // console.log('this.component[name].isFor', this.component[name].isFor);
-          // console.log('Parent Node', node.parentNode.option);
-
-          // if (this.modules[name].isFor) {
-          //   katsuMeta.isFor = this.modules[name].isFor;
-          // }
-
           //Check for If directive
           node.childNodes.forEach((thisNode) => {
             let dontUseElm = false;
@@ -984,7 +933,6 @@ export default class Katsu{
               }
   
               if (!dontUseElm) {
-                console.log(thisNode);
                 if (thisNode) {
                   thisNode.setAttribute('remove-elm', true);
                 }
@@ -1160,7 +1108,6 @@ export default class Katsu{
   }
 
   changed(node1, node2){
-    // console.log(node1, node2);
     return typeof node1 !== typeof node2 ||
          typeof node1 === 'string' && node1 !== node2 ||
          node1.type !== node2.type || node1.content !== node2.content
@@ -1195,11 +1142,7 @@ export default class Katsu{
       const newLength = newNode.children.length;
       const oldLength = oldNode.children.length;
 
-      // console.log(root.childNodes, newLength, oldLength);
-
       for(let i = 0; i < newLength || i < oldLength; i++){
-        // console.log(i, newLength[i], oldLength[i], root.childNodes);
-
         this.updateDom(
           root.childNodes[index],
           newNode.children[i],
@@ -1253,7 +1196,6 @@ export default class Katsu{
       const hasEvent = target.katsuMeta.clickable.hasListener;
       if(!hasEvent){
         target.addEventListener('click', (e) => {
-          console.log(component, viewName);
           const func = component[viewName].events[event];
           let newArgs = [];
           const args = arg[0].split(',');
@@ -1355,14 +1297,10 @@ export default class Katsu{
 
     const setSyncEvent = (target) => {
       const hasEvent = target.katsuMeta.syncable.hasListener;
-
       const {selector, component} = target.katsuMeta.syncable;
-      // console.log('setSyncEvent')
 
       if(!hasEvent){
         target.addEventListener('input', (e) => {
-          // console.log(e.target.value, component, ...selector.split('.'));
-
           // Deep nesting solution
           if (selector.indexOf('.') > -1) {
             const set = (path, value) => {
@@ -1649,8 +1587,6 @@ export default class Katsu{
 
             target[prop] = value;
 
-            // console.log(obj, value, target, prop);
-
             // Data update is firing twice when using updating with sync directive
 
             if (typeof obj[pathArray] === 'object') {
@@ -1802,7 +1738,6 @@ export default class Katsu{
   }
 
   updateData (data, target, watchPath, type = 'data') {
-    console.log('####### updateData ########');
     // Set Data
     this.prevComponent = {};
 
@@ -1821,28 +1756,16 @@ export default class Katsu{
       let domparser = new DOMParser();
 
       // Does Component exist before update
-      const prevCurrentDom = domparser.parseFromString(this.currentDom, 'text/html').querySelector('body').innerHTML;
-      const prevExistingComponent = this.findNode(prevCurrentDom, 'component', target);
-
-
-      // if (this.component[target].componentElms) {
-      //   this.component[target].componentElms.forEach((component) => {
-      //     this.component[component].updated = false;
-      //   });
-      // }
+      // const prevCurrentDom = domparser.parseFromString(this.currentDom, 'text/html').querySelector('body').innerHTML;
+      const prevExistingComponent = this.findNode(this.currentDom, 'component', target);
 
       Object.keys(this.component).forEach((component) => {
         this.component[component].updated = false;
       });
 
-      console.log('############### 3 ##############');
-      console.log(target);
-          // Generate Root View
+        // Generate Root View
       Object.keys(this.component).forEach((target) => {
-        // const template = this.modules[viewName].template;
-        // let targetElm = null;
-
-        console.log(this.component, target);
+        // console.log(this.component, target);
         if (!this.component[target].parent) {
 
           //Set root component
@@ -1858,35 +1781,45 @@ export default class Katsu{
           this.rootTemplate = htmlContent;
         } else {
           // Generate non-root View
-          console.log(target, this.component[target].template);
+          // console.log(target, this.component[target].template);
           const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
-          console.log(htmlContent);
+          // console.log(htmlContent);
           this.component[target].vDomNew = htmlContent;
         }
       });
 
 
+      // Generate view of newly created instances
+      Object.keys(this.component).forEach((target) => {
+        if (!this.component[target].vDomNew) {
+          const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
+          this.component[target].vDomNew = htmlContent;
+        }
+      });
+
       const templateDom = this.prepareDom();
       this.updateDom(this.root, templateDom, this.currentDom);
       this.currentDom = templateDom;
 
-      // Does Component exist after update
-      const currentUpdateDom = domparser.parseFromString(this.currentDom, 'text/html').querySelector('body').innerHTML;
-      const existingComponent = this.findNode(currentUpdateDom, 'component', target);
 
       // If new component found after updateDom then fire Created lifecycle event
-      if (!prevExistingComponent && existingComponent) {
-        if (this.component[target].lifecycle.created) {
-          this.component[target].lifecycle.created();
-        }
-      }
+      // console.log(prevExistingComponent, existingComponent);
+      // if (this.component[target].disabled) {
+      //   this.component[target].disabled = false;
+      //   if (this.component[target].lifecycle.created) {
+      //     this.component[target].lifecycle.created();
+      //   }
+      // }
 
-      // If component no longer exists after updateDom then fire Destoryed lifecycle event
-      if (prevExistingComponent && !existingComponent) {
-        if (this.component[target].lifecycle.destroyed) {
-          this.component[target].lifecycle.destroyed();
-        }
-      }
+
+      // Does Component exist after update
+      // const currentUpdateDom = domparser.parseFromString(this.currentDom, 'text/html').querySelector('body').innerHTML;
+      const existingComponent = this.findNode(this.currentDom, 'component', target);
+
+      // console.log('#### Component after update ####');
+      // console.log(this.currentDom);
+      // console.log(target);
+      // console.log(existingComponent);
 
       this.setDomListeners(this.root);
 
@@ -1900,6 +1833,8 @@ export default class Katsu{
   }
 
   prepareDom() {
+    // Modify the vDOM and set components here?
+
     let htmlDOM = {};
 
     const findandReplaceComponent = (dom, target, component, componentName) => {
@@ -1908,14 +1843,19 @@ export default class Katsu{
 
        const traverseTree = (dom) => {
         let newDom = dom;
+        console.log(newDom);
         // console.log(dom);
         if (newDom && !foundDom) {
           newDom.children.forEach((child, i) => {
-            // console.log(child, componentName);
             if (child.katsuMeta.component === componentName) {
+              // console.log(child.katsuMeta.component);
+              // If the component's node meta is flagged for removal it will not be inserted into the VDOM, it is then considered to be removed / destroyed.
+              // The component is flagged as "disabled" and is to be removed at the end of the prepareDom phase.
               if (!child.katsuMeta.removed) {
                 newDom.children[i] = component;
                 newDom.children[i].katsuMeta.component = componentName;
+              } else {
+                this.component[componentName].disabled = true;
               }
 
               foundDom = true;
@@ -1942,11 +1882,11 @@ export default class Katsu{
     const removeElms = (dom) => {
       let updatedDom = {}
 
-       const traverseTree = (dom) => {
+      const traverseTree = (dom) => {
         let newDom = dom;
 
         if (newDom) {
-          console.log(newDom, newDom.katsuMeta);
+          // console.log(newDom, newDom.katsuMeta);
           if (newDom.katsuMeta.removed) {
             // console.log(newDom.children[i], newDom.children[i].katsuMeta);
             newDom = {
@@ -1967,34 +1907,53 @@ export default class Katsu{
 
           return newDom;
         }
+      }
 
-       }
-
-       if (dom.children) {
-        updatedDom = traverseTree(dom)
-       }
+      if (dom.children) {
+      updatedDom = traverseTree(dom)
+      }
 
       return updatedDom;
     }
 
+    // console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~');
     Object.keys(this.component).forEach((component, index) => {
+      // console.log(component);
       const componentTemplate = this.component[component].vDomNew[0];
 
       if (!this.component[component].parent) {
-        console.log('++++ A ++++');
+        // console.log('++++ A ++++');
         htmlDOM = this.rootTemplate[0];
       } else {
-        console.log('==================== B ==========================');
+        // console.log('==================== B ==========================');
         htmlDOM = findandReplaceComponent(this.rootTemplate[0], this.component[component].module, componentTemplate, component);
       }
 
       this.component[component].vDomOld = this.component[component].vDomNew;
     });
+    // console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~');
 
-    htmlDOM = removeElms(htmlDOM)
+    htmlDOM = removeElms(htmlDOM);
 
-    console.log('####### After Elements #######');
-    console.log(htmlDOM);
+    // Set Component controllers here?
+    // Set the contollers of the components that will be active when rendering is finished
+
+    // Remove any components that are flagged as "destroyed"
+    Object.keys(this.component).forEach((componentName) => {
+      // When this happens, fire the component's destoryed lifecycle event; If the component has one.
+      // Once done, reset the component to it's initial state.
+      if (this.component[componentName].disabled) {
+        if (this.component[componentName].lifecycle.destroyed) {
+          this.component[componentName].lifecycle.destroyed();
+          const module = this.component[componentName].module;
+          // Get Parent Component
+          const parentComponent = this.component[componentName].parentComponent;
+          this.component[componentName] = Object.assign({}, this.modules[module]);
+          this.setComponent(module, parentComponent, componentName);
+          this.component[componentName].disabled = true;
+        }
+      }
+    });
 
     return htmlDOM;
   }
@@ -2152,34 +2111,39 @@ export default class Katsu{
     })
   }
 
-  setComponent(component, parent = null) {
-    console.log(this.modules);
+  setComponent(component, parent = null, target = null) {
+    // console.log(this.modules);
     const domparser = new DOMParser();
     let viewName = component;
     let index = 0;
     
-    // Increment index if component already exists
-    while(this.component[`${viewName}-${index}`]) {
-      index++
-    }
+    if (!target) {
+      // Increment index if component already exists
+      while(this.component[`${viewName}-${index}`]) {
+        index++
+      }
 
-    viewName = `${viewName}-${index}`;
+      viewName = `${viewName}-${index}`;
+    } else {
+      viewName = target;
+    }
 
     // const childComponent = this.component[viewName].parent ? true : false;
     this.component[viewName] = Object.assign({}, this.modules[component]);
 
     this.component[viewName].initialized = false;
-
+    this.component[viewName].controllerSet = false;
     this.component[viewName].module = component;
     this.component[viewName].parentComponent = parent;
-
 
     if (parent) {
       if (!this.component[parent].componentElms) {
         this.component[parent].componentElms = [];
       }
 
-      this.component[parent].componentElms.push(viewName);
+      if (!this.component[parent].componentElms.includes(viewName)) {
+        this.component[parent].componentElms.push(viewName);
+      }
     }
 
     this.component[viewName].root = this.root;
@@ -2295,7 +2259,7 @@ export default class Katsu{
 
     const $destroyed = (selector) => {
       return (func) => {
-        this.component[selector].lifecycle.destoryed = func;
+        this.component[selector].lifecycle.destroyed = func;
       }
     }
 
@@ -2362,10 +2326,10 @@ export default class Katsu{
       this.createModule(singleModule.name, singleModule)
     });
 
-    console.log('############### 1 ##############');
+    // console.log('############### 1 ##############');
     // Generate Root View
     Object.keys(this.modules).forEach((module, index) => {
-      console.log(module);
+      // console.log(module);
       const viewName = module;
       // const template = this.modules[viewName].template;
       let targetElm = null;
@@ -2379,6 +2343,7 @@ export default class Katsu{
         targetElm.katsuMeta.component = componentName;
 
         this.setController(componentName);
+        this.component[componentName].controllerSet = true;
 
         // Build Template
         // Set non-root Modules in buildVDom
@@ -2390,7 +2355,7 @@ export default class Katsu{
       }
     });
 
-    console.log('############### 2 ##############');
+    // console.log('############### 2 ##############');
     // Generate non-root View
     // Most likely to replace or wrap FOREACH with a WHILE loop
     Object.keys(this.component).forEach((component, index) => {
@@ -2401,10 +2366,10 @@ export default class Katsu{
       }
     });
 
-    console.log(this.component);
+    // console.log(this.component);
     const templateDom = this.prepareDom();
 
-    console.log(templateDom);
+    // console.log(templateDom);
 
     this.updateDom(this.root, templateDom);
     this.currentDom = templateDom;
@@ -2419,7 +2384,7 @@ export default class Katsu{
       }
     });
 
-    console.log('===== Finshed components =====')
-    console.log(this.modules, this.component);
+    // console.log('===== Finshed components =====')
+    // console.log(this.modules, this.component);
   }
 }

@@ -30,13 +30,9 @@ class Todo {
         formInput: { name: 'Hello' }
       }
     }
-    controller($data, $event, $watch, $state, $global, $preCreated, $created, $preUpdate, $updated) {
+    controller($data, $event, $watch, $state, $global, $preCreated, $created, $preUpdate, $updated, $destroyed) {
       // $preCreated((name) => {
       //   console.log('Component Before Created: ',name);
-      // });
-
-      // $created((name) => {
-      //   console.log('Component After Created: ', name);
       // });
 
       // $preUpdate(() => {

@@ -23,8 +23,8 @@ class Todo {
         display: true,
         currentPokemon: null,
         movies: [
-          {name: 'Fellowship fo the Ring', isFav: false},
-          {name: 'Two Towers', isFav: false},
+          {name: 'Fellowship of the Ring', isFav: false},
+          {name: 'Two Towers', isFav: true},
           {name: 'Return of the King', isFav: false},
         ],
         formInput: { name: 'Hello' }
@@ -52,8 +52,9 @@ class Todo {
       // List rendering with Functional Data
       $data.filteredMovies = () => $data.movies.filter((movie) => movie.isFav);
 
-      $event.on('changeFilteredData', (e, data) => {
-        $data.movies[data.index].isFav = e.target.checked;
+      $event.on('changeFilteredData', (e, index) => {
+        console.log(e, index);
+        $data.movies[index].isFav = e.target.checked;
       });
 
       $event.on('forceChange', () => {
@@ -71,12 +72,13 @@ class Todo {
       $event.on('getPokemon', (e) => {
         console.log('Get Pokemon');
         fetch(`https://pokeapi.co/api/v2/pokemon/${e.target.value}/`).then((res) => res.json()).then((json) => {
+          console.log(json);
           $data.currentPokemon = json;
         })
       });
 
-      $event.on('changeText', (e, index) => {
-        alert(`Hello World - ${index}`);
+      $event.on('changeText', (e, data, index) => {
+        alert(`${data} - ${index}`);
       });
 
       $event.on('changeStyle', (e, text, text2) => {
@@ -84,7 +86,7 @@ class Todo {
       });
 
       $event.on('changeCase', () => {
-        $data.switch = 'two';
+        $data.switch = 'three';
       });
     }
     components() {

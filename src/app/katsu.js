@@ -1092,7 +1092,6 @@ export default class Katsu{
 
     // node.testAttr = 'xxxxxxxxxxxxxxxxxxxx';
 
-
     node.children.map(this.createElm.bind(this)).forEach($el.appendChild.bind($el));
     return $el;
 
@@ -1749,47 +1748,41 @@ export default class Katsu{
 
       // Does Component exist before update
       // const prevCurrentDom = domparser.parseFromString(this.currentDom, 'text/html').querySelector('body').innerHTML;
-      const prevExistingComponent = this.findNode(this.currentDom, 'component', target);
+      // const prevExistingComponent = this.findNode(this.currentDom, 'component', target);
 
       Object.keys(this.component).forEach((component) => {
         this.component[component].updated = false;
       });
 
         // Generate Root View
-      Object.keys(this.component).forEach((target) => {
-        // console.log(this.component, target);
-        if (!this.component[target].parent) {
-
-          //Set root component
-          // const componentName = this.setComponent(viewName);
-
-          // Build Template
-          // Set non-root Modules in buildVDom
-          const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
-
-          // console.log(viewName, this.component, htmlContent);
-
-          this.component[target].vDomNew = htmlContent;
-          this.rootTemplate = htmlContent;
-        } else {
-          // Generate non-root View
-          // console.log(target, this.component[target].template);
-          const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
-          // console.log(htmlContent);
-          this.component[target].vDomNew = htmlContent;
-        }
-      });
+      // Object.keys(this.component).forEach((target) => {
+      //   if (!this.component[target].parent) {
+      //     // Build Template
+      //     // Set non-root Modules in buildVDom
+      //     const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
+      //     this.component[target].vDomNew = htmlContent;
+      //     this.rootTemplate = htmlContent;
+      //   } else {
+      //     // Generate non-root View
+      //     const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
+      //     this.component[target].vDomNew = htmlContent;
+      //   }
+      // });
 
 
       // Generate view of newly created instances
-      Object.keys(this.component).forEach((target) => {
-        if (!this.component[target].vDomNew) {
-          const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
-          this.component[target].vDomNew = htmlContent;
-        }
-      });
+      // Object.keys(this.component).forEach((target) => {
+      //   if (!this.component[target].vDomNew) {
+      //     const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
+      //     this.component[target].vDomNew = htmlContent;
+      //   }
+      // });
 
-      const templateDom = this.prepareDom();
+      const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
+      this.component[target].vDomNew = htmlContent;
+
+      const templateDom = this.prepareDom(htmlContent);
+
       this.updateDom(this.root, templateDom, this.currentDom);
       this.currentDom = templateDom;
 
@@ -1806,7 +1799,7 @@ export default class Katsu{
 
       // Does Component exist after update
       // const currentUpdateDom = domparser.parseFromString(this.currentDom, 'text/html').querySelector('body').innerHTML;
-      const existingComponent = this.findNode(this.currentDom, 'component', target);
+      // const existingComponent = this.findNode(this.currentDom, 'component', target);
 
       // console.log('#### Component after update ####');
       // console.log(this.currentDom);
@@ -1814,20 +1807,12 @@ export default class Katsu{
       // console.log(existingComponent);
 
       this.setDomListeners(this.root);
-
-      // If component exists before and after updateDom the fire Update lifecycle event
-      if (prevExistingComponent && existingComponent) { // Curently broken
-        if (this.component[target].lifecycle.updated) {
-          this.component[target].lifecycle.updated(data);
-        }
-      }
     }
   }
 
-  prepareDom() {
+  prepareDom(vDomTemplate) {
     // Modify the vDOM and set components here?
-
-    let vDom = {};
+    let vDom = Object.assign({}, vDomTemplate[0]);
 
     const forNode = (forMeta, forNode, forNodeUpdated) => {
       const { itemSelector, dataSelector, component } = forMeta;
@@ -2148,8 +2133,6 @@ export default class Katsu{
             };
           }
 
-          console.log(newDom);
-
           newDom.children.forEach((child, i) => {
             if (child.children.length > 0) {
               newDom.children[i] = traverseTree(child);
@@ -2161,10 +2144,10 @@ export default class Katsu{
       }
 
       if (dom.children) {
-        updatedDom = traverseTree(dom)
+        return traverseTree(dom)
       }
 
-      return updatedDom;
+      return dom;
     }
 
     // Duplicate isFor nodes 
@@ -2191,7 +2174,7 @@ export default class Katsu{
 
           // Duplicate isFor nodes 
           dom.forEach((node, i) => {
-            console.log(node);
+            // console.log(node);
               if (node.katsuMeta.isFor) {
                 // console.log('@@@@@@@@@@@@@@ Duplicate isFor nodes @@@@@@@@@@@@@@')
                 // console.log(node);
@@ -2200,7 +2183,7 @@ export default class Katsu{
               }
 
               if (node.children.length > 0) {
-                traverseTree(node.children);
+                return traverseTree(node.children);
               }
           });
 
@@ -2231,7 +2214,7 @@ export default class Katsu{
 
       }
       
-
+      // console.log(dom);
       if (dom.children) {
         updatedDom.children = traverseTree(dom.children)
       }
@@ -2241,179 +2224,309 @@ export default class Katsu{
 
     // Replace expressions with Data
     const expressionNodes = (dom) => {
-      let updatedDom = Object.assign({}, dom);
+      if (dom) {
+        let updatedDom = Object.assign({}, dom);
 
-      const traverseTree = (dom) => {
-        if (dom.length > 0) {
-          dom.forEach((node, i) => {
-            if (node.content) {
-              (/{{(.*?)}}/g.test(node.content) ? dom[i].content = this.expressions(dom[i].content, dom[i].katsuMeta.component.module) : dom[i].content)
-            }
-
-            if (node.children.length > 0) {
-              traverseTree(node.children);
-            }
-          });
+        const traverseTree = (dom) => {
+          if (dom.length > 0) {
+            dom.forEach((node, i) => {
+              if (node.content) {
+                (/{{(.*?)}}/g.test(node.content) ? dom[i].content = this.expressions(dom[i].content, dom[i].katsuMeta.component.module) : dom[i].content)
+              }
+  
+              if (node.children.length > 0) {
+                return traverseTree(node.children);
+              }
+            });
+          }
+  
+          return dom;
+        }
+        
+  
+        if (dom.children) {
+          updatedDom.children = traverseTree(dom.children)
         }
 
-        return dom;
-
-      }
-      
-
-      if (dom.children) {
-        updatedDom.children = traverseTree(dom.children)
+        return updatedDom;
       }
 
-      return updatedDom;
+      return dom;
     }
 
     // Replace Bindable with Data
     const bindableNodes = (dom) => {
       let updatedDom = Object.assign({}, dom);
 
-      const traverseTree = (dom) => {
-        if (dom.length > 0) {
-          dom.forEach((node, i) => {
-
-            if (node.katsuMeta.bindable) {
-              if (node.katsuMeta.bindable.attrs.length > 0) {
-                const data = {...this.component[node.katsuMeta.component.module].dataProxy.store, ...this.component[node.katsuMeta.component.module].propsProxy.store};
-
-                node.katsuMeta.bindable.attrs.forEach((attr) => {
-                  if(attr.value.indexOf('.') > -1){
-                    let expArray = attr.value.split('.');
-                    let currentData = null;
+      if (dom) {
+        const traverseTree = (dom) => {
+          if (dom.length > 0) {
+            dom.forEach((node, i) => {
   
-                    for(let y=0;y<expArray.length;y++){
-                      let thisData = null;
-
-                      thisData = currentData || data;
-
-                      if(y === expArray.length - 1){
-                        let newAttr = {};
-                        // Possibly has a bug for rendering multiple expressions in the same element
-                        try{
-                          // console.log(data, exp, currentData[expArray[i]]);
-                          newAttr[attr.selector] = thisData[expArray[y]];
-                        }
-                        catch{
-                          newAttr[attr.selector] = '';
-                        }
+              if (node.katsuMeta.bindable) {
+                if (node.katsuMeta.bindable.attrs.length > 0) {
+                  const data = {...this.component[node.katsuMeta.component.module].dataProxy.store, ...this.component[node.katsuMeta.component.module].propsProxy.store};
   
-                        let attrExists = null;
-                        attrExists = dom[i].attr.filter((domAttr) => Object.keys(domAttr)[0] === Object.keys(newAttr)[0]);
-
-                        if (attrExists.length === 0) dom[i].attr.push(newAttr);
-                      }else{
-                        try{
-                          currentData = thisData[expArray[y]];
-                        }
-                        catch{
-                          currentData = '';
+                  node.katsuMeta.bindable.attrs.forEach((attr) => {
+                    if(attr.value.indexOf('.') > -1){
+                      let expArray = attr.value.split('.');
+                      let currentData = null;
+    
+                      for(let y=0;y<expArray.length;y++){
+                        let thisData = null;
+  
+                        thisData = currentData || data;
+  
+                        if(y === expArray.length - 1){
+                          let newAttr = {};
+                          // Possibly has a bug for rendering multiple expressions in the same element
+                          try{
+                            // console.log(data, exp, currentData[expArray[i]]);
+                            newAttr[attr.selector] = thisData[expArray[y]];
+                          }
+                          catch{
+                            newAttr[attr.selector] = '';
+                          }
+    
+                          let attrExists = null;
+                          attrExists = dom[i].attr.filter((domAttr) => Object.keys(domAttr)[0] === Object.keys(newAttr)[0]);
+  
+                          if (attrExists.length === 0) dom[i].attr.push(newAttr);
+                        }else{
+                          try{
+                            currentData = thisData[expArray[y]];
+                          }
+                          catch{
+                            currentData = '';
+                          }
                         }
                       }
+                    } else {
+                      let attrExists = null;
+                      let newAttr = {};
+                      newAttr[attr.selector] = attr.value;
+    
+                      attrExists = dom[i].attr.filter((domAttr) => Object.keys(domAttr)[0] === Object.keys(newAttr)[0]);
+    
+                      if (!attrExists) dom[i].attr.push(newAttr)
                     }
-                  } else {
-                    let attrExists = null;
-                    let newAttr = {};
-                    newAttr[attr.selector] = attr.value;
-  
-                    attrExists = dom[i].attr.filter((domAttr) => Object.keys(domAttr)[0] === Object.keys(newAttr)[0]);
-  
-                    if (!attrExists) dom[i].attr.push(newAttr)
-                  }
-                });
+                  });
+                }
               }
-            }
+  
+              if (node.children.length > 0) {
+                return traverseTree(node.children);
+              }
+            });
+  
 
-            if (node.children.length > 0) {
-              traverseTree(node.children);
-            }
-          });
+          }
+  
+          return dom;
+  
         }
 
-        return dom;
+        if (dom.children) {
+          updatedDom.children = traverseTree(dom.children)
+        }
 
+        return updatedDom;
+        
       }
-      
 
-      if (dom.children) {
-        updatedDom.children = traverseTree(dom.children)
-      }
-
-      return updatedDom;
+      return dom;
     }
 
     const componentNodes = (dom) => {
       let updatedDom = Object.assign({}, dom);
+      let existingComponents = [];
 
-      const traverseTree = (dom) => {
-        if (dom.length > 0) {
-          dom.forEach((node, i) => {
+      const findExistingComponents = (domNodes) => {
+        domNodes.forEach((domNode) => {
+          if (domNode.katsuMeta?.component?.name) {
+            console.log('##### Found Component #####')
+            console.log(domNode.katsuMeta.component.name);
+            domNode.katsuMeta.component.name && existingComponents.push(domNode.katsuMeta.component.name)
+          }
+          if (domNode.childNodes.length > 1) {
+            findExistingComponents(domNode.childNodes)
+          }
+        })
+      }
+
+      const createComponentNodes = (dom) => {
+        console.log('createComponentNodes', 'start', dom);
+        const traverseTree = (dom) => {
+          if (dom.length > 0) {
+            dom.forEach((node, i) => {
+              Object.keys(this.modules).forEach((component, index) => {
+                if (node.type === component.toLowerCase()) {
+                  // console.log('========= Component Node =============')
+                  // console.log(node);
+  
+                    // targetElm = document.querySelector(target);
+                    //Set root component
+                    const componentName = this.setComponent(node.katsuMeta.component.module);
+                    const parentComponent = dom[i].katsuMeta.component.parent;
+                    if (!this.component[parentComponent].childComponents) {
+                      this.component[parentComponent].childComponents = [];
+                    }
+  
+                    this.component[parentComponent].childComponents.push(componentName);
+  
+                    // targetElm.katsuMeta = {};
+                    // targetElm.katsuMeta.component = componentName;
+            
+                    this.setController(componentName);
+                    this.component[componentName].controllerSet = true;
+            
+                    // Build Template
+                    // Set non-root Modules in buildVDom
+                    const htmlContent = this.virtualDom(this.component[componentName].template, componentName, false, null);
+
+                    this.component[componentName].vDomNew = htmlContent;
+                    this.component[componentName].vDomBuilt = true;
 
 
+  
+                    dom[i].katsuMeta.component.name = componentName;
 
+                    // console.log('====== Component prepareDom ======')
+                    const templateDom = this.prepareDom(htmlContent)
+                    console.log('createComponentNodes', 'after prepareDom', templateDom);
 
-            console.log(this.modules, this.component);
-            Object.keys(this.component).forEach((component, index) => {
-              console.log('========= Compoennt Node =============')
-              console.log(node.type, component.toLowerCase());
-              if (node.type === component.toLowerCase()) {
-                console.log('========= Compoennt Node =============')
-                console.log(node);
-    
+                    //Replace Component element in VDOM with compiled template
+                }
+              });
 
-                              // console.log(component);
-              // const componentTemplate = this.component[component].vDomNew[0];
-        
-              // if (this.component[component].parent) {
-              //   // console.log('==================== B ==========================');
-              //   dom[i] = findandReplaceComponent(dom[i], this.component[component].module, componentTemplate, component);
-              // }
-        
-              // this.component[component].vDomOld = this.component[component].vDomNew;
+              // console.log('createComponentNodes', 'During traverseTree', node);
+
+              if (node.children.length > 0) {
+                return traverseTree(node.children);
               }
             });
-      
-
-
-            if (node.children.length > 0) {
-              traverseTree(node.children);
-            }
-          });
+          }
+  
+          return dom;
+  
         }
 
-        return dom;
+        // console.log('createComponentNodes', 'Before traverseTree', dom.children);
+        
+  
+        if (dom.children) {
+          updatedDom.children = traverseTree(dom.children)
+        }
 
+        return updatedDom;
       }
-      
 
-      if (dom.children) {
-        updatedDom.children = traverseTree(dom.children)
+      // findExistingComponents(document.querySelector('#root').childNodes);
+
+      // Check if this vDom has already been built
+
+      // console.log(this.root);
+
+
+      // Find existing components if DOM has already been built
+      if (this.root.childNodes.length > 0) {
+        console.log(this.root.childNodes);
+        this.root.childNodes.forEach((node) => {
+          findExistingComponents(node.childNodes);
+        })
+
+        let componentsToBeDestoryed = [];
+        let componentsToBeCreated = [];
+
+        // If component is not found on DOM, but exists in component object, then destory component
+        // Object.keys(this.component).forEach((component) => {
+          existingComponents.forEach(existingComponent => {
+            // Needs code here
+            // component !== existingComponent && componentsToBeDestoryed.push(component);
+            // console.log(Object.keys(this.component), existingComponent);
+            if (!Object.keys(this.component).includes(existingComponent)) componentsToBeDestoryed.push(existingComponent);
+          })
+          
+
+        // })
+
+
+        // TODO: To be removed, I don't think this is required
+        // If component is found on DOM, but does NOT exists in component object, then create component
+        // existingComponents.forEach(existingComponent => {
+          // Object.keys(this.component).forEach((component) => {
+            // Needs code here
+            // existingComponent !== component && componentsToBeCreated.push(component);
+          //   if (!existingComponents.includes(component)) componentsToBeCreated.push(component);
+          // })           
+        // })
+        // Run through componentsToBeDestoryed and componentsToBeCreated
+
+        console.log('====== componentsToBeDestoryed / componentsToBeCreated ======');
+        console.log(componentsToBeDestoryed);
+        console.log(componentsToBeCreated);
+        console.log(dom);
+
+        updatedDom = createComponentNodes(dom)
+
+        return updatedDom;
+
+
+      } else {
+        console.log('componentNodes', 'Component does not exists', dom)
+        updatedDom = createComponentNodes(dom)
+
+        console.log(updatedDom);
+
+        return updatedDom;
       }
 
-      return updatedDom;
+      // Create Component nodes using what components are available, in the right order.
+      // Needs code here
+
+      console.log('componentNodes', 'Nothing here', dom)
+      console.log(dom)
+
+      return dom;
     }
 
-    vDom = this.rootTemplate[0];
+    // console.log('++++++++++++++++++++++++++');
+    // console.log(vDom);
+
     // Duplicate Nodes in For loops
     vDom = forNodes(vDom);
+
+    // console.log('forNodes', vDom);
 
     // Create and set components
     vDom = componentNodes(vDom);
 
+    // console.log('componentNodes', vDom);
+
     // Set Expressions
     vDom = expressionNodes(vDom);
+
+    // console.log('expressionNodes', vDom);
 
     // Set Bindables
     vDom = bindableNodes(vDom)
 
+    // console.log('bindableNodes', vDom);
+
     // Any addtional modification to nodes
     vDom = modifyNodes(vDom);
 
+    // console.log('modifyNodes', vDom);
+
+    // console.log('root', vDomTemplate)
+    // console.log('Perpared VDOM', vDom);
+
+
     // Set Component controllers here?
     // Set the contollers of the components that will be active when rendering is finished
+
+    //Create Components
+
 
     // Remove any components that are flagged as "destroyed"
     Object.keys(this.component).forEach((componentName) => {
@@ -2592,18 +2705,8 @@ export default class Katsu{
     // console.log(this.modules);
     const domparser = new DOMParser();
     let viewName = component;
-    let index = 0;
-    
-    if (!target) {
-      // Increment index if component already exists
-      while(this.component[`${viewName}-${index}`]) {
-        index++
-      }
 
-      viewName = `${viewName}-${index}`;
-    } else {
-      viewName = target;
-    }
+    viewName = `${viewName}-${Math.random().toString(36).substring(2,8+2)}`;
 
     // const childComponent = this.component[viewName].parent ? true : false;
     this.component[viewName] = Object.assign({}, this.modules[component]);
@@ -2844,7 +2947,9 @@ export default class Katsu{
     });
 
     // console.log(this.component);
-    const templateDom = this.prepareDom();
+    const templateDom = this.prepareDom(this.rootTemplate);
+
+    console.log('templateDom', templateDom);
 
     // console.log(templateDom);
 

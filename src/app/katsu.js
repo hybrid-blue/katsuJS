@@ -1,6 +1,8 @@
 import { random } from 'lodash';
 import '../style.css';
 
+// TODO: Allow Debug mode, to allow access on the 'meta' via console log
+
 export default class Katsu{
   constructor(){
 
@@ -9,13 +11,15 @@ export default class Katsu{
     this.targetElement;
     this.modules = {};
     this.component = {};
-    // this.forLoop = [];
-    // this.forCount = [];
     this.currentIteration;
     this.switchCase;
     this.expressStr;
 
-    this.root;
+    this.rootTarget;
+
+    this.root; // The original state of the DOM before init
+    this.domSnapshot; // The current state of the DOM before update
+
     this.eventMap = {};
     this.prevComponent = {};
     this.currentDom = {};
@@ -63,7 +67,7 @@ export default class Katsu{
                 currentData = currentData[expArray[i]];
               }
             }
-            catch{
+            catch {
               currentData = '';
             }
           }
@@ -93,7 +97,7 @@ export default class Katsu{
 
   bindExpressions(exp, target) {
     let data = null;
-    if(exp.indexOf('.') > -1){
+    if (exp.indexOf('.') > -1) {
       let expArray = exp.split('.');
       let currentData = {...this.component[target].dataProxy.store, ...this.component[target].propsProxy.store};
 
@@ -122,7 +126,7 @@ export default class Katsu{
           }
         }
       }
-    }else{
+    } else {
       // console.log('bindExpressions', exp, target);
 
       const componentData = {...this.component[target].dataProxy.store, ...this.component[target].propsProxy.store};
@@ -397,7 +401,11 @@ export default class Katsu{
 
         katsuMeta.component = {}
         katsuMeta.component.module = name
+        katsuMeta.render = {}
 
+        if (node.nodeType === Node.TEXT_NODE) {
+          katsuMeta.content = node.textContent;
+        }
 
         if(node.attributes){
           // Check for For attribute. If it is then set directive.
@@ -627,13 +635,13 @@ export default class Katsu{
             // });
           // }
 
-          if (isKatsuIf) {
-            node.removeAttribute(`data-kat-if`);
-          }
+          // if (isKatsuIf) {
+          //   node.removeAttribute(`data-kat-if`);
+          // }
 
-          if (isKatsuElse) {
-            node.removeAttribute(`data-kat-else`);
-          }
+          // if (isKatsuElse) {
+          //   node.removeAttribute(`data-kat-else`);
+          // }
 
           // Check if parent is for directive
           // console.log('### parentNode ###', node.parentNode);
@@ -801,11 +809,15 @@ export default class Katsu{
             const forDataSelector = args[1].trim();
             const forItemSelector = args[0].trim();
 
-            katsuMeta.isFor = {
+            katsuMeta.isForData = {
               dataSelector: forDataSelector,
               itemSelector: forItemSelector,
               component: name
             };
+
+            katsuMeta.isFor = true
+
+            node.removeAttribute(`data-kat-for`);
           }
 
           // Move to prepareDom
@@ -844,11 +856,11 @@ export default class Katsu{
               if (propsDataValue) {
                 let syncValue = null;
 
-                if (katsuMeta.isFor) {
-                  syncValue = this.bindExpressions(`${katsuMeta.isFor.dataSelector}[${katsuMeta.isFor.itteration}].${propsDataValue.split('.').slice(1).join('.')}`, name);
+                if (katsuMeta.isForData) {
+                  syncValue = this.bindExpressions(`${katsuMeta.isForData.dataSelector}[${katsuMeta.isForData.itteration}].${propsDataValue.split('.').slice(1).join('.')}`, name);
                   
                   katsuMeta.syncable = { 
-                    selector: `${katsuMeta.isFor.dataSelector}[${katsuMeta.isFor.itteration}].${propsDataValue.split('.').slice(1).join('.')}`,
+                    selector: `${katsuMeta.isForData.dataSelector}[${katsuMeta.isForData.itteration}].${propsDataValue.split('.').slice(1).join('.')}`,
                     component: name,
                     value: syncValue
                   }
@@ -869,15 +881,15 @@ export default class Katsu{
           }
 
           //Check for If directive
-          node.childNodes.forEach((thisNode) => {
+          // node.childNodes.forEach((thisNode) => {
             let dontUseElm = false;
-            if (thisNode.nodeType === 3 || thisNode.nodeType === 8) {
+            if (node.nodeType === 3 || node.nodeType === 8) {
               dontUseElm = true
             }
 
             if (!dontUseElm) {
-              const isKatsuIf = thisNode.getAttribute(`data-kat-if`);
-              const isKatsuElse = thisNode.getAttribute(`data-kat-else`);
+              const isKatsuIf = node.getAttribute(`data-kat-if`);
+              const isKatsuElse = node.getAttribute(`data-kat-else`);
 
               if (isKatsuIf) {
                 const regex = /(?<=\()(.*?)(?=\s*\))/g;
@@ -896,40 +908,63 @@ export default class Katsu{
 
                 if (!Boolean(data)) {
                   // node.removeChild(thisNode);
-                  thisNode.setAttribute('remove-elm', true);
+                  katsuMeta.removed = true;
+                } else {
+                  node.setAttribute('if-condition-true', true);
+                }
+
+                katsuMeta.render = {
+                  type: 'if',
+                  condition: isKatsuIf,
+                  expectation: true,
+                }
+
+                if (!node.nextElementSibling.getAttribute(`data-kat-else`)) {
+                  node.removeAttribute(`data-kat-if`);
                 }
               }
 
               if (isKatsuElse) {
-                const prevSibling = thisNode.previousElementSibling;
-                if (prevSibling.getAttribute(`data-kat-if`) && !prevSibling.getAttribute(`remove-elm`) ) {
+                const prevSibling = node.previousElementSibling;
+                if (prevSibling.getAttribute('data-kat-if') && prevSibling.getAttribute('if-condition-true')) {
                   // node.removeChild(thisNode);
-                  thisNode.setAttribute('remove-elm', true);
+                  // thisNode.setAttribute('remove-elm', true);
+                  katsuMeta.removed = true;
+
+                  prevSibling.removeAttribute(`data-kat-if`);
+                  prevSibling.removeAttribute('if-condition-true')
                 }
+
+                katsuMeta.render = {
+                  type: 'if',
+                  condition: isKatsuIf,
+                  expectation: false,
+                }
+
+                node.removeAttribute(`data-kat-else`);
               }
             }
-          });
+          // });
 
-          if (removeElm) {
-            katsuMeta.removed = true;
-            node.removeAttribute('remove-elm');
+          // if (removeElm) {
+          //   katsuMeta.removed = true;
+          //   node.removeAttribute('remove-elm');
 
-            node.childNodes.forEach((thisNode) => {
-              let dontUseElm = false;
-              if (thisNode.nodeType === 3 || thisNode.nodeType === 8) {
-                dontUseElm = true
-              }
+          //   // node.childNodes.forEach((thisNode) => {
+          //   //   let dontUseElm = false;
+          //   //   if (thisNode.nodeType === 3 || thisNode.nodeType === 8) {
+          //   //     dontUseElm = true
+          //   //   }
   
-              if (!dontUseElm) {
-                if (thisNode) {
-                  thisNode.setAttribute('remove-elm', true);
-                }
-              }
-            });
-          }
+          //   //   if (!dontUseElm) {
+          //   //     if (thisNode) {
+          //   //       thisNode.setAttribute('remove-elm', true);
+          //   //     }
+          //   //   }
+          //   // });
+          // }
         }
 
-        // Run through the node's attributes and set directives.
         // this.directives is no longer required and needs removing, after all functions inside is moved out to their apporite stages
         // this.directives(node, null, name, type, index, this.currentIteration, domRoot)
         let map, thisNode = node.textContent.trim(), emptyArray = [];
@@ -953,6 +988,183 @@ export default class Katsu{
     return buildVNodes(htmlobject);
 
   };
+
+
+  buildUpdateVDom(dom, name, updateData, root = "body") {
+    const buildVNodes = (thisnode) => {
+      return Array.prototype.map.call(thisnode.childNodes, (node => {
+
+        let restoreNode = false;
+
+        // console.log(this.component[name]);
+        // console.log(node.katsuMeta);
+
+        let katsuMeta;
+        if (node.katsuMeta) {
+          katsuMeta = Object.assign({}, {} , node.katsuMeta); 
+        } else {
+          katsuMeta = {}; 
+        }
+
+
+
+        // katsuMeta.component = {}
+        // katsuMeta.component.module = name
+
+        // if (node.nodeType === Node.TEXT_NODE) {
+        //   katsuMeta.content = node.textContent;
+        // }
+
+        if (katsuMeta.noData) {
+          let data;
+          const dataPathArry = katsuMeta.isForData.dataSelector.split('.')
+
+          // Find data
+          const findData = (cData, dataPath) => {
+            let currentData;
+            dataPath.forEach((path, i) => {
+              if (i === path.length - 1) {
+                currentData = currentData[path];
+              } else {
+                currentData = cData[path];
+              }
+            })
+
+            return currentData;
+          }
+
+          if (dataPathArry.length === 1) {
+            data = this.component[name].data[katsuMeta.isForData.dataSelector];
+          } else {
+            data = findData(this.component[name].data, dataPathArry)
+          }
+
+          if (data.length > 0 || typeof data === 'function') {
+            delete katsuMeta.noData;
+            delete katsuMeta.removed;
+            restoreNode = true;
+          }
+        }
+
+
+        if (katsuMeta.isForData) {
+          if (typeof this.component[name].data[katsuMeta.isForData.dataSelector] === 'function') { // Always update for nodes with functional data
+            katsuMeta.isForUpdate = true;
+          }
+
+          if (katsuMeta.isForData.dataSelector.split('.')[0] === updateData && katsuMeta.isForData.index === 0) {
+            katsuMeta.isForUpdate = true;
+          }
+        }
+
+        //Check for If directive
+        // node.childNodes.forEach((thisNode) => {
+          let dontUseElm = false;
+
+          if (node.nodeType === Node.TEXT_NODE) {
+            dontUseElm = true
+          }
+
+
+          if (!dontUseElm && node) {
+            // console.log(node, node.katsuMeta, node.nodeType === Node.TEXT_NODE)
+            if (katsuMeta.render.type === 'if') {
+              const isKatsuIf = katsuMeta.render.expectation
+              const isKatsuElse = !katsuMeta.render.expectation
+
+              if (isKatsuIf) {
+                console.log('buildUpdateVDom', 'isKatsuIf', node, katsuMeta)
+                const regex = /(?<=\()(.*?)(?=\s*\))/g;
+                const arg = katsuMeta.render.condition.match(regex)[0];
+                let data = null;
+
+                if (arg.includes('.')) {
+                  let baseData = this.component[name].data;
+                  arg.split('.').forEach((argData) => {
+                    baseData = baseData[argData]
+                  });
+                  data = baseData;
+                } else {
+                  data = this.component[name].data[arg];
+                }
+
+                if (!Boolean(data)) {
+                  // node.removeChild(thisNode);
+                  // thisNode.setAttribute('remove-elm', true);
+                  katsuMeta.removed = true;
+                } else {
+                  node.katsuMeta.ifCondition = true;
+                  
+                  if (node.katsuMeta.removed) {
+                    restoreNode = true;
+                    delete katsuMeta.removed;
+                  }
+                }
+              }
+
+              if (isKatsuElse) {
+                const findIfElement = (prevSibling) => {
+                  if (prevSibling.nodeType === Node.TEXT_NODE) {
+                    return findIfElement(prevSibling.previousSibling);
+                  }
+
+                  return prevSibling;
+                }
+
+                const prevSibling = findIfElement(node.previousSibling);
+                if (prevSibling.katsuMeta.ifCondition && prevSibling.katsuMeta.render.type === 'if' ) {
+                  // node.removeChild(thisNode);
+                  // thisNode.setAttribute('remove-elm', true);
+                  katsuMeta.removed = true;
+                  delete prevSibling.katsuMeta.ifCondition;
+                }
+              }
+            }
+          }
+
+
+            
+          // });
+
+        // this.directives is no longer required and needs removing, after all functions inside is moved out to their apporite stages
+        // this.directives(node, null, name, type, index, this.currentIteration, domRoot)
+        let map, thisNode = node.textContent.trim(), emptyArray = [];
+        
+
+        if (restoreNode) {
+          const newNode = katsuMeta.node;
+
+          delete katsuMeta.node;
+
+          map = {
+            type: newNode.type,
+            content: newNode.content,
+            attr: newNode.attr,
+            node: newNode.node,
+            children: newNode.children,
+            katsuMeta,
+          }
+        } else {
+          map = {
+            type: node.nodeType === 3 ? 'text' : (node.nodeType === 1 ? node.tagName.toLowerCase() : (node.nodeType === 8 ? 'comment' : null)),
+            content: node.childNodes && node.childNodes.length > 0 ? null :  node.textContent,
+            attr: node.attributes ? this.buildAttributes(node.attributes) : (node.nodeType === 8 ? emptyArray : null),
+            node: node,
+            children: buildVNodes(node, katsuMeta.isFor),
+            katsuMeta,
+          }
+        }
+
+        return map
+      }));
+
+    }
+
+    return buildVNodes(dom);
+
+  };
+
+
 
   virtualDom(dom, name, update = false, root){
     let builtDom = this.buildVDom(dom, name, update, root);
@@ -1027,7 +1239,25 @@ export default class Katsu{
   }
 
   removeOp($target, name){
-    $target.removeAttribute(name);
+    function removeMeta(data, deleteKeys) {
+      // console.log(typeof data != "object")
+      if (typeof data != "object") return;
+      if (!data) return; // null object
+      
+      for (const key in data) {
+        if (deleteKeys.includes(key)) {
+          delete data[key];
+        } else {
+          // If the key is not deleted from the current `data` object,
+          // the value should be check for black-listed keys.
+          removeMeta(data[key], deleteKeys);
+        }
+      }
+    }
+
+    //const newOps = cleanData($target.katsuMeta, [name]);
+
+    removeMeta($target.katsuMeta, [name]);
   }
 
   setOp($target, name, value){
@@ -1045,38 +1275,62 @@ export default class Katsu{
 
   updateOption(root, name, newVal, oldVal){
     if (!newVal) {
-      this.removeAttr(root, name);
+      this.removeOp(root, name);
     } else if (!oldVal || newVal !== oldVal) {
       this.setOp(root, name, newVal);
     }
   }
 
-  updateOptions(root, newOps, oldOps){
-    let newProps = newOps ? newOps : {};
-    let oldProps = oldOps ? oldOps : {};
-    const props = Object.assign({}, newAttrs, oldAttrs);
+  // updateOptions(root, newOps, oldOps){
+  //   let newProps = newOps ? newOps : {};
+  //   let oldProps = oldOps ? oldOps : {};
+  //   const props = Object.assign({}, newProps, oldProps);
 
-    Object.values(props).forEach((name, i) => {
-      let valName = Object.keys(name)[0];
-      let newVal = newProps[i] ? Object.values(newProps[i])[0] : null;
-      let oldVal = oldProps[i] ? Object.values(oldProps[i])[0] : null;
-      this.updateOption(root, valName, newVal, oldVal);
-    });
-  }
 
-  createElm(node){
+  //   Object.values(props).forEach((name, i) => {
+  //     console.log(name)
+  //     let valName = Object.keys(name)[0];
+  //     let newVal = newProps[i] ? Object.values(newProps[i])[0] : null;
+  //     let oldVal = oldProps[i] ? Object.values(oldProps[i])[0] : null;
+
+  //     this.updateOption(root, valName, newVal, oldVal);
+  //   });
+  // }
+
+  createElm(node){    
     if(node){
       if(node.type === 'text'){
-        return document.createTextNode(node.content);
+        const $el = document.createTextNode(node.content);
+
+        if(node.katsuMeta){
+          $el.katsuMeta = {};
+          this.setOps($el, node.katsuMeta);
+        }
+  
+        return $el;
       }else if (node.type === 'comment') {
-  			return document.createComment(node.content);
+        const $el = document.createComment(node.content);
+
+        if(node.katsuMeta){
+          $el.katsuMeta = {};
+          this.setOps($el, node.katsuMeta);
+        }
+  
+        return $el;
   		}
     }else{
       return document.createTextNode('');
     }
 
     if (typeof node === 'string') {
-      return document.createTextNode(node);
+      const $el = document.createTextNode(node);
+
+      if(node.katsuMeta){
+        $el.katsuMeta = {};
+        this.setOps($el, node.katsuMeta);
+      }
+
+      return $el;
     }
 
     const $el = document.createElement(node.type);
@@ -1089,8 +1343,6 @@ export default class Katsu{
       $el.katsuMeta = {};
       this.setOps($el, node.katsuMeta);
     }
-
-    // node.testAttr = 'xxxxxxxxxxxxxxxxxxxx';
 
     node.children.map(this.createElm.bind(this)).forEach($el.appendChild.bind($el));
     return $el;
@@ -1123,8 +1375,11 @@ export default class Katsu{
         }
 
         if (newNode.katsuMeta) {
-          if(newNode.katsuMeta.length > 0){
-            this.updateOptions(root.childNodes[index], newNode.attr, oldNode.attr);
+          if(JSON.stringify(newNode.katsuMeta) !== JSON.stringify(oldNode.katsuMeta)){
+            // this.updateOptions(root.childNodes[index], newNode.attr, oldNode.attr);
+            // this.updateOptions(root.childNodes[index], newNode.katsuMeta, oldNode.katsuMeta);
+            root.childNodes[index].katsuMeta = {};
+            this.setOps(root.childNodes[index], newNode.katsuMeta)
           }
         }
       }
@@ -1728,7 +1983,11 @@ export default class Katsu{
     return foundNode;
   }
 
-  updateData (data, target, watchPath, type = 'data') {
+  // Re-render when data has been updated
+  updateData(data, target, watchPath, type = 'data') {
+
+    console.log('updateData', Object.keys(data)[0], target)
+
     // Set Data
     this.prevComponent = {};
 
@@ -1778,14 +2037,23 @@ export default class Katsu{
       //   }
       // });
 
-      const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
+      const dom = document.querySelector('#root');
+
+      const targetComponent = this.findNode(dom, 'component', target);
+
+      // console.log('updateData', 'targetComponent', targetComponent);
+
+      // const htmlContent = this.virtualDom(this.component[target].template, target, true, null);
+      const htmlContent = this.buildUpdateVDom(targetComponent, target, Object.keys(data)[0]);
+
       this.component[target].vDomNew = htmlContent;
 
-      const templateDom = this.prepareDom(htmlContent);
+      console.log(htmlContent);
 
-      this.updateDom(this.root, templateDom, this.currentDom);
+      const templateDom = this.prepareDom(htmlContent, true);
+
+      this.updateDom(dom, templateDom, this.currentDom);
       this.currentDom = templateDom;
-
 
       // If new component found after updateDom then fire Created lifecycle event
       // console.log(prevExistingComponent, existingComponent);
@@ -1806,115 +2074,155 @@ export default class Katsu{
       // console.log(target);
       // console.log(existingComponent);
 
-      this.setDomListeners(this.root);
+      this.setDomListeners(dom);
     }
   }
 
-  prepareDom(vDomTemplate) {
+  prepareDom(vDomTemplate, updateOnly = false) {
     // Modify the vDOM and set components here?
     let vDom = Object.assign({}, vDomTemplate[0]);
 
-    const forNode = (forMeta, forNode, forNodeUpdated) => {
+    const forNode = (forMeta, forNode, updateOnly) => {
+      //console.log('forNode', forMeta, forNode);
       const { itemSelector, dataSelector, component } = forMeta;
       let forData = this.bindExpressions(dataSelector, component);
       let newNodes = [];
-
       let funcData;
 
-      const thisNode = JSON.parse(JSON.stringify(forNode)); // Deep clone forNode
-
-      // Handle functionl data
-      if (typeof forData === 'function') {
-        const componentData = {...this.component[thisNode.katsuMeta.isFor.component].dataProxy.store, ...this.component[thisNode.katsuMeta.isFor.component].propsProxy.store};
-        const func = forData.toString().substring(13, forData.toString().length - 1);
-        const funcReturn = new Function('$data', func);
-        forData = funcReturn(componentData);
-      }
-
-      if (forData || typeof forData === 'function') {
-        // console.log(`Is function: ${typeof forData === 'function'}`)
-        let dataCount = forData.length;
-
-        // if (funcData) {
-        //   dataCount = funcData.length;
-        // }
-
-        for (let i = 0;i < dataCount;i++) {
-          let cloneElm = JSON.parse(JSON.stringify(thisNode)); // Deep Clone thisNode
-
-          // let forHtml = cloneElm.outerHTML;
-          // forHtml = forHtml.replace(`data-kat-for="${node.getAttribute(`data-kat-for`)}"`, `itteration="${i}" dataSelector="${forDataSelector}" itemSelector="${forItemSelector}"`);
-
-          // console.log(i, thisNode, cloneElm);
+      console.log('forNode', forNode, forData.length)
 
 
-          // const forItemSelector = node.attr['data-kat-for'].split(' of ')[0];
-          // const forDataSelector = node.attr['data-kat-for'].split(' of ')[1];
+      // TODO: Remove all functions related to or uses "funcData"
+      const findAndReplaceExpressions = (nodes, data, index, meta) => {
+        const regex = /(?<=\{{)(.*?)(?=\s*}})/g;
+        const i = index;
 
-          let forItemSelector;
-          let forDataSelector;
+        nodes.forEach((node, x) => {
+          const forItemSelector = meta.itemSelector
+          const forDataSelector = meta.dataSelector
 
-          cloneElm.attr.forEach(attr => {
-            if (Object.keys(attr)[0] === 'data-kat-for') {
-              const forVals = Object.values(attr)[0].split(' of ');
-              forItemSelector = forVals[0];
-              forDataSelector = forVals[1];
-            }
-          });
+          if (node.katsuMeta.clickable) {
+            node.katsuMeta.clickable.forIndex = i; 
+          }
 
-          cloneElm.attr = cloneElm.attr.filter(attr => Object.keys(attr)[0] !== 'data-kat-for');
+          if (node.katsuMeta.bindable) {
+            console.log('findAndReplaceExpressions', node);
+            node.katsuMeta.bindable.forIndex = i;
 
-          cloneElm.attr.push({'itteration': `${i}`});
-          cloneElm.attr.push({'dataSelector': forDataSelector});
-          cloneElm.attr.push({'itemSelector': forItemSelector});
+            node.katsuMeta.bindable.attrs.forEach((attr) => {
+              if(attr.value.indexOf('.') > -1){
+                let expArray = attr.value.split('.');
+                let currentData;
 
-          const regex = /(?<=\{{)(.*?)(?=\s*}})/g;
-          // const expressions = cloneElm.attr['dataSelector'].match(regex);
+                for(let y=1;y<expArray.length;y++){
+                  if(y === expArray.length - 1){
+                    let newAttr = {};
+                    // Possibly has a bug for rendering multiple expressions in the same element
+                    try{
+                      newAttr[attr.selector] = data[expArray[y]];
+                    }
+                    catch{
+                      newAttr[attr.selector] = '';
+                    }
 
-          // cloneElm.attr.forEach(attr => {
-          //   console.log('1@@@@@@@@@@@@@@', Object.keys(attr))
-          //   if (Object.keys(attr)[0] === 'dataSelector') {
-          //     console.log('2@@@@@@@@@@@@@@', regex);
-          //     console.log('3@@@@@@@@@@@@@@', Object.values(attr)[0])
-          //     expressions = Object.values(attr)[0].attr['dataSelector'].match(regex);
-          //   }
-          // });
+                    let pushAttr = true;
 
-          let expressions = cloneElm.content ? cloneElm.content.match(regex) : null;
+                    if (typeof data[expArray[y]] === 'boolean') {
+                      if (!data[expArray[y]]) pushAttr = false;
+                    }
 
-          // console.log('=======================');
-          // console.log(forDataSelector, forItemSelector, i);
-          // console.log('expressions', expressions);
-          // console.log('=======================');
-
-
-          // TODO: Remove all functions related to or uses "funcData"
-          const findAndReplaceExpressions = (nodes, data, index) => {
-            nodes.forEach((node, x) => {
-              if (node.katsuMeta.clickable) {
-                node.katsuMeta.clickable.forIndex = i; 
-              }
-
-              if (node.katsuMeta.bindable) {
-                node.katsuMeta.bindable.forIndex = i;
-
-                node.katsuMeta.bindable.attrs.forEach((attr) => {
-                  if(attr.value.indexOf('.') > -1){
-                    let expArray = attr.value.split('.');
-                    let currentData;
+                    if (pushAttr) {
+                      let attrExists = null;
+                      attrExists = node.attr.filter((domAttr) => Object.keys(domAttr)[0] === Object.keys(newAttr)[0]);
   
+                      if (attrExists.length > 0) {
+                        node.attr.forEach((domAttr, x) => {
+                          if(Object.keys(domAttr)[0] === attr.selector) {
+                            node.attr.splice(x, 1);
+                          };
+                        })
+                        node.attr.push(newAttr)
+                      } else {
+                        node.attr.push(newAttr);
+                      }
+  
+                    }
+                  }else{
+                    try{
+                      currentData = data[expArray[y]];
+                    }
+                    catch{
+                      currentData = '';
+                    }
+                  }
+                }
+              } else {
+                let newAttr = {};
+                newAttr[attr.selector] = attr.value;
+                node.attr.push(newAttr)
+              }
+            });
+          }
+
+          if (node.katsuMeta.content) {
+
+            const expressions = node.katsuMeta.content.match(regex);
+            const katsuMetaContent = node.katsuMeta.content;
+
+            if (expressions) {
+              expressions.forEach(expression => {
+                if (typeof data === 'function') {
+                  // If it's functional data, just insert the function's return data, rather than prepare it for the expression method;
+
+                  if(expression.indexOf('.') > -1){
+                    let expArray = expression.split('.');
+                    let currentData = funcData;
+
                     for(let y=1;y<expArray.length;y++){
                       if(y === expArray.length - 1){
-                        let newAttr = {};
                         // Possibly has a bug for rendering multiple expressions in the same element
+                        let thisData = null;
+
+                        thisData = currentData ?? data;
+                        
                         try{
                           // console.log(data, exp, currentData[expArray[i]]);
-                          newAttr[attr.selector] = data[expArray[y]];
+                          nodes[x].content = katsuMetaContent.replace(`{{${expression}}}`, currentData);
                         }
                         catch{
-                          newAttr[attr.selector] = '';
+                          nodes[x].content = katsuMetaContent.replace(`{{${expression}}}`, '');
                         }
-                        node.attr.push(newAttr)
+                      }else{
+                        try{
+                          currentData = currentData[index][expArray[x]];
+                        }
+                        catch{
+                          currentData = '';
+                        }
+                      }
+                    }
+                  } else {
+                    if (nodes[x].content) nodes[x].content = katsuMetaContent.replace(`{{${forItemSelector}}}`, funcData[index]);
+                  }
+                } else {
+                  if(expression.indexOf('.') > -1){
+                    let expArray = expression.split('.');
+                    let currentData = null;
+
+                    for(let y=1;y<expArray.length;y++){
+                      if(y === expArray.length - 1){
+                        // Possibly has a bug for rendering multiple expressions in the same element
+                        let thisData = null;
+
+                        thisData = currentData ?? data;
+
+                        try{
+                          // console.log(data, exp, currentData[expArray[i]]);
+                          nodes[x].content = katsuMetaContent.replace(`{{${expression}}}`, thisData[expArray[y]]);
+                        }
+                        catch{
+                          nodes[x].content = katsuMetaContent.replace(`{{${expression}}}`, '');
+                        }
                       }else{
                         try{
                           currentData = data[expArray[y]];
@@ -1925,192 +2233,143 @@ export default class Katsu{
                       }
                     }
                   } else {
-                    let newAttr = {};
-                    newAttr[attr.selector] = attr.value;
-                    node.attr.push(newAttr)
+                    // if (nodes[x].content) nodes[x].content = node.katsuMeta.content.replace(`{{${forItemSelector}}}`, `{{${forDataSelector}[${index}]}}`)
+                    const forTextContent = katsuMetaContent.replace(`{{${forItemSelector}}}`, `{{${forDataSelector}[${index}]}}`)
+                    if (nodes[x].content) nodes[x].content = this.expressions(forTextContent, nodes[x].katsuMeta.component.module)
                   }
-                });
-              }
 
-              if (node.content) {
-                const expressions = node.content.match(regex);
-
-                if (expressions) {
-                  expressions.forEach(expression => {
-                    if (typeof data === 'function') {
-                      // If it's functional data, just insert the function's return data, rather than prepare it for the expression method;
-
-                      if(expression.indexOf('.') > -1){
-                        let expArray = expression.split('.');
-                        let currentData = funcData;
-
-                        for(let y=1;y<expArray.length;y++){
-                          if(y === expArray.length - 1){
-                            // Possibly has a bug for rendering multiple expressions in the same element
-                            let thisData = null;
-
-                            thisData = currentData ?? data;
-                            
-                            try{
-                              // console.log(data, exp, currentData[expArray[i]]);
-                              nodes[x].content = node.content.replace(`{{${expression}}}`, currentData);
-                            }
-                            catch{
-                              nodes[x].content = node.content.replace(`{{${expression}}}`, '');
-                            }
-                          }else{
-                            try{
-                              currentData = currentData[index][expArray[x]];
-                            }
-                            catch{
-                              currentData = '';
-                            }
-                          }
-                        }
-                      } else {
-                        if (nodes[x].content) nodes[x].content = node.content.replace(`{{${forItemSelector}}}`, funcData[index]);
-                      }
-                    } else {
-                      if(expression.indexOf('.') > -1){
-                        let expArray = expression.split('.');
-                        let currentData = null;
- 
-                        for(let y=1;y<expArray.length;y++){
-                          if(y === expArray.length - 1){
-                            // Possibly has a bug for rendering multiple expressions in the same element
-                            let thisData = null;
-
-                            thisData = currentData ?? data;
-
-                            try{
-                              // console.log(data, exp, currentData[expArray[i]]);
-                              nodes[x].content = node.content.replace(`{{${expression}}}`, thisData[expArray[y]]);
-                            }
-                            catch{
-                              nodes[x].content = node.content.replace(`{{${expression}}}`, '');
-                            }
-                          }else{
-                            try{
-                              currentData = data[expArray[y]];
-                            }
-                            catch{
-                              currentData = '';
-                            }
-                          }
-                        }
-                      } else {
-                        if (nodes[x].content) nodes[x].content = node.content.replace(`{{${forItemSelector}}}`, `{{${forDataSelector}[${index}]}}`)
-                      }
-
-                    }
-                  });
                 }
-              }
 
-
-              if (nodes[x].children.length > 0) {
-                nodes[x].children = findAndReplaceExpressions(node.children, data, i)
-              }
-            })
-
-            return nodes;
-          };
-
-          // findAndReplaceExpressions() top level node
-          cloneElm = findAndReplaceExpressions([cloneElm], forData[i], i);
-
-          if (cloneElm[0].children.length > 0) {
-            cloneElm[0].children = findAndReplaceExpressions(cloneElm[0].children, forData[i], i);
+              });
+            }
           }
 
-          // if (expressions) {
-          //   expressions.forEach((forExp) => {
-          //     console.log(forExp);
-          //     const forExpression = forExp.trim().replace(forItemSelector, `${forDataSelector}[${i}]`);
 
+          if (nodes[x].children.length > 0) {
+            nodes[x].children = findAndReplaceExpressions(node.children, data, i, forMeta)
+          }
 
-          // //   })
-          // // } else {
-          //   if (typeof forData === 'function') {
-          //     // If it's functional data, just insert the function's return data, rather than prepare it for the expression method;
-          //     // forHtml = forHtml.replace(`{{${itemSelector}}}`, funcData[i]);
-          //     cloneElm.content = cloneElm.content.replace(`{{${forItemSelector}}}`, funcData[i])
+          nodes[x].katsuMeta.isForExp = true;
+        })
 
-          //   } else {
-          //     // forHtml = forHtml.replace(`{{${itemSelector}}}`, `{{${dataSelector}[${i}]}}`);
+        return nodes;
+      };
 
-          //     if (cloneElm.content) cloneElm.content = cloneElm.content.replace(`{{${forItemSelector}}}`, `{{${forDataSelector}[${i}]}}`)
+      const thisNode = JSON.parse(JSON.stringify(forNode)); // Deep clone forNode
 
-          //     // node.attr = node.attr.map(attr => {
-          //     //   if (Object.keys(attr) === 'itemSelector') {
-          //     //     node.attr.forEach(attrData => {
-          //     //       if (Object.keys(attrData) === 'dataSelector') {
-          //     //         return {}
-          //     //       }
-
-
-          //     //     })
-          //     //   }
-
-          //     //   return attr;
-          //     // });
-    
-          //   }
-          // // }                      
-          
-          delete cloneElm[0].katsuMeta.isFor;
-
-          cloneElm[0].katsuMeta.forIndex;
-
-          newNodes.push(cloneElm[0]);
-        }
+      // Handle functionl data
+      if (typeof forData === 'function') {
+        const componentData = {...this.component[thisNode.katsuMeta.isForData.component].dataProxy.store, ...this.component[thisNode.katsuMeta.isForData.component].propsProxy.store};
+        const func = forData.toString().substring(13, forData.toString().length - 1);
+        const funcReturn = new Function('$data', func);
+        forData = funcReturn(componentData);
       }
 
-      return newNodes;
+      if (forData.length === 0) {
+        console.log('findAndReplaceExpressions', 'no forData', forNode);
+        forNode.katsuMeta.removed = true; // Marked as removed when there is no data for the cloning.
+        forNode.katsuMeta.noData = true;
+        return forNode;
+      }
+
+      console.log('forNode', 'forData', forData);
+
+      if (forData || typeof forData === 'function') {
+        // console.log(`Is function: ${typeof forData === 'function'}`)
+        let dataCount = forData.length;
+
+        // if (funcData) {
+        //   dataCount = funcData.length;
+        // }
+
+        if (!updateOnly) {
+          for (let i = 0;i < dataCount;i++) {
+            let cloneElm = JSON.parse(JSON.stringify(thisNode)); // Deep Clone thisNode
+  
+            cloneElm.attr = cloneElm.attr.filter(attr => Object.keys(attr)[0] !== 'data-kat-for');
+  
+            cloneElm.attr.push({'itteration': `${i}`});
+            cloneElm.attr.push({'dataSelector': cloneElm.katsuMeta.isForData.dataSelector});
+            cloneElm.attr.push({'itemSelector': cloneElm.katsuMeta.isForData.itemSelector});
+  
+            let expressions = cloneElm.content ? cloneElm.content.match(regex) : null;
+  
+            // findAndReplaceExpressions() top level node
+            cloneElm = findAndReplaceExpressions([cloneElm], forData[i], i, forMeta);
+  
+            if (cloneElm[0].children.length > 0) {
+              cloneElm[0].children = findAndReplaceExpressions(cloneElm[0].children, forData[i], i, forMeta);
+            }
+  
+            cloneElm[0].katsuMeta.isForData.index = i;
+
+            if (i !== 0) {
+              cloneElm[0].katsuMeta.skipUpdate = true;
+            }
+  
+            delete cloneElm[0].katsuMeta.isFor;
+  
+            newNodes.push(cloneElm[0]);
+          }
+
+          return newNodes;
+        } else {
+          const index = forNode.katsuMeta.isForData.index
+          const forElm = findAndReplaceExpressions([forNode], forData[index], index, forMeta);
+
+          if (forElm[0].children.length > 0) {
+            forElm[0].children = findAndReplaceExpressions(forElm[0].children, forData[index], index, forMeta);
+          }
+
+          return forElm[0];
+        }
+
+      }
+
     }
 
-    const findandReplaceComponent = (dom, target, component, componentName) => {
-      console.log('===== findandReplaceComponent =====')
-      console.log(dom, target, component, componentName)
-      let foundDom = false;
-      let updatedDom = {}
+    // const findandReplaceComponent = (dom, component, componentName) => {
+    //   console.log('===== findandReplaceComponent =====')
+    //   console.log(dom, component, componentName)
+    //   let foundDom = false;
+    //   let updatedDom = {}
 
-      const traverseTree = (dom) => {
-        let newDom = dom;
+    //   const traverseTree = (dom) => {
+    //     let newDom = dom;
 
-        if (newDom && !foundDom) {
-          newDom.children.forEach((child, i) => {
-            if (child.katsuMeta.component === componentName) {
-              // console.log(child.katsuMeta.component);
-              // If the component's node meta is flagged for removal it will not be inserted into the VDOM, it is then considered to be removed / destroyed.
-              // The component is flagged as "disabled" and is to be removed at the end of the prepareDom phase.
-              if (!child.katsuMeta.removed) {
-                newDom.children[i] = component;
-                newDom.children[i].katsuMeta.component = componentName;
-              } else {
-                this.component[componentName].disabled = true;
-              }
+    //     if (newDom && !foundDom) {
+    //       newDom.children.forEach((child, i) => {
+    //         if (child.katsuMeta.component === componentName) {
+    //           // console.log(child.katsuMeta.component);
+    //           // If the component's node meta is flagged for removal it will not be inserted into the VDOM, it is then considered to be removed / destroyed.
+    //           // The component is flagged as "disabled" and is to be removed at the end of the prepareDom phase.
+    //           if (!child.katsuMeta.removed) {
+    //             newDom.children[i] = component;
+    //             newDom.children[i].katsuMeta.component = componentName;
+    //           } else {
+    //             this.component[componentName].disabled = true;
+    //           }
 
-              foundDom = true;
-            }
+    //           foundDom = true;
+    //         }
 
-            if (!foundDom) {
-              if (child.children.length > 0) {
-                newDom.children[i] = traverseTree(child);
-               }
-            }
-          });
+    //         if (!foundDom) {
+    //           if (child.children.length > 0) {
+    //             newDom.children[i] = traverseTree(child);
+    //            }
+    //         }
+    //       });
 
-          return newDom;
-        }
-      }
+    //       return newDom;
+    //     }
+    //   }
 
-       if (dom.children) {
-        updatedDom = traverseTree(dom)
-       }
+    //    if (dom.children) {
+    //     updatedDom = traverseTree(dom)
+    //    }
 
-      return updatedDom;
-    };
+    //   return updatedDom;
+    // };
 
     const modifyNodes = (dom) => {
       let updatedDom = {}
@@ -2123,14 +2382,22 @@ export default class Katsu{
 
           // Replace with comment node
           if (newDom.katsuMeta?.removed) {
+
             newDom = {
               attr: [],
               children: [],
               content: 'removed',
-              katsuMeta: {},
+              katsuMeta: {
+                ...newDom.katsuMeta,
+                node: dom
+              },
               node: null,
               type: 'comment'
             };
+          }
+
+          if (newDom.katsuMeta?.ifCondition) {
+            delete newDom.katsuMeta.ifCondition;
           }
 
           newDom.children.forEach((child, i) => {
@@ -2157,34 +2424,56 @@ export default class Katsu{
       const traverseTree = (dom) => {
         let newDom = [];
 
-        // console.log(newDom, newDom.katsuMeta);
-
-        // Replace with comment node
-        // Find For Node to duplicate
-
         if (dom.length > 0) {
-          // newDom.children.forEach((node, i) => {
-          //   console.log('===== node.katsuMeta =====');
-          //   console.log(node, node.katsuMeta);
-          //   if (node.katsuMeta?.isFor) {
-          //     const newNodes = forNode(node.katsuMeta.isFor, node);
-          //     newNodes.length > 1 ? newDom.children.splice(i, 1, ...newNodes) : newDom.children.splice(i, 1, newNodes);
-          //   }
-          // });
 
-          // Duplicate isFor nodes 
+          
           dom.forEach((node, i) => {
-            // console.log(node);
-              if (node.katsuMeta.isFor) {
-                // console.log('@@@@@@@@@@@@@@ Duplicate isFor nodes @@@@@@@@@@@@@@')
-                // console.log(node);
-                const newNodes = forNode(node.katsuMeta.isFor, node);
-                newNodes.length > 0 ? dom.splice(i, 1, ...newNodes) : dom.splice(i, 1);
+            if (node.katsuMeta.isFor) { // Duplicate isFor nodes 
+
+
+              const newNodes = forNode(node.katsuMeta.isForData, node, false)  // Clone and update nodes;
+
+              console.log('newNodes', newNodes, node, dom, i)
+              console.log(dom[i]);
+
+              if (newNodes) {
+                newNodes.length > 0 && dom.splice(i, 1, ...newNodes);
               }
 
-              if (node.children.length > 0) {
-                return traverseTree(node.children);
+            } else if (node.katsuMeta.isForUpdate) { // If node are already duplicated, then just update them
+              if (node.katsuMeta.skipUpdate) {
+                delete node.katsuMeta.skipUpdate
+              } else {
+                let nextIndex = i + 1
+
+                // Remove For siblings
+                while(dom[nextIndex].katsuMeta.isForData) {
+                  dom.splice(nextIndex, 1);
+                  nextIndex + 1
+                }
+
+                const newNodes = forNode(node.katsuMeta.isForData, node, false)  // Clone and update nodes;
+  
+                if (newNodes) {
+                  newNodes.length > 0 && dom.splice(i, 1, ...newNodes);
+                }
+
+                // parentNode.childNodes.forEach((node) => {
+                //   console.log(node);
+                // })
+  
+  
+                // if () { // However, if there has been a chnage to the number of items, delete all items, re-clone and update nodes
+  
+                // } else { // Otherwise, Update only
+                  // dom[i] = forNode(node.katsuMeta.isForData, node, true) 
+                // }
               }
+            }
+
+            if (node.children.length > 0) {
+              return traverseTree(node.children);
+            }
           });
 
           // Modify Node to replace expressions and 
@@ -2230,8 +2519,8 @@ export default class Katsu{
         const traverseTree = (dom) => {
           if (dom.length > 0) {
             dom.forEach((node, i) => {
-              if (node.content) {
-                (/{{(.*?)}}/g.test(node.content) ? dom[i].content = this.expressions(dom[i].content, dom[i].katsuMeta.component.module) : dom[i].content)
+              if (node.katsuMeta.content && !node.katsuMeta.isForExp) {
+                (/{{(.*?)}}/g.test(node.katsuMeta.content) ? dom[i].content = this.expressions(dom[i].katsuMeta.content, dom[i].katsuMeta.component.module) : dom[i].katsuMeta.content)
               }
   
               if (node.children.length > 0) {
@@ -2262,8 +2551,7 @@ export default class Katsu{
         const traverseTree = (dom) => {
           if (dom.length > 0) {
             dom.forEach((node, i) => {
-  
-              if (node.katsuMeta.bindable) {
+              if (node.katsuMeta.bindable && !node.katsuMeta.isForExp) {
                 if (node.katsuMeta.bindable.attrs.length > 0) {
                   const data = {...this.component[node.katsuMeta.component.module].dataProxy.store, ...this.component[node.katsuMeta.component.module].propsProxy.store};
   
@@ -2271,27 +2559,43 @@ export default class Katsu{
                     if(attr.value.indexOf('.') > -1){
                       let expArray = attr.value.split('.');
                       let currentData = null;
-    
+
                       for(let y=0;y<expArray.length;y++){
                         let thisData = null;
   
                         thisData = currentData || data;
-  
+
                         if(y === expArray.length - 1){
                           let newAttr = {};
                           // Possibly has a bug for rendering multiple expressions in the same element
                           try{
-                            // console.log(data, exp, currentData[expArray[i]]);
                             newAttr[attr.selector] = thisData[expArray[y]];
                           }
                           catch{
                             newAttr[attr.selector] = '';
                           }
-    
-                          let attrExists = null;
-                          attrExists = dom[i].attr.filter((domAttr) => Object.keys(domAttr)[0] === Object.keys(newAttr)[0]);
+
+                          let pushAttr = true;
+
+                          if (typeof thisData === 'boolean') {
+                            if (!thisData[expArray[y]]) pushAttr = false;
+                          }
+
+                          if (pushAttr) {
+                            let attrExists = null;
+                            attrExists = dom[i].attr.filter((domAttr) => Object.keys(domAttr)[0] === Object.keys(newAttr)[0]);
   
-                          if (attrExists.length === 0) dom[i].attr.push(newAttr);
+                            if (attrExists.length > 0) {
+                              dom[i].attr.forEach((domAttr, x) => {
+                                if(Object.keys(domAttr)[0] === attr.selector) {
+                                  dom[i].attr.splice(x, 1);
+                                };
+                              })
+                              dom[i].attr.push(newAttr)
+                            } else {
+                              dom[i].attr.push(newAttr);
+                            }
+                          }
                         }else{
                           try{
                             currentData = thisData[expArray[y]];
@@ -2304,6 +2608,7 @@ export default class Katsu{
                     } else {
                       let attrExists = null;
                       let newAttr = {};
+
                       newAttr[attr.selector] = attr.value;
     
                       attrExists = dom[i].attr.filter((domAttr) => Object.keys(domAttr)[0] === Object.keys(newAttr)[0]);
@@ -2346,7 +2651,7 @@ export default class Katsu{
           if (domNode.katsuMeta?.component?.name) {
             console.log('##### Found Component #####')
             console.log(domNode.katsuMeta.component.name);
-            domNode.katsuMeta.component.name && existingComponents.push(domNode.katsuMeta.component.name)
+            if (domNode.katsuMeta.component.name) existingComponents.push(domNode.katsuMeta.component.name)
           }
           if (domNode.childNodes.length > 1) {
             findExistingComponents(domNode.childNodes)
@@ -2354,48 +2659,100 @@ export default class Katsu{
         })
       }
 
-      const createComponentNodes = (dom) => {
-        console.log('createComponentNodes', 'start', dom);
+      const createComponentNodes = (rootDom) => {
+        console.log('createComponentNodes', 'start', rootDom);
         const traverseTree = (dom) => {
           if (dom.length > 0) {
             dom.forEach((node, i) => {
               Object.keys(this.modules).forEach((component, index) => {
+                // console.log(node, node.type, component.toLowerCase());
                 if (node.type === component.toLowerCase()) {
-                  // console.log('========= Component Node =============')
-                  // console.log(node);
+                  console.log('========= Component Node =============')
+                  console.log(node);
   
-                    // targetElm = document.querySelector(target);
-                    //Set root component
-                    const componentName = this.setComponent(node.katsuMeta.component.module);
-                    const parentComponent = dom[i].katsuMeta.component.parent;
-                    if (!this.component[parentComponent].childComponents) {
-                      this.component[parentComponent].childComponents = [];
-                    }
+                  // targetElm = document.querySelector(target);
+                  //Set root component
+
+                  // create new Component if it doesn't exist
+                  const componentName = this.setComponent(node.katsuMeta.component.module);
+
+                  const parentComponent = dom[i].katsuMeta.component.parent;
+                  if (!this.component[parentComponent].childComponents) {
+                    this.component[parentComponent].childComponents = [];
+                  }
+
+                  this.component[parentComponent].childComponents.push(componentName);
+                  this.setController(componentName);
+                  this.component[componentName].controllerSet = true;
+          
+                  // Build Template
+                  // Set non-root Modules in buildVDom
+                  const htmlContent = this.virtualDom(this.component[componentName].template, componentName, false, null);
+
+                  this.component[componentName].vDomNew = htmlContent;
+                  this.component[componentName].vDomBuilt = true;
+
+                  dom[i].katsuMeta.component.name = componentName;
+
+
+                  const templateDom = this.prepareDom(htmlContent)
+
+                  dom[i] = templateDom;
+
+                  dom[i].attr = [{'name': componentName}];
+
+                  console.log('createComponentNodes', 'After templateDom', dom[i]);
+
+                }
+              });
+
+              // console.log('createComponentNodes', 'During traverseTree', node);
+
+              if (node.children) {
+                if (node.children.length > 0) {
+                  return traverseTree(node.children);
+                }
+              }
+            });
+          }
   
-                    this.component[parentComponent].childComponents.push(componentName);
+          return dom;
   
-                    // targetElm.katsuMeta = {};
-                    // targetElm.katsuMeta.component = componentName;
-            
-                    this.setController(componentName);
-                    this.component[componentName].controllerSet = true;
-            
-                    // Build Template
-                    // Set non-root Modules in buildVDom
-                    const htmlContent = this.virtualDom(this.component[componentName].template, componentName, false, null);
+        }
 
-                    this.component[componentName].vDomNew = htmlContent;
-                    this.component[componentName].vDomBuilt = true;
-
-
+        // console.log('createComponentNodes', 'Before traverseTree', dom.children);
+        
   
-                    dom[i].katsuMeta.component.name = componentName;
+        if (rootDom.children) {
+          updatedDom.children = traverseTree(rootDom.children)
+        }
 
-                    // console.log('====== Component prepareDom ======')
-                    const templateDom = this.prepareDom(htmlContent)
-                    console.log('createComponentNodes', 'after prepareDom', templateDom);
+        return updatedDom;
+      }
 
-                    //Replace Component element in VDOM with compiled template
+      const setComponentNodes = (rootDom, componentName) => {
+        console.log('createComponentNodes', 'start', rootDom);
+        const traverseTree = (dom) => {
+          if (dom.length > 0) {
+            dom.forEach((node, i) => {
+              Object.keys(this.modules).forEach((component, index) => {
+                // console.log(node, node.type, component.toLowerCase());
+                if (node.type === component.toLowerCase()) {
+                  // Build Template
+                  // Set non-root Modules in buildVDom
+                  const htmlContent = this.virtualDom(this.component[componentName].template, componentName, false, null);
+
+                  this.component[componentName].vDomNew = htmlContent;
+                  this.component[componentName].vDomBuilt = true;
+
+                  dom[i].katsuMeta.component.name = componentName;
+
+
+                  const templateDom = this.prepareDom(htmlContent)
+
+                  dom[i] = templateDom;
+
+                  dom[i].attr = [{'name': componentName}];
                 }
               });
 
@@ -2410,12 +2767,9 @@ export default class Katsu{
           return dom;
   
         }
-
-        // console.log('createComponentNodes', 'Before traverseTree', dom.children);
-        
   
-        if (dom.children) {
-          updatedDom.children = traverseTree(dom.children)
+        if (rootDom.children) {
+          updatedDom.children = traverseTree(rootDom.children)
         }
 
         return updatedDom;
@@ -2427,56 +2781,77 @@ export default class Katsu{
 
       // console.log(this.root);
 
-
       // Find existing components if DOM has already been built
-      if (this.root.childNodes.length > 0) {
-        console.log(this.root.childNodes);
-        this.root.childNodes.forEach((node) => {
-          findExistingComponents(node.childNodes);
-        })
 
-        let componentsToBeDestoryed = [];
-        let componentsToBeCreated = [];
+      console.log('componentNodes', 'Before Init / Update', dom, this.component[dom.katsuMeta.component.module].childComponents)
 
-        // If component is not found on DOM, but exists in component object, then destory component
-        // Object.keys(this.component).forEach((component) => {
-          existingComponents.forEach(existingComponent => {
-            // Needs code here
-            // component !== existingComponent && componentsToBeDestoryed.push(component);
-            // console.log(Object.keys(this.component), existingComponent);
-            if (!Object.keys(this.component).includes(existingComponent)) componentsToBeDestoryed.push(existingComponent);
-          })
+      if (this.component[dom.katsuMeta.component.module].childComponents) {
+        // console.log('componentNodes', 'Update route');
+        // console.log(this.root.katsuMeta);
+        // console.log(this.component);
+
+        // this.root.childNodes.forEach((node) => {
+        //   findExistingComponents(node.childNodes);
+        // })
+
+        // let componentsToBeDestoryed = [];
+        // let componentsToBeCreated = [];
+
+        // // If component is not found on DOM, but exists in component object, then destory component
+        // // Object.keys(this.component).forEach((component) => {
+        //   existingComponents.forEach(existingComponent => {
+        //     // Needs code here
+        //     // component !== existingComponent && componentsToBeDestoryed.push(component);
+        //     // console.log(Object.keys(this.component), existingComponent);
+        //     if (!Object.keys(this.component).includes(existingComponent)) componentsToBeDestoryed.push(existingComponent);
+        //   })
           
 
-        // })
+        // // })
 
 
-        // TODO: To be removed, I don't think this is required
-        // If component is found on DOM, but does NOT exists in component object, then create component
+        // // TODO: To be removed, I don't think this is required
+        // // If component is found on DOM, but does NOT exists in component object, then create component
         // existingComponents.forEach(existingComponent => {
-          // Object.keys(this.component).forEach((component) => {
-            // Needs code here
-            // existingComponent !== component && componentsToBeCreated.push(component);
-          //   if (!existingComponents.includes(component)) componentsToBeCreated.push(component);
-          // })           
+        //   Object.keys(this.component).forEach((component) => {
+        //     existingComponent !== component && componentsToBeCreated.push(component);
+        //     if (!existingComponents.includes(component)) componentsToBeCreated.push(component);
+        //   })           
         // })
-        // Run through componentsToBeDestoryed and componentsToBeCreated
+        // // Run through componentsToBeDestoryed and componentsToBeCreated
 
-        console.log('====== componentsToBeDestoryed / componentsToBeCreated ======');
-        console.log(componentsToBeDestoryed);
-        console.log(componentsToBeCreated);
-        console.log(dom);
 
-        updatedDom = createComponentNodes(dom)
+        
+
+        // console.log('====== componentsToBeDestoryed / componentsToBeCreated ======');
+        // console.log(componentsToBeDestoryed);
+        // console.log(componentsToBeCreated);
+        // console.log(dom);
+
+        // console.log(this);
+
+        // console.log('componentNodes', 'Component does not exists', dom)
+        // updatedDom = createComponentNodes(dom)
+        // console.log('componentNodes', 'after createComponentNodes', updatedDom)
+
+        // return updatedDom
+
+        // const compoentsToSet = this.component[dom.katsuMeta.component.module].childComponents;
+
+
+
+        // updatedDom = setComponentNodes(dom)
 
         return updatedDom;
-
-
       } else {
+        console.log('componentNodes', 'Init route');
         console.log('componentNodes', 'Component does not exists', dom)
         updatedDom = createComponentNodes(dom)
 
-        console.log(updatedDom);
+        console.log('componentNodes', 'after createComponentNodes', updatedDom)
+
+        // Replace with updatedDom
+        console.log('Replace with updatedDom', dom, updatedDom);
 
         return updatedDom;
       }
@@ -2490,13 +2865,15 @@ export default class Katsu{
       return dom;
     }
 
-    // console.log('++++++++++++++++++++++++++');
-    // console.log(vDom);
+    console.log('prepareDom', 'component count', this.component, Object.keys(this.component).length);
 
     // Duplicate Nodes in For loops
     vDom = forNodes(vDom);
 
+
     // console.log('forNodes', vDom);
+
+    // console.log('Before componentNodes', vDom);
 
     // Create and set components
     vDom = componentNodes(vDom);
@@ -2516,7 +2893,7 @@ export default class Katsu{
     // Any addtional modification to nodes
     vDom = modifyNodes(vDom);
 
-    // console.log('modifyNodes', vDom);
+    console.log('Prepared vDOM', vDom);
 
     // console.log('root', vDomTemplate)
     // console.log('Perpared VDOM', vDom);
@@ -2894,6 +3271,9 @@ export default class Katsu{
  // Refactor code to make it reusable
   render(modules, target) {
     let module = [];
+
+    this.rootTarget = target;
+
     this.root = document.querySelector(target);
 
     if (Array.isArray(modules)) {

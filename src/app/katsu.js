@@ -700,109 +700,13 @@ export default class Katsu{
           }
 
           if (isKatsuClass) {
-            const dataSelector = node.getAttribute(`data-kat-class`);
-            const isForElement = this.component[name].isFor;
-
-            const data = isForElement ? this.component[name].data[isForElement.forDataSelector][dataSelector] : this.component[name].data[dataSelector];
-            const dataType = typeof data;
-
-            switch (dataType) {
-              case 'string':
-                node.classList.add(data)
-                break;
-              case 'object':
-                if (Array.isArray(data)) {
-                  node.classList.add(...data);
-                } else {
-                  let activeClasses = [];
-                  Object.keys(data).map((katsuClass) => {
-                    if (Boolean(data[katsuClass])) {
-                      activeClasses.push(katsuClass)
-                    }
-                  });
-
-                  node.classList.add(...activeClasses);
-                }
-                
-                break;
+            katsuMeta.class = { 
+              data: node.getAttribute(`data-kat-class`),
+              // type: dataType
             }
 
             node.removeAttribute(`data-kat-class`);
           }
-
-          // Move to prepareDom
-          if (isKatsuSwitch) {
-            const regex = /(?<=\()(.*?)(?=\s*\))/g;
-            const arg = isKatsuSwitch.match(regex)[0];
-
-            const removeNode = (node, target) => {
-              const traverseTree = (node, target) => {
-                if (node.getAttribute('data-kat-case')) {
-                  if (node.getAttribute('data-kat-case') !== target) {
-                    node.setAttribute('remove-element', true);
-                  }
-                }
-
-                if (node.children) {
-                  for(let child of node.children) {
-                    traverseTree(child, target);
-                  }
-                }
-              }
-              traverseTree(node, target);
-            }
-
-            let data = null;
-
-            if (arg.includes('.')) {
-              let baseData = this.component[name].data;
-              arg.split('.').forEach((argData) => {
-                baseData = baseData[argData]
-              });
-              data = baseData;
-            } else {
-              data = this.component[name].data[arg];
-            }
-
-            removeNode(node, data);
-
-            node.querySelectorAll('[remove-element]').forEach((removeElm) => {
-              removeElm.parentNode.removeChild(removeElm);
-            });
-
-            node.removeAttribute(`data-kat-switch`);
-          }
-
-          if (isKatsuCase) {
-            node.removeAttribute(`data-kat-case`);
-          }
-
-          // if (isKatsuSrc) {
-          //   const regex = /(?<=\()(.*?)(?=\s*\))/g;
-          //   const arg = isKatsuSwitch.match(regex)[0];
-          //   let data = null;
-
-          //   if (arg.includes('.')) {
-          //     let baseData = this.component[name].data;
-          //     arg.split('.').forEach((argData) => {
-          //       baseData = baseData[argData]
-          //     });
-          //     data = baseData;
-          //   } else {
-          //     data = this.component[name].data[arg];
-          //   }
-
-          //   if(this.component[name].isFor){
-          //     elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`)[index];
-          //     elms.setAttribute('src', data);
-          //   }else{
-          //     elms = document.querySelectorAll(`[data-kat-src="${attr.value}"]`);
-          //     for(let elm of elms){
-          //       elm.setAttribute('src', data);
-          //     }
-          //   }
-
-          // }
 
           if (isKatsuFor) {
             const args = isKatsuFor.split('of');
@@ -943,6 +847,68 @@ export default class Katsu{
 
                 node.removeAttribute(`data-kat-else`);
               }
+            }
+
+
+            if (isKatsuSwitch) {
+              const regex = /(?<=\()(.*?)(?=\s*\))/g;
+              const arg = isKatsuSwitch.match(regex)[0];
+  
+              const removeNode = (node, arg, target) => {
+                const traverseTree = (node, target) => {
+                  if (node.getAttribute('data-kat-case')) {
+                    node.setAttribute('switch-arg', arg);
+                    node.setAttribute('switch-value', target);
+                    if (node.getAttribute('data-kat-case') !== target) {
+                      node.setAttribute('remove-element', true);
+                    }
+                  }
+  
+                  if (node.children) {
+                    for(let child of node.children) {
+                      traverseTree(child, target);
+                    }
+                  }
+                }
+                traverseTree(node, target);
+              }
+  
+              let data = null;
+  
+              if (arg.includes('.')) {
+                let baseData = this.component[name].data;
+                arg.split('.').forEach((argData) => {
+                  baseData = baseData[argData]
+                });
+                data = baseData;
+              } else {
+                data = this.component[name].data[arg];
+              }
+  
+              removeNode(node, arg, data);
+            
+              katsuMeta.switch = {
+                arg: isKatsuSwitch.match(regex)[0],
+                value: data
+              } 
+  
+              node.removeAttribute(`data-kat-switch`);
+            }
+  
+            if (isKatsuCase) {
+              console.log('isKatsuCase', node);
+              katsuMeta.case = {
+                value: node.getAttribute('data-kat-case'),
+                switchValue: node.getAttribute('switch-value'),
+                switchArg: node.getAttribute('switch-arg')
+              } 
+
+              if (node.getAttribute('remove-element')) {
+                katsuMeta.removed = true
+              }
+  
+              node.removeAttribute('data-kat-case');
+              node.removeAttribute('remove-element');
             }
           // });
 
@@ -1121,6 +1087,32 @@ export default class Katsu{
               }
             }
           }
+
+          if (katsuMeta.case) {
+            const arg = katsuMeta.case.switchArg;
+            let data = null;
+
+            if (arg.includes('.')) {
+              let baseData = this.component[name].data;
+              arg.split('.').forEach((argData) => {
+                baseData = baseData[argData]
+              });
+              data = baseData;
+            } else {
+              data = this.component[name].data[arg];
+            }
+
+            if (katsuMeta.case.value === data) {
+              if (katsuMeta.removed) {
+                restoreNode = true;
+                delete katsuMeta.removed;
+              }
+            } else {
+              katsuMeta.removed = true;
+            }
+          }
+
+
 
 
             
@@ -1987,6 +1979,7 @@ export default class Katsu{
   updateData(data, target, watchPath, type = 'data') {
 
     console.log('updateData', Object.keys(data)[0], target)
+    console.log(this.component[target].data);
 
     // Set Data
     this.prevComponent = {};
@@ -2642,6 +2635,67 @@ export default class Katsu{
       return dom;
     }
 
+    const classNode = (dom) => {
+      if (dom) {
+        let updatedDom = Object.assign({}, dom);
+
+        const traverseTree = (dom) => {
+          if (dom.length > 0) {
+            dom.forEach((node, i) => {
+
+              if (node.katsuMeta.class) {
+                const dataSelector = node.katsuMeta.class.data
+                const isForElement = node.katsuMeta.isForData;
+                const componentName = node.katsuMeta.component.module
+          
+                const data = isForElement ? this.component[componentName].data[isForElement.forDataSelector][dataSelector] : this.component[componentName].data[dataSelector];
+                const dataType = typeof data;
+
+                let newClasses = '';
+                
+          
+                switch (dataType) {
+                  case 'string':
+                    console.log(dom[i]);
+                    newClasses = '';
+                    break;
+                  case 'object':
+                    if (Array.isArray(data)) {
+                      newClasses = [...data].join(' ');
+                    } else {
+                      let activeClasses = [];
+                      Object.keys(data).map((katsuClass) => {
+                        if (Boolean(data[katsuClass])) {
+                          activeClasses.push(katsuClass)
+                        }
+                      });
+          
+                      newClasses = [...activeClasses].join(' ');
+                    }
+                    
+                    break;
+                }
+
+                dom[i].attr.push({'class': newClasses});
+              }
+
+            });
+          }
+  
+          return dom;
+        }
+        
+  
+        if (dom.children) {
+          updatedDom.children = traverseTree(dom.children)
+        }
+
+        return updatedDom;
+      }
+
+      return dom;
+    }
+
     const componentNodes = (dom) => {
       let updatedDom = Object.assign({}, dom);
       let existingComponents = [];
@@ -2887,6 +2941,8 @@ export default class Katsu{
 
     // Set Bindables
     vDom = bindableNodes(vDom)
+
+    vDom = classNode(vDom);
 
     // console.log('bindableNodes', vDom);
 

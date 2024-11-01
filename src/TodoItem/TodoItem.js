@@ -12,17 +12,21 @@ class TodoItem {
         name: 'Johnny'
       }
     }
-    controller($data, $props, $event, $created, $destroyed) {
+    controller($data, $props, $event, $created, $destroyed, $updated) {
       $created((name) => {
         console.log('Component Created: ', name);
       });
 
-      $destroyed((name) => {
-        console.log('Component Destoryed: ', name);
+      $updated((data) => {
+        console.log('Component Updated: ', data);
+      });
+
+      $destroyed(() => {
+        console.log('Component Destoryed');
       })
 
       $event.on('changeText', () => {
-        console.log($props.title);
+        console.log($props);
         $data.name = `${$props.title} David`;
       });
     }

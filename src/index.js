@@ -1420,6 +1420,7 @@ export default class Katsu{
     }
   }
 
+  // To be removed once module is created
   setDomListeners(root){
     const component = this.component;
 

@@ -3,12 +3,12 @@ const path = require('path');
 
 module.exports = {
   mode: 'production',
-  entry: './src/index.js',
+  entry: './demo/index.js',
   plugins: [
     new HtmlWebpackPlugin({
       hash: true,
       title: 'A KatsuJS App',
-      template: './src/index.html',
+      template: './demo/index.html',
       filename: './index.html'
     })
   ],
@@ -25,14 +25,6 @@ module.exports = {
     },
     port: 8000,
   },
-  externals: {
-    lodash: {
-    commonjs: 'lodash',
-    commonjs2: 'lodash',
-    amd: 'lodash',
-    root: '_',
-  },
- },
   module: {
     rules: [
       {

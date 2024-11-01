@@ -1,6 +1,3 @@
-import { random } from 'lodash';
-import '../style.css';
-
 // TODO: Allow Debug mode, to allow access on the 'meta' via console log
 
 export default class Katsu{
@@ -2538,8 +2535,6 @@ export default class Katsu{
       const traverseTree = (dom) => {
         if (dom) {
           if (dom.katsuMeta.component.name) {
-            console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', dom.katsuMeta.component.name)
-            console.log(this.component[dom.katsuMeta.component.name]);
             this.component[dom.katsuMeta.component.name].isDestroyed = true;
           }
 

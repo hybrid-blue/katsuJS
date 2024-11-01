@@ -1,5 +1,6 @@
 // module.exports = require('./app/katsu.js').default;
-import { default as Katsu }  from './app/katsu';
+import './style.css';
+import { default as Katsu }  from '../src/katsu';
 import { default as Todo }  from './Todo/Todo';
 import { default as TodoItem }  from './TodoItem/TodoItem';
 
